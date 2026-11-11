@@ -1,23 +1,14 @@
 {
-  "name": "Ojoola AI – Your AI Study Partner",
-  "short_name": "Ojoola AI",
-  "description": "Your AI study partner for learning, courses and conversations.",
+  "id": "./",
+  "name": "Ọjọ́ọ̀la",
+  "short_name": "Ọjọ́ọ̀la",
+  "description": "Ọjọ́ọ̀la — Your AI Study Partner",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "background_color": "#f4f6fb",
+  "theme_color": "#102a56"
 }
