@@ -127,7 +127,15 @@ textarea{min-height:80px;resize:vertical}
   </div>
 
   <div class="card">
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="generalSearch" placeholder="🔎 Search previous messages..." style="margin-top:0;flex:1">
+      <button class="ghost" style="width:auto;margin:0;padding:11px 13px" onclick="clearChatSearch('general')">✕</button>
+    </div>
+    <div id="generalSearchInfo" style="font-size:12px;color:var(--muted);margin-top:7px"></div>
+
     <div id="generalMsgs" class="chatList"></div>
+
+    <button id="generalDownBtn" onclick="scrollChatBottom('general')" class="hidden" style="position:fixed;right:20px;bottom:90px;width:44px;height:44px;border-radius:50%;background:#2563EB;color:white;font-size:22px;font-weight:800;z-index:30;box-shadow:0 6px 18px rgba(37,99,235,.35)">↓</button>
 
     <div class="chatInputWrap">
       <textarea id="generalInput" placeholder="Ask me anything..."></textarea>
@@ -190,7 +198,16 @@ textarea{min-height:80px;resize:vertical}
   <div id="picList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
 
   <h3 style="margin-top:18px">💬 Chat For This Course Only</h3>
+
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+    <input id="courseSearch" placeholder="🔎 Search previous messages..." style="margin-top:0;flex:1">
+    <button class="ghost" style="width:auto;margin:0;padding:11px 13px" onclick="clearChatSearch('course')">✕</button>
+  </div>
+  <div id="courseSearchInfo" style="font-size:12px;color:var(--muted);margin-top:7px"></div>
+
   <div id="courseMsgs" class="chatList" style="margin-top:8px"></div>
+
+  <button id="courseDownBtn" onclick="scrollChatBottom('course')" class="hidden" style="position:fixed;right:20px;bottom:90px;width:44px;height:44px;border-radius:50%;background:#2563EB;color:white;font-size:22px;font-weight:800;z-index:60;box-shadow:0 6px 18px rgba(37,99,235,.35)">↓</button>
 
   <div class="chatInputWrap">
     <textarea id="courseInput" placeholder="Ask about this course..."></textarea>
@@ -237,7 +254,7 @@ textarea{min-height:80px;resize:vertical}
 
     <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
 
-    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - fast model first, 6s per model, max 3 tries.</p>
+    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - fast model first, 8s per model, max 3 tries.</p>
   </div>
 
   <div class="card">
@@ -252,6 +269,7 @@ textarea{min-height:80px;resize:vertical}
 
 <script>
 let raw=JSON.parse(localStorage.getItem('ojoola_courses')||'null');
+
 let courses=raw&&raw.length===15?raw.map(c=>({
   name:c.name||'',
   code:c.code||'',
@@ -260,34 +278,85 @@ let courses=raw&&raw.length===15?raw.map(c=>({
   ref:c.ref!==false,
   chat:c.chat||[]
 })):Array.from({length:15},()=>({
-  name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]
+  name:'',
+  code:'',
+  pdfs:[null,null,null,null],
+  pics:[],
+  ref:true,
+  chat:[]
 }));
 
 let generalChat=JSON.parse(localStorage.getItem('ojoola_general_chat')||'null')||[];
 let current=0;
 let theme=localStorage.getItem('ojoola_theme')||'system';
 let apiKey=localStorage.getItem('ojoola_key')||'';
-let cachedModelList=null,cachedModelListTime=0;
+
 let activeController=null;
 let stoppedByUser=false;
+let speechActive=false;
+let searchState={
+  general:{query:'',index:-1},
+  course:{query:'',index:-1}
+};
 
-function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
-function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
-function saveGeneral(){localStorage.setItem('ojoola_general_chat',JSON.stringify(generalChat))}
-function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
+const FAST_FALLBACK=[
+  'gemini-3.8-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-3.6-flash',
+  'gemini-2.5-flash-lite'
+];
+
+const FIRST_BYTE_TIMEOUT=8000;
+
+function bounce(el){
+  el.classList.remove('jump');
+  void el.offsetWidth;
+  el.classList.add('jump');
+}
+
+function save(){
+  localStorage.setItem('ojoola_courses',JSON.stringify(courses));
+}
+
+function saveGeneral(){
+  localStorage.setItem('ojoola_general_chat',JSON.stringify(generalChat));
+}
+
+function showToast(id){
+  let el=document.getElementById(id);
+  if(!el)return;
+  el.classList.remove('hidden');
+  setTimeout(()=>el.classList.add('hidden'),2000);
+}
 
 function applyTheme(){
   document.body.classList.remove('dark');
+
   let t=theme;
-  if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+
+  if(t==='system'){
+    t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  }
+
   if(t==='dark')document.body.classList.add('dark');
+
   document.getElementById('thSystem').className=theme==='system'?'active':'';
   document.getElementById('thLight').className=theme==='light'?'active':'';
   document.getElementById('thDark').className=theme==='dark'?'active':'';
 }
 
-function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
-if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system')applyTheme()});
+function setTheme(v){
+  theme=v;
+  localStorage.setItem('ojoola_theme',v);
+  applyTheme();
+}
+
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change',()=>{
+      if(theme==='system')applyTheme();
+    });
+}
 
 function goWelcome(){
   document.getElementById('welcome').classList.remove('hidden');
@@ -298,15 +367,28 @@ function goWelcome(){
 function enterApp(view){
   document.getElementById('welcome').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+
   showView(view);
   render();
-  try{history.pushState({page:'app',view:view},'', '#app')}catch(e){}
+
+  try{
+    history.pushState({page:'app',view:view},'', '#app');
+  }catch(e){}
+
   window.scrollTo(0,0);
 }
 
-function goHome(){enterApp('home')}
-function goStudy(){enterApp('home')}
-function goGeneral(){enterApp('general')}
+function goHome(){
+  enterApp('home');
+}
+
+function goStudy(){
+  enterApp('home');
+}
+
+function goGeneral(){
+  enterApp('general');
+}
 
 window.addEventListener('popstate',e=>{
   if(!e.state||e.state.page!=='app')goWelcome();
@@ -315,9 +397,14 @@ window.addEventListener('popstate',e=>{
 function showView(v){
   document.getElementById('homeView').classList.toggle('hidden',v!=='home');
   document.getElementById('generalView').classList.toggle('hidden',v!=='general');
+
   document.getElementById('navHome').classList.toggle('active',v==='home');
   document.getElementById('navGeneral').classList.toggle('active',v==='general');
-  if(v==='general')renderGeneralChat();
+
+  if(v==='general'){
+    renderGeneralChat();
+    setupChatScroll('general');
+  }
 }
 
 function turnAllOn(){
@@ -329,48 +416,73 @@ function turnAllOn(){
 
 function render(){
   let g=document.getElementById('courseGrid');
+
   g.innerHTML='';
+
   courses.forEach((c,i)=>{
     let display=c.name?c.name:'Course '+(i+1);
     let sub=c.name?(c.code?c.code:'Tap to open'):'Tap to open';
+
     let d=document.createElement('div');
+
     d.className='card course';
     d.onclick=()=>openCourse(i);
-    d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';
+
+    d.innerHTML=
+      '<div class="num">Course '+(i+1)+'</div>'+
+      '<div class="title">'+escapeHtml(display)+'</div>'+
+      '<div class="sub">'+escapeHtml(sub)+'</div>';
+
     g.appendChild(d);
   });
+
   renderGeneralChat();
+
   if(window.lucide)lucide.createIcons();
 }
 
 function openCourse(i){
   if(activeController)stopAI();
+
   current=i;
+
   let c=courses[i];
-  document.getElementById('modalTitle').textContent=c.name||('Course '+(i+1));
+
+  document.getElementById('modalTitle').textContent=
+    c.name||('Course '+(i+1));
+
   lockCourseFields();
   updateRefUI();
   renderPdfs();
   renderPics();
   renderCourseChat();
+
   document.getElementById('courseModal').classList.remove('hidden');
   document.getElementById('courseModal').scrollTop=0;
+
+  setupChatScroll('course');
 }
 
 function closeCourse(){
   if(activeController)stopAI();
+
   document.getElementById('courseModal').classList.add('hidden');
+
   render();
 }
 
 function lockCourseFields(){
   let c=courses[current];
+
   document.getElementById('nameText').textContent=c.name||'Not set yet';
   document.getElementById('codeText').textContent=c.code||'Not set yet';
+
   document.getElementById('courseName').value=c.name;
   document.getElementById('courseCode').value=c.code;
+
   document.getElementById('nameView').classList.remove('hidden');
   document.getElementById('codeView').classList.remove('hidden');
+
   document.getElementById('nameEdit').classList.add('hidden');
   document.getElementById('codeEdit').classList.add('hidden');
   document.getElementById('saveCourseRow').classList.add('hidden');
@@ -379,27 +491,40 @@ function lockCourseFields(){
 function editCourseFields(){
   document.getElementById('nameView').classList.add('hidden');
   document.getElementById('codeView').classList.add('hidden');
+
   document.getElementById('nameEdit').classList.remove('hidden');
   document.getElementById('codeEdit').classList.remove('hidden');
+
   document.getElementById('saveCourseRow').classList.remove('hidden');
+
   document.getElementById('courseName').focus();
 }
 
-function cancelCourseEdit(){lockCourseFields()}
+function cancelCourseEdit(){
+  lockCourseFields();
+}
 
 function saveCourseName(){
   courses[current].name=document.getElementById('courseName').value.trim();
   courses[current].code=document.getElementById('courseCode').value.trim();
+
   save();
-  document.getElementById('modalTitle').textContent=courses[current].name||('Course '+(current+1));
+
+  document.getElementById('modalTitle').textContent=
+    courses[current].name||('Course '+(current+1));
+
   lockCourseFields();
   showToast('courseToast');
 }
 
 function updateRefUI(){
   let on=courses[current].ref;
-  document.getElementById('refSwitch').className='switch '+(on?'on':'');
-  document.getElementById('refLabel').textContent=on?'AI will use this course':'AI will skip this course';
+
+  document.getElementById('refSwitch').className=
+    'switch '+(on?'on':'');
+
+  document.getElementById('refLabel').textContent=
+    on?'AI will use this course':'AI will skip this course';
 }
 
 function toggleRef(){
@@ -410,31 +535,53 @@ function toggleRef(){
 
 function renderPdfs(){
   let el=document.getElementById('pdfList');
+
   el.innerHTML='';
+
   courses[current].pdfs.forEach((p,idx)=>{
     let row=document.createElement('div');
+
     row.className='fileRow';
-    row.innerHTML='<span><b>PDF '+(idx+1)+':</b> '+(p?p.name:'Empty')+'</span>';
+
+    row.innerHTML=
+      '<span><b>PDF '+(idx+1)+':</b> '+
+      escapeHtml(p?p.name:'Empty')+
+      '</span>';
+
     let b=document.createElement('button');
+
     b.className='smallBtn';
     b.textContent=p?'Replace':'Upload PDF';
+
     b.onclick=()=>{
       let inp=document.createElement('input');
+
       inp.type='file';
       inp.accept='application/pdf';
+
       inp.onchange=e=>{
         let f=e.target.files[0];
+
         if(!f)return;
+
         let r=new FileReader();
+
         r.onload=()=>{
-          courses[current].pdfs[idx]={name:f.name,data:r.result};
+          courses[current].pdfs[idx]={
+            name:f.name,
+            data:r.result
+          };
+
           save();
           renderPdfs();
         };
+
         r.readAsDataURL(f);
       };
+
       inp.click();
     };
+
     row.appendChild(b);
     el.appendChild(row);
   });
@@ -443,87 +590,345 @@ function renderPdfs(){
 function addPics(e){
   Array.from(e.target.files).forEach(f=>{
     let r=new FileReader();
+
     r.onload=()=>{
-      courses[current].pics.push({name:f.name,data:r.result});
+      courses[current].pics.push({
+        name:f.name,
+        data:r.result
+      });
+
       save();
       renderPics();
     };
+
     r.readAsDataURL(f);
   });
+
   e.target.value='';
 }
 
 function renderPics(){
   let el=document.getElementById('picList');
+
   el.innerHTML='';
+
   courses[current].pics.forEach((p,idx)=>{
     let w=document.createElement('div');
+
     w.style.position='relative';
-    w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';
+
+    w.innerHTML=
+      '<img class="thumb" src="'+p.data+'">'+
+      '<button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" '+
+      'style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';
+
     el.appendChild(w);
   });
 }
 
 function escapeHtml(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
 
 function renderMarkdown(el,rawText){
   if(!el)return;
+
   let t=String(rawText||'').replace(/\r/g,'');
+
   t=t.replace(/```[\s\S]*?```/g,m=>m.replace(/```/g,''));
   t=t.replace(/`([^`]+)`/g,'$1');
-  t=t.replace(/^#{1,6}\s+/gm,'');
+
+  t=t.replace(/^#{1,6}\s+(.+)$/gm,'**$1**');
+
   t=t.replace(/^>\s?/gm,'');
   t=t.replace(/^\s*[-*]\s+/gm,'• ');
+
   t=t.replace(/!\[([^\]]*)\]\([^)]+\)/g,'$1');
   t=t.replace(/\[([^\]]+)\]\([^)]+\)/g,'$1');
+
   let esc=escapeHtml(t);
+
   esc=esc.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
   esc=esc.replace(/__([^_]+)__/g,'<b>$1</b>');
-  esc=esc.replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>');
-  esc=esc.replace(/(^|[^_])_([^_\n]+)_/g,'$1<i>$2</i>');
-  esc=esc.replace(/\*\*/g,'').replace(/__/g,'').replace(/~~([^~]+)~~/g,'$1');
+
+  esc=esc.replace(
+    /(^|[^*])\*([^*\n]+)\*/g,
+    '$1<i>$2</i>'
+  );
+
+  esc=esc.replace(
+    /(^|[^_])_([^_\n]+)_/g,
+    '$1<i>$2</i>'
+  );
+
+  esc=esc.replace(
+    /~~([^~]+)~~/g,
+    '$1'
+  );
+
+  esc=esc.replace(/\*\*/g,'').replace(/__/g,'');
+
   el.innerHTML=esc.replace(/\n/g,'<br>');
+}
+
+function createActionButton(label,onclick){
+  let b=document.createElement('button');
+
+  b.type='button';
+  b.textContent=label;
+
+  b.style.cssText=
+    'background:transparent;'+
+    'color:var(--muted);'+
+    'padding:3px 6px;'+
+    'font-size:11px;'+
+    'font-weight:700;'+
+    'border-radius:7px;';
+
+  b.onclick=onclick;
+
+  return b;
+}
+
+async function copyMessage(text,button){
+  let copied=false;
+
+  try{
+    if(navigator.clipboard&&window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      copied=true;
+    }
+  }catch(e){}
+
+  if(!copied){
+    try{
+      let ta=document.createElement('textarea');
+
+      ta.value=text;
+      ta.style.position='fixed';
+      ta.style.left='-9999px';
+
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+
+      copied=document.execCommand('copy');
+
+      ta.remove();
+    }catch(e){}
+  }
+
+  if(button){
+    let old=button.textContent;
+    button.textContent=copied?'✓ Copied':'Copy failed';
+
+    setTimeout(()=>{
+      button.textContent=old;
+    },1500);
+  }
+}
+
+async function shareMessage(text,button){
+  try{
+    if(navigator.share){
+      await navigator.share({
+        title:'Ojoola AI',
+        text:text
+      });
+    }else{
+      await copyMessage(text,button);
+    }
+  }catch(e){
+    if(e.name!=='AbortError'){
+      await copyMessage(text,button);
+    }
+  }
+}
+
+function readMessage(text,button){
+  if(!window.speechSynthesis)return;
+
+  if(speechActive){
+    speechSynthesis.cancel();
+    speechActive=false;
+
+    if(button){
+      button.textContent='🔊 Read';
+    }
+
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  let utter=new SpeechSynthesisUtterance(
+    String(text||'')
+  );
+
+  speechActive=true;
+
+  if(button)button.textContent='⏹ Stop';
+
+  utter.onend=()=>{
+    speechActive=false;
+
+    if(button){
+      button.textContent='🔊 Read';
+    }
+  };
+
+  utter.onerror=()=>{
+    speechActive=false;
+
+    if(button){
+      button.textContent='🔊 Read';
+    }
+  };
+
+  speechSynthesis.speak(utter);
+}
+
+function addMessageActions(msgElement,text){
+  let actions=document.createElement('div');
+
+  actions.style.cssText=
+    'display:flex;'+
+    'gap:3px;'+
+    'align-items:center;'+
+    'margin-top:7px;'+
+    'opacity:.85;'+
+    'flex-wrap:wrap;';
+
+  let copyBtn=createActionButton(
+    '📋 Copy',
+    ()=>copyMessage(text,copyBtn)
+  );
+
+  let shareBtn=createActionButton(
+    '↗ Share',
+    ()=>shareMessage(text,shareBtn)
+  );
+
+  let readBtn=createActionButton(
+    '🔊 Read',
+    ()=>readMessage(text,readBtn)
+  );
+
+  actions.appendChild(copyBtn);
+  actions.appendChild(shareBtn);
+  actions.appendChild(readBtn);
+
+  msgElement.appendChild(actions);
+}
+
+function createMessageElement(m){
+  let d=document.createElement('div');
+
+  d.className=
+    'msg '+(m.role==='user'?'me':'ai');
+
+  let content=document.createElement('div');
+
+  content.className='msgContent';
+
+  if(m.role==='user'){
+    content.textContent=m.text;
+  }else{
+    renderMarkdown(content,m.text);
+  }
+
+  d.appendChild(content);
+
+  if(m.text&&m.text!=='Thinking...'){
+    addMessageActions(d,m.text);
+  }
+
+  return {
+    element:d,
+    content:content
+  };
 }
 
 function renderCourseChat(){
   let el=document.getElementById('courseMsgs');
+
   el.innerHTML='';
-  if(!courses[current].chat.length){
-    el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';
+
+  let chat=courses[current].chat;
+
+  if(!chat.length){
+    let empty=createMessageElement({
+      role:'ai',
+      text:'Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.'
+    });
+
+    el.appendChild(empty.element);
   }
-  courses[current].chat.forEach(m=>{
-    let d=document.createElement('div');
-    d.className='msg '+(m.role==='user'?'me':'ai');
-    if(m.role==='user')d.textContent=m.text;
-    else renderMarkdown(d,m.text);
-    el.appendChild(d);
+
+  chat.forEach(m=>{
+    let item=createMessageElement(m);
+    el.appendChild(item.element);
+  });
+
+  applyChatSearch('course');
+
+  requestAnimationFrame(()=>{
+    if(!searchState.course.query){
+      el.scrollTop=el.scrollHeight;
+    }
   });
 }
 
 function renderGeneralChat(){
   let el=document.getElementById('generalMsgs');
+
   if(!el)return;
+
   el.innerHTML='';
+
   if(!generalChat.length){
-    el.innerHTML='<div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div>';
-    return;
+    let empty=createMessageElement({
+      role:'ai',
+      text:'Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.'
+    });
+
+    el.appendChild(empty.element);
+
+  }else{
+
+    generalChat.forEach(m=>{
+      let item=createMessageElement(m);
+      el.appendChild(item.element);
+    });
   }
-  generalChat.forEach(m=>{
-    let d=document.createElement('div');
-    d.className='msg '+(m.role==='user'?'me':'ai');
-    if(m.role==='user')d.textContent=m.text;
-    else renderMarkdown(d,m.text);
-    el.appendChild(d);
+
+  applyChatSearch('general');
+
+  requestAnimationFrame(()=>{
+    if(!searchState.general.query){
+      el.scrollTop=el.scrollHeight;
+    }
   });
-  el.scrollTop=el.scrollHeight;
 }
 
 function clearCourseChat(){
   if(activeController)stopAI();
+
   courses[current].chat=[];
+
   save();
+
+  searchState.course={
+    query:'',
+    index:-1
+  };
+
+  document.getElementById('courseSearch').value='';
+
   renderCourseChat();
 }
 
@@ -533,30 +938,88 @@ function trimHistory(history,max=20){
 
 function makeHistory(history){
   return trimHistory(history)
-    .filter(m=>m && m.text && m.text!=='Thinking...')
+    .filter(m=>m&&m.text&&m.text!=='Thinking...')
     .map(m=>({
       role:m.role==='user'?'user':'model',
-      parts:[{text:String(m.text)}]
+      parts:[{
+        text:String(m.text)
+      }]
     }));
+}
+
+function createChatStatus(type){
+  let id=type==='general'
+    ?'generalMsgs'
+    :'courseMsgs';
+
+  let el=document.getElementById(id);
+
+  if(!el)return null;
+
+  let s=document.createElement('div');
+
+  s.className='msg ai';
+
+  s.style.opacity='.78';
+  s.style.fontSize='13px';
+  s.style.fontWeight='700';
+
+  s.textContent='⏳ Starting...';
+
+  el.appendChild(s);
+
+  requestAnimationFrame(()=>{
+    el.scrollTop=el.scrollHeight;
+  });
+
+  return s;
+}
+
+function updateChatStatus(el,text){
+  if(!el)return;
+
+  el.textContent=text;
+
+  let parent=el.parentElement;
+
+  if(parent){
+    requestAnimationFrame(()=>{
+      parent.scrollTop=parent.scrollHeight;
+    });
+  }
+}
+
+function removeChatStatus(el){
+  if(el&&el.parentNode){
+    el.parentNode.removeChild(el);
+  }
 }
 
 function stopAI(){
   stoppedByUser=true;
+
   if(activeController){
-    try{activeController.abort()}catch(e){}
+    try{
+      activeController.abort();
+    }catch(e){}
   }
+
   activeController=null;
 
   let gb=document.getElementById('generalSendBtn');
+
   if(gb){
     gb.disabled=false;
     gb.textContent='Send Message 🚀';
+    gb.onclick=sendGeneral;
   }
 
   let cb=document.getElementById('courseSendBtn');
+
   if(cb){
     cb.disabled=false;
     cb.textContent='Send Message 🚀';
+    cb.onclick=sendCourseChat;
   }
 }
 
@@ -564,8 +1027,11 @@ async function testConnection(){
   let el=document.getElementById('testResult');
 
   if(!apiKey){
-    el.textContent='❌ No key saved yet. Tap Edit and paste your key.';
+    el.textContent=
+      '❌ No key saved yet. Tap Edit and paste your key.';
+
     el.style.color='#DC2626';
+
     return;
   }
 
@@ -573,139 +1039,101 @@ async function testConnection(){
   el.style.color='#64748B';
 
   try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey);
+    let res=await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey
+    );
+
     let j=await res.json();
 
     if(j.error){
-      el.textContent='❌ Key FAILED: '+j.error.message;
+      el.textContent=
+        '❌ Key FAILED: '+j.error.message;
+
       el.style.color='#DC2626';
+
       return;
     }
 
     let names=(j.models||[])
       .map(m=>m.name.replace('models/',''))
       .filter(n=>n.includes('flash'))
-      .slice(0,5)
+      .slice(0,8)
       .join(', ');
 
-    el.textContent='✅ Key WORKS! Found: '+names;
+    el.textContent=
+      '✅ Key WORKS! Found: '+(names||'No Flash models returned.');
+
     el.style.color='#16A34A';
+
   }catch(e){
-    el.textContent='❌ Network error: '+e.message;
+    el.textContent=
+      '❌ Network error: '+e.message;
+
     el.style.color='#DC2626';
   }
 }
 
-const FAST_FALLBACK=[
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-2.5-flash',
-  'gemini-3-flash',
-  'gemini-3.8-flash'
-];
-
 function scoreModel(name){
   let n=name.toLowerCase();
 
-  if(n.includes('tts')||n.includes('image')||n.includes('embedding')||n.includes('preview-tts')||n.includes('robotics')||n.includes('veo')||n.includes('imagen'))return-100;
+  if(
+    n.includes('tts')||
+    n.includes('image')||
+    n.includes('embedding')||
+    n.includes('robotics')||
+    n.includes('veo')||
+    n.includes('imagen')
+  )return-100;
+
   if(!n.includes('flash'))return-100;
-  if(n.includes('latest'))return40;
-  if(n.includes('2.5-flash-lite'))return100;
-  if(n.includes('2.0-flash-lite'))return95;
-  if(n.includes('flash-lite'))return90;
-  if(n.includes('2.0-flash'))return85;
-  if(n.includes('2.5-flash')&&!n.includes('lite'))return80;
-  if(n.includes('3-flash')&&!n.includes('lite'))return70;
-  if(n.includes('3.8-flash'))return60;
-  if(n.includes('flash'))return50;
-  return0;
+
+  if(n.includes('3.8-flash'))return100;
+  if(n.includes('3.6-flash'))return95;
+  if(n.includes('3.1-flash-lite'))return90;
+  if(n.includes('2.5-flash-lite'))return85;
+  if(n.includes('flash-lite'))return80;
+  if(n.includes('2.5-flash'))return75;
+  if(n.includes('2.0-flash'))return70;
+
+  return50;
 }
 
-async function getModelList(){
-  if(cachedModelList&&(Date.now()-cachedModelListTime)<86400000)return cachedModelList;
-
-  try{
-    let saved=JSON.parse(localStorage.getItem('ojoola_model_list')||'null');
-
-    if(saved&&saved.time&&(Date.now()-saved.time)<86400000&&Array.isArray(saved.list)&&saved.list.length){
-      cachedModelList=saved.list;
-      cachedModelListTime=saved.time;
-      return cachedModelList;
-    }
-  }catch(e){}
-
-  try{
-    let ctrl=new AbortController();
-    let to=setTimeout(()=>ctrl.abort(),4000);
-
-    let res=await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey,
-      {signal:ctrl.signal}
-    );
-
-    clearTimeout(to);
-
-    let j=await res.json().catch(()=>({}));
-
-    if(!j.error&&j.models){
-      let cands=(j.models||[])
-        .map(m=>{
-          let nm=(m.name||'').replace('models/','');
-          let supports=m.supportedGenerationMethods||[];
-          let canGen=supports.length===0||supports.includes('generateContent');
-          return{name:nm,score:scoreModel(nm),canGen};
-        })
-        .filter(x=>x.canGen&&x.score>0);
-
-      cands.sort((a,b)=>b.score-a.score);
-
-      if(cands.length){
-        cachedModelList=cands;
-        cachedModelListTime=Date.now();
-
-        try{
-          localStorage.setItem(
-            'ojoola_model_list',
-            JSON.stringify({time:cachedModelListTime,list:cands})
-          );
-        }catch(e){}
-
-        let badge=document.getElementById('modelBadge');
-        if(badge)badge.textContent='Model: Auto-Picked - '+cands[0].name+' (fast first)';
-
-        return cands;
-      }
-    }
-  }catch(e){}
-
-  let fb=FAST_FALLBACK.map(n=>({name:n,score:scoreModel(n),canGen:true}));
-  cachedModelList=fb;
-  cachedModelListTime=Date.now();
-  return fb;
-}
-
-async function tryOneModelStream(modelName,contents,onChunk){
+async function tryOneModelStream(modelName,contents,onChunk,onStatus){
   activeController=new AbortController();
 
+  if(onStatus){
+    onStatus('🔌 Connecting to '+modelName+'…');
+  }
+
   let firstByteTimer=setTimeout(()=>{
-    try{activeController.abort('timeout-first-byte')}catch(e){}
-  },6000);
+    try{
+      activeController.abort('timeout-first-byte');
+    }catch(e){}
+  },FIRST_BYTE_TIMEOUT);
 
   let gotFirst=false;
   let res;
 
   try{
+
     res=await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/'+modelName+':streamGenerateContent?alt=sse&key='+apiKey,
+      'https://generativelanguage.googleapis.com/v1beta/models/'+
+      modelName+
+      ':streamGenerateContent?alt=sse&key='+apiKey,
       {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents}),
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          contents:contents
+        }),
         signal:activeController.signal
       }
     );
+
   }catch(e){
+
     clearTimeout(firstByteTimer);
 
     if(stoppedByUser){
@@ -714,64 +1142,109 @@ async function tryOneModelStream(modelName,contents,onChunk){
       throw er;
     }
 
-    let err=new Error('Timeout / network - '+modelName+' did not start in 6s');
+    let err=new Error(
+      'Timeout / network - '+
+      modelName+
+      ' did not start in 8s'
+    );
+
     err.status=503;
+
     throw err;
   }
 
   if(!res.ok||!res.body){
+
     clearTimeout(firstByteTimer);
 
     let j={};
-    try{j=await res.json()}catch(e){}
 
-    let msg=(j.error&&j.error.message)||('HTTP '+res.status);
+    try{
+      j=await res.json();
+    }catch(e){}
 
-    if(msg.toLowerCase().includes('api key')||msg.includes('API_KEY_INVALID')){
-      throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
+    let msg=
+      (j.error&&j.error.message)||
+      ('HTTP '+res.status);
+
+    if(
+      msg.toLowerCase().includes('api key')||
+      msg.includes('API_KEY_INVALID')
+    ){
+      throw new Error(
+        'Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.'
+      );
     }
 
-    let err=new Error('Google said: '+res.status+' - '+msg);
+    let err=new Error(
+      'Google said: '+res.status+' - '+msg
+    );
+
     err.status=res.status;
+
     throw err;
   }
 
   let reader=res.body.getReader();
   let decoder=new TextDecoder();
+
   let buffer='';
   let full='';
 
   try{
+
     while(true){
+
       let r=await reader.read();
 
       if(r.done)break;
 
       if(!gotFirst){
+
         gotFirst=true;
         clearTimeout(firstByteTimer);
+
+        if(onStatus){
+          onStatus('📡 Receiving response from '+modelName+'…');
+        }
       }
 
-      buffer+=decoder.decode(r.value,{stream:true});
+      buffer+=decoder.decode(
+        r.value,
+        {stream:true}
+      );
 
       let lines=buffer.split('\n');
+
       buffer=lines.pop();
 
       for(let line of lines){
+
         line=line.trim();
 
         if(!line.startsWith('data:'))continue;
 
         let dataStr=line.slice(5).trim();
 
-        if(!dataStr||dataStr==='[DONE]')continue;
+        if(
+          !dataStr||
+          dataStr==='[DONE]'
+        )continue;
 
         try{
+
           let chunk=JSON.parse(dataStr);
 
           if(chunk.error){
-            let e2=new Error('Google said: '+(chunk.error.message||'stream error'));
-            e2.status=chunk.error.code||0;
+
+            let e2=new Error(
+              'Google said: '+
+              (chunk.error.message||'stream error')
+            );
+
+            e2.status=
+              chunk.error.code||0;
+
             throw e2;
           }
 
@@ -779,25 +1252,47 @@ async function tryOneModelStream(modelName,contents,onChunk){
             chunk.candidates&&
             chunk.candidates[0]&&
             chunk.candidates[0].content
-              ?chunk.candidates[0].content.parts.map(p=>p.text||'').join('')
+              ?chunk.candidates[0].content.parts
+                .map(p=>p.text||'')
+                .join('')
               :'';
 
           if(txt){
+
             full+=txt;
-            if(onChunk)onChunk(full);
+
+            if(onChunk){
+              onChunk(full);
+            }
           }
+
         }catch(e){
-          if(e.status!==undefined)throw e;
+
+          if(e.status!==undefined){
+            throw e;
+          }
         }
       }
     }
+
   }catch(e){
+
     clearTimeout(firstByteTimer);
 
-    if(stoppedByUser||e.name==='AbortError'){
-      let er=new Error(stoppedByUser?'Stopped':'Timeout - '+modelName+' too slow');
+    if(
+      stoppedByUser||
+      e.name==='AbortError'
+    ){
+
+      let er=new Error(
+        stoppedByUser
+          ?'Stopped'
+          :'Timeout - '+modelName+' too slow'
+      );
+
       er.stopped=stoppedByUser;
       er.status=503;
+
       throw er;
     }
 
@@ -806,68 +1301,167 @@ async function tryOneModelStream(modelName,contents,onChunk){
 
   clearTimeout(firstByteTimer);
 
-  if(!full)throw new Error('Google returned no answer.');
+  if(!full){
+    throw new Error(
+      'Google returned no answer.'
+    );
+  }
 
   return full;
 }
 
-async function callGeminiFast(prompt,images,history,onChunk){
+async function callGeminiFast(
+  prompt,
+  images,
+  history,
+  onChunk,
+  onStatus
+){
+
   if(!apiKey){
+
     openSettings();
-    throw new Error('No API Key yet. Please add your key in Settings.');
+
+    throw new Error(
+      'No API Key yet. Please add your key in Settings.'
+    );
   }
 
   stoppedByUser=false;
 
+  if(onStatus){
+    onStatus('🔎 Checking your question…');
+  }
+
   let contents=makeHistory(history||[]);
+
+  if(onStatus){
+    onStatus('🧠 Preparing conversation context…');
+  }
 
   let parts=[{
     text:
       prompt+
-      '\n\nIMPORTANT: Do NOT use markdown stars. Write plain text. Use real headings with line breaks. Do not use ** or __ or # or backticks. Write clean readable text.'
+      '\n\nIMPORTANT: You may use markdown formatting when useful. '+
+      'Use **bold** for important points when appropriate. '+
+      'Use clear headings and line breaks. '+
+      'Keep the answer clean and readable. '+
+      'Do not use unnecessary markdown.'
   }];
 
   (images||[]).slice(0,2).forEach(img=>{
+
+    if(!img||!img.data)return;
+
     let b=img.data.split(',')[1];
-    let mt=img.data.split(';')[0].split(':')[1];
-    parts.push({inlineData:{mimeType:mt,data:b}});
+
+    let mt=
+      img.data.split(';')[0].split(':')[1];
+
+    if(b&&mt){
+
+      parts.push({
+        inlineData:{
+          mimeType:mt,
+          data:b
+        }
+      });
+    }
   });
 
   contents.push({
     role:'user',
-    parts
+    parts:parts
   });
 
-  let models=await getModelList();
+  let models=
+    FAST_FALLBACK
+      .slice()
+      .sort((a,b)=>scoreModel(b)-scoreModel(a));
+
   let lastErr=null;
-  let tries=Math.min(3,models.length);
+
+  let tries=Math.min(
+    3,
+    models.length
+  );
 
   for(let i=0;i<tries;i++){
-    if(stoppedByUser)throw Object.assign(new Error('Stopped'),{stopped:true});
+
+    if(stoppedByUser){
+
+      throw Object.assign(
+        new Error('Stopped'),
+        {stopped:true}
+      );
+    }
+
+    let model=models[i];
+
+    if(onStatus){
+
+      if(i===0){
+        onStatus(
+          '🤖 Using '+model+'…'
+        );
+      }else{
+
+        onStatus(
+          '🔄 Trying backup model '+model+'…'
+        );
+      }
+    }
 
     try{
-      let ans=await tryOneModelStream(models[i].name,contents,onChunk);
 
-      let badge=document.getElementById('modelBadge');
+      let ans=
+        await tryOneModelStream(
+          model,
+          contents,
+          onChunk,
+          onStatus
+        );
+
+      let badge=
+        document.getElementById('modelBadge');
 
       if(badge){
-        badge.textContent='Model: Auto-Picked - '+models[i].name+' (fast first)';
+
+        badge.textContent=
+          'Model: Auto-Picked - '+
+          model+
+          ' (fast first)';
       }
 
       activeController=null;
+
+      if(onStatus){
+        onStatus('✨ Finishing answer…');
+      }
+
       return ans;
 
     }catch(e){
+
       activeController=null;
 
-      if(e.stopped||stoppedByUser){
-        throw Object.assign(new Error('Stopped'),{stopped:true});
+      if(
+        e.stopped||
+        stoppedByUser
+      ){
+
+        throw Object.assign(
+          new Error('Stopped'),
+          {stopped:true}
+        );
       }
 
       lastErr=e;
 
       let s=e.status||0;
-      let m=String(e.message||'');
+
+      let m=
+        String(e.message||'');
 
       let isRetryable=
         s===503||
@@ -880,35 +1474,64 @@ async function callGeminiFast(prompt,images,history,onChunk){
         m.toLowerCase().includes('high demand')||
         m.toLowerCase().includes('not found')||
         m.toLowerCase().includes('timeout')||
-        m.toLowerCase().includes('too slow');
+        m.toLowerCase().includes('too slow')||
+        m.toLowerCase().includes('network');
 
-      if(isRetryable)continue;
+      if(isRetryable){
+
+        if(onStatus){
+
+          onStatus(
+            '⚠️ '+model+
+            ' unavailable. Trying a backup…'
+          );
+        }
+
+        continue;
+      }
 
       throw e;
     }
   }
 
   if(lastErr){
+
     throw new Error(
-      'All fast models busy. Tried: '+
-      models.slice(0,3).map(x=>x.name).join(', ')+
+      'All fast models were unavailable. Tried: '+
+      models.slice(0,tries)
+        .join(', ')+
       '. Last: '+lastErr.message
     );
   }
 
-  throw new Error('No model available.');
+  throw new Error(
+    'No model available.'
+  );
 }
 
 function buildContext(courseList){
-  let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples.\n\n';
+  let txt=
+    'You are Ojoola AI, a friendly Nigerian study partner. '+
+    'Answer clearly, simply, with examples.\n\n';
 
   courseList.forEach(c=>{
-    if(c.ref&&c.pdfs.some(x=>x)){
+
+    if(
+      c.ref&&
+      c.pdfs.some(x=>x)
+    ){
+
       txt+=
-        'Course: '+(c.name||'')+
+        'Course: '+
+        (c.name||'')+
         ': has PDFs: '+
-        c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+
-        '. Has '+c.pics.length+' pictures.\n';
+        c.pdfs
+          .filter(x=>x)
+          .map(x=>x.name)
+          .join(', ')+
+        '. Has '+
+        c.pics.length+
+        ' pictures.\n';
     }
   });
 
@@ -916,100 +1539,213 @@ function buildContext(courseList){
 }
 
 async function sendCourseChat(){
+
   if(activeController)return;
 
-  let inp=document.getElementById('courseInput');
+  let inp=
+    document.getElementById('courseInput');
+
   let q=inp.value.trim();
 
   if(!q)return;
 
-  let btn=document.getElementById('courseSendBtn');
+  let btn=
+    document.getElementById('courseSendBtn');
+
   btn.disabled=false;
   btn.textContent='⏹ Stop Thinking';
+  btn.onclick=stopAI;
 
-  let history=courses[current].chat.slice();
+  let history=
+    courses[current].chat.slice();
 
-  courses[current].chat.push({role:'user',text:q});
+  courses[current].chat.push({
+    role:'user',
+    text:q
+  });
 
-  let aiIndex=courses[current].chat.length;
-  courses[current].chat.push({role:'ai',text:'Thinking...'});
+  let aiIndex=
+    courses[current].chat.length;
+
+  courses[current].chat.push({
+    role:'ai',
+    text:'Thinking...'
+  });
 
   save();
-  renderCourseChat();
+
   inp.value='';
 
-  let el=document.getElementById('courseMsgs');
-  let aiEl=el.lastChild;
+  renderCourseChat();
+
+  let el=
+    document.getElementById('courseMsgs');
+
+  let aiWrap=
+    el.lastChild;
+
+  let aiEl=
+    aiWrap
+      ?aiWrap.querySelector('.msgContent')
+      :null;
+
+  let statusEl=
+    createChatStatus('course');
 
   try{
-    let ans=await callGeminiFast(
-      buildContext([courses[current]])+'Question: '+q,
-      courses[current].pics,
-      history,
-      partial=>{
-        if(partial&&aiEl)renderMarkdown(aiEl,partial);
-      }
-    );
 
-    courses[current].chat[aiIndex].text=ans||'No answer.';
+    let ans=
+      await callGeminiFast(
+        buildContext([courses[current]])+
+        'Question: '+q,
+        courses[current].pics,
+        history,
+        partial=>{
+
+          if(partial&&aiEl){
+
+            renderMarkdown(
+              aiEl,
+              partial
+            );
+
+            requestAnimationFrame(()=>{
+              el.scrollTop=
+                el.scrollHeight;
+            });
+          }
+        },
+        status=>{
+          updateChatStatus(
+            statusEl,
+            status
+          );
+        }
+      );
+
+    courses[current].chat[aiIndex].text=
+      ans||'No answer.';
 
   }catch(e){
+
     if(e.stopped){
-      courses[current].chat[aiIndex].text='Generation stopped.';
+
+      courses[current].chat[aiIndex].text=
+        'Generation stopped.';
+
     }else{
-      courses[current].chat[aiIndex].text='Error: '+e.message;
+
+      courses[current].chat[aiIndex].text=
+        'Error: '+e.message;
     }
+
   }
+
+  removeChatStatus(statusEl);
 
   save();
   renderCourseChat();
 
   btn.disabled=false;
   btn.textContent='Send Message 🚀';
+  btn.onclick=sendCourseChat;
+
   activeController=null;
   stoppedByUser=false;
+
+  scrollChatBottom('course');
 }
 
 async function sendGeneral(){
+
   if(activeController)return;
 
-  let inp=document.getElementById('generalInput');
+  let inp=
+    document.getElementById('generalInput');
+
   let q=inp.value.trim();
 
   if(!q)return;
 
-  let btn=document.getElementById('generalSendBtn');
+  let btn=
+    document.getElementById('generalSendBtn');
+
   btn.disabled=false;
   btn.textContent='⏹ Stop Thinking';
+  btn.onclick=stopAI;
 
-  let history=generalChat.slice();
+  let history=
+    generalChat.slice();
 
-  generalChat.push({role:'user',text:q});
+  generalChat.push({
+    role:'user',
+    text:q
+  });
 
-  let aiIndex=generalChat.length;
-  generalChat.push({role:'ai',text:'Thinking...'});
+  let aiIndex=
+    generalChat.length;
+
+  generalChat.push({
+    role:'ai',
+    text:'Thinking...'
+  });
 
   saveGeneral();
 
-  let box=document.getElementById('generalMsgs');
+  inp.value='';
+
   renderGeneralChat();
 
-  let a=box.lastChild;
-  inp.value='';
+  let box=
+    document.getElementById('generalMsgs');
+
+  let aiWrap=
+    box.lastChild;
+
+  let aiEl=
+    aiWrap
+      ?aiWrap.querySelector('.msgContent')
+      :null;
+
+  let statusEl=
+    createChatStatus('general');
 
   let start=Date.now();
 
   try{
-    let ans=await callGeminiFast(
-      'You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. General question: '+q,
-      [],
-      history,
-      partial=>{
-        if(partial)renderMarkdown(a,partial);
-      }
-    );
 
-    generalChat[aiIndex].text=ans||'No answer.';
+    let ans=
+      await callGeminiFast(
+        'You are Ojoola AI, a friendly Nigerian study partner. '+
+        'Answer clearly, simply, with examples. '+
+        'General question: '+q,
+        [],
+        history,
+        partial=>{
+
+          if(partial&&aiEl){
+
+            renderMarkdown(
+              aiEl,
+              partial
+            );
+
+            requestAnimationFrame(()=>{
+              box.scrollTop=
+                box.scrollHeight;
+            });
+          }
+        },
+        status=>{
+          updateChatStatus(
+            statusEl,
+            status
+          );
+        }
+      );
+
+    generalChat[aiIndex].text=
+      ans||'No answer.';
 
     console.log(
       'General chat took '+
@@ -1018,67 +1754,641 @@ async function sendGeneral(){
     );
 
   }catch(e){
+
     if(e.stopped){
-      generalChat[aiIndex].text='Generation stopped.';
+
+      generalChat[aiIndex].text=
+        'Generation stopped.';
+
     }else{
-      generalChat[aiIndex].text='Error: '+e.message;
+
+      generalChat[aiIndex].text=
+        'Error: '+e.message;
     }
   }
+
+  removeChatStatus(statusEl);
 
   saveGeneral();
   renderGeneralChat();
 
   btn.disabled=false;
   btn.textContent='Send Message 🚀';
+  btn.onclick=sendGeneral;
+
   activeController=null;
   stoppedByUser=false;
+
+  scrollChatBottom('general');
 }
 
 function openSettings(){
   lockKeyView();
-  document.getElementById('settingsModal').classList.remove('hidden');
+
+  document.getElementById('settingsModal')
+    .classList.remove('hidden');
 }
 
 function closeSettings(){
-  document.getElementById('settingsModal').classList.add('hidden');
+  document.getElementById('settingsModal')
+    .classList.add('hidden');
 }
 
 function lockKeyView(){
+
   document.getElementById('keyText').textContent=
-    apiKey?'••••••••'+apiKey.slice(-4):'••••••••';
+    apiKey
+      ?'••••••••'+apiKey.slice(-4)
+      :'••••••••';
 
   document.getElementById('keyStatus').textContent=
-    apiKey?'✅ Key Saved - Locked':'❌ No key yet';
+    apiKey
+      ?'✅ Key Saved - Locked'
+      :'❌ No key yet';
 
-  document.getElementById('apiKeyInput').value=apiKey;
-  document.getElementById('keyView').classList.remove('hidden');
-  document.getElementById('keyEdit').classList.add('hidden');
+  document.getElementById('apiKeyInput').value=
+    apiKey;
+
+  document.getElementById('keyView')
+    .classList.remove('hidden');
+
+  document.getElementById('keyEdit')
+    .classList.add('hidden');
 }
 
 function editKey(){
-  document.getElementById('keyView').classList.add('hidden');
-  document.getElementById('keyEdit').classList.remove('hidden');
+  document.getElementById('keyView')
+    .classList.add('hidden');
+
+  document.getElementById('keyEdit')
+    .classList.remove('hidden');
+
   document.getElementById('apiKeyInput').focus();
 }
 
-function cancelKeyEdit(){lockKeyView()}
+function cancelKeyEdit(){
+  lockKeyView();
+}
 
 function saveKey(){
-  apiKey=document.getElementById('apiKeyInput').value.trim();
-  localStorage.setItem('ojoola_key',apiKey);
-  cachedModelList=null;
-  cachedModelListTime=0;
 
-  try{
-    localStorage.removeItem('ojoola_model_list');
-  }catch(e){}
+  apiKey=
+    document.getElementById('apiKeyInput')
+      .value.trim();
+
+  localStorage.setItem(
+    'ojoola_key',
+    apiKey
+  );
 
   lockKeyView();
+
   showToast('keyToast');
 }
 
+/* =========================
+   CHAT SEARCH
+========================= */
+
+function getChatData(type){
+
+  if(type==='general'){
+    return generalChat;
+  }
+
+  return courses[current].chat;
+}
+
+function getSearchElements(type){
+
+  if(type==='general'){
+
+    return {
+      input:document.getElementById('generalSearch'),
+      info:document.getElementById('generalSearchInfo'),
+      box:document.getElementById('generalMsgs')
+    };
+  }
+
+  return {
+    input:document.getElementById('courseSearch'),
+    info:document.getElementById('courseSearchInfo'),
+    box:document.getElementById('courseMsgs')
+  };
+}
+
+function highlightSearchText(text,query){
+
+  let safe=escapeHtml(text);
+
+  if(!query)return safe;
+
+  let safeQuery=
+    escapeHtml(query);
+
+  if(!safeQuery)return safe;
+
+  try{
+
+    let re=
+      new RegExp(
+        '('+
+        safeQuery.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          '\\$&'
+        )+
+        ')',
+        'gi'
+      );
+
+    return safe.replace(
+      re,
+      '<mark style="background:#FDE68A;color:#111827;border-radius:3px;padding:1px 2px">$1</mark>'
+    );
+
+  }catch(e){
+
+    return safe;
+  }
+}
+
+function renderSearchableContent(el,text,query){
+
+  if(!query){
+
+    if(el.parentElement &&
+       el.parentElement.classList.contains('msgContent')){
+
+      renderMarkdown(el,text);
+
+    }else{
+
+      renderMarkdown(el,text);
+    }
+
+    return;
+  }
+
+  let lower=
+    String(text||'').toLowerCase();
+
+  let q=
+    String(query||'').toLowerCase();
+
+  if(!lower.includes(q)){
+
+    renderMarkdown(el,text);
+
+    return;
+  }
+
+  let parts=
+    String(text||'').split(
+      new RegExp(
+        '('+
+        q.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          '\\$&'
+        )+
+        ')',
+        'gi'
+      )
+    );
+
+  el.innerHTML='';
+
+  parts.forEach((part,i)=>{
+
+    if(
+      part.toLowerCase()===q
+    ){
+
+      let mark=
+        document.createElement('mark');
+
+      mark.textContent=part;
+
+      mark.style.background='#FDE68A';
+      mark.style.color='#111827';
+      mark.style.borderRadius='3px';
+      mark.style.padding='1px 2px';
+
+      el.appendChild(mark);
+
+    }else{
+
+      let span=
+        document.createElement('span');
+
+      renderMarkdown(
+        span,
+        part
+      );
+
+      el.appendChild(span);
+    }
+  });
+}
+
+function applyChatSearch(type){
+
+  let data=getChatData(type);
+
+  let els=getSearchElements(type);
+
+  if(!els.input||!els.info||!els.box)return;
+
+  let query=
+    els.input.value.trim();
+
+  searchState[type].query=query;
+
+  let matches=[];
+
+  els.box
+    .querySelectorAll('.msgContent')
+    .forEach((content,index)=>{
+
+      let text=
+        content.innerText||content.textContent||'';
+
+      if(
+        query&&
+        text.toLowerCase().includes(
+          query.toLowerCase()
+        )
+      ){
+
+        matches.push(index);
+      }
+    });
+
+  els.box
+    .querySelectorAll('.msg')
+    .forEach(msg=>{
+
+      msg.style.outline='none';
+      msg.style.boxShadow='none';
+    });
+
+  if(!query){
+
+    els.info.textContent='';
+
+    return;
+  }
+
+  if(!matches.length){
+
+    els.info.textContent=
+      'No messages found for "'+
+      query+
+      '".';
+
+    return;
+  }
+
+  let idx=
+    searchState[type].index;
+
+  if(idx<0||idx>=matches.length){
+    idx=0;
+  }
+
+  searchState[type].index=idx;
+
+  els.info.textContent=
+    (idx+1)+
+    ' of '+
+    matches.length+
+    ' matching messages';
+
+  let messageIndex=
+    matches[idx];
+
+  let messages=
+    els.box.querySelectorAll('.msg');
+
+  let target=
+    messages[messageIndex];
+
+  if(target){
+
+    target.style.outline=
+      '2px solid #2563EB';
+
+    target.style.boxShadow=
+      '0 0 0 4px rgba(37,99,235,.10)';
+
+    target.scrollIntoView({
+      behavior:'smooth',
+      block:'center'
+    });
+  }
+}
+
+function performSearch(type){
+
+  searchState[type].index=0;
+
+  applyChatSearch(type);
+}
+
+function nextSearchResult(type){
+
+  let data=getChatData(type);
+
+  let els=getSearchElements(type);
+
+  let query=
+    els.input.value.trim();
+
+  if(!query){
+
+    els.input.focus();
+
+    return;
+  }
+
+  let count=0;
+
+  data.forEach(m=>{
+
+    if(
+      String(m.text||'')
+        .toLowerCase()
+        .includes(
+          query.toLowerCase()
+        )
+    ){
+      count++;
+    }
+  });
+
+  if(!count)return;
+
+  searchState[type].index=
+    (searchState[type].index+1)%count;
+
+  applyChatSearch(type);
+}
+
+function previousSearchResult(type){
+
+  let data=getChatData(type);
+
+  let els=getSearchElements(type);
+
+  let query=
+    els.input.value.trim();
+
+  if(!query){
+
+    els.input.focus();
+
+    return;
+  }
+
+  let count=0;
+
+  data.forEach(m=>{
+
+    if(
+      String(m.text||'')
+        .toLowerCase()
+        .includes(
+          query.toLowerCase()
+        )
+    ){
+      count++;
+    }
+  });
+
+  if(!count)return;
+
+  searchState[type].index=
+    searchState[type].index<=0
+      ?count-1
+      :searchState[type].index-1;
+
+  applyChatSearch(type);
+}
+
+function clearChatSearch(type){
+
+  let els=
+    getSearchElements(type);
+
+  if(!els.input)return;
+
+  els.input.value='';
+
+  searchState[type]={
+    query:'',
+    index:-1
+  };
+
+  applyChatSearch(type);
+
+  els.info.textContent='';
+}
+
+function setupSearch(type){
+
+  let els=
+    getSearchElements(type);
+
+  if(!els.input)return;
+
+  if(els.input.dataset.ready==='1'){
+    return;
+  }
+
+  els.input.dataset.ready='1';
+
+  els.input.addEventListener(
+    'input',
+    ()=>{
+      searchState[type].index=0;
+      applyChatSearch(type);
+    }
+  );
+
+  els.input.addEventListener(
+    'keydown',
+    e=>{
+
+      if(e.key==='Enter'){
+
+        e.preventDefault();
+
+        if(e.shiftKey){
+          previousSearchResult(type);
+        }else{
+          nextSearchResult(type);
+        }
+      }
+
+      if(e.key==='Escape'){
+        clearChatSearch(type);
+      }
+    }
+  );
+}
+
+function addSearchNavigationButtons(){
+
+  let generalInput=
+    document.getElementById('generalSearch');
+
+  let courseInput=
+    document.getElementById('courseSearch');
+
+  [generalInput,courseInput].forEach((input,index)=>{
+
+    if(!input||input.dataset.navReady==='1'){
+      return;
+    }
+
+    input.dataset.navReady='1';
+
+    let type=
+      index===0
+        ?'general'
+        :'course';
+
+    let parent=input.parentElement;
+
+    let next=createActionButton(
+      '↓',
+      ()=>nextSearchResult(type)
+    );
+
+    next.title='Next search result';
+
+    let prev=createActionButton(
+      '↑',
+      ()=>previousSearchResult(type)
+    );
+
+    prev.title='Previous search result';
+
+    next.style.cssText=
+      'background:var(--input);color:var(--text);padding:8px 10px;font-size:14px;border-radius:9px;font-weight:800';
+
+    prev.style.cssText=
+      'background:var(--input);color:var(--text);padding:8px 10px;font-size:14px;border-radius:9px;font-weight:800';
+
+    parent.insertBefore(prev,input.nextSibling);
+    parent.insertBefore(next,prev.nextSibling);
+  });
+}
+
+/* =========================
+   CHAT BOTTOM ARROW
+========================= */
+
+function isChatNearBottom(box){
+
+  if(!box)return true;
+
+  return (
+    box.scrollHeight-
+    box.scrollTop-
+    box.clientHeight
+  )<80;
+}
+
+function updateDownButton(type){
+
+  let box=
+    document.getElementById(
+      type==='general'
+        ?'generalMsgs'
+        :'courseMsgs'
+    );
+
+  let btn=
+    document.getElementById(
+      type==='general'
+        ?'generalDownBtn'
+        :'courseDownBtn'
+    );
+
+  if(!box||!btn)return;
+
+  btn.classList.toggle(
+    'hidden',
+    isChatNearBottom(box)
+  );
+}
+
+function scrollChatBottom(type){
+
+  let box=
+    document.getElementById(
+      type==='general'
+        ?'generalMsgs'
+        :'courseMsgs'
+    );
+
+  if(!box)return;
+
+  box.scrollTo({
+    top:box.scrollHeight,
+    behavior:'smooth'
+  });
+
+  setTimeout(()=>{
+    updateDownButton(type);
+  },300);
+}
+
+function setupChatScroll(type){
+
+  let box=
+    document.getElementById(
+      type==='general'
+        ?'generalMsgs'
+        :'courseMsgs'
+    );
+
+  if(!box)return;
+
+  if(box.dataset.scrollReady==='1'){
+
+    updateDownButton(type);
+
+    return;
+  }
+
+  box.dataset.scrollReady='1';
+
+  box.addEventListener(
+    'scroll',
+    ()=>{
+      updateDownButton(type);
+    },
+    {passive:true}
+  );
+
+  updateDownButton(type);
+}
+
+/* Make search and scroll controls available */
+setupSearch('general');
+setupSearch('course');
+addSearchNavigationButtons();
+
 applyTheme();
 render();
+
+setupSearch('general');
+setupSearch('course');
+addSearchNavigationButtons();
+
+setupChatScroll('general');
+setupChatScroll('course');
 
 if(window.lucide)lucide.createIcons();
 </script>
