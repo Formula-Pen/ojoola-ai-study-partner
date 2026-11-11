@@ -5489,6 +5489,54 @@ async function startCourseLive() {
       )
       .join("\n");
 
+          /* COURSE MATERIAL NOTES FOR LIVE SESSION */
+
+    let materialNotes = "";
+
+    try {
+      if (c.ref && ((c.pdfs || []).length || (c.pictures || []).length)) {
+
+        const noteKey = [
+          ...(c.pdfs || []).map(f => f && f.id),
+          ...(c.pictures || []).map(f => f && f.id)
+        ].join("|");
+
+        const store = safeJSON(
+          localStorage.getItem("ojoola_live_notes"),
+          {}
+        ) || {};
+
+        const cached = store[c.id];
+
+        if (cached && cached.key === noteKey && cached.notes) {
+          materialNotes = cached.notes;
+        } else {
+          liveSetStatus("Reading your course materials (first time only)…");
+
+          materialNotes = await callGemini(
+            "Study every attached PDF and picture carefully. Write detailed study notes that capture all key definitions, concepts, formulas, examples, steps, tables and diagrams. Organise the notes by file, and mention page numbers or section headings where you can. Be thorough and accurate. Do not add outside information.",
+            [],
+            fileParts(c),
+            null,
+            s => liveSetStatus(s),
+            new AbortController().signal
+          );
+
+          store[c.id] = { key: noteKey, notes: materialNotes };
+
+          try {
+            localStorage.setItem(
+              "ojoola_live_notes",
+              JSON.stringify(store)
+            );
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.warn("Could not prepare course material notes:", e);
+      liveSetStatus("Could not read materials. Continuing without them…");
+    }
+
 
     /* AI INSTRUCTIONS */
 
@@ -5515,7 +5563,7 @@ Keep spoken answers reasonably concise.
 
 Allow the student to interrupt you naturally and ask follow-up questions.
 
-RECENT COURSE CONVERSATION:
+COURSE MATERIAL NOTES (taken from the student's attached PDFs and pictures). Treat these as the main reference. If the notes do not cover a question, say so before adding general knowledge:  ${materialNotes || "No course materials are attached or enabled."}  RECENT COURSE CONVERSATION:
 
 ${history || "No previous messages."}
 `;
