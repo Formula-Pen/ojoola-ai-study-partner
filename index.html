@@ -2,341 +2,3155 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ojoola AI - Your AI Study Partner</title>
-<script src="https://unpkg.com/lucide@latest"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2563EB">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ọjọ́ọ̀la">
+<link rel="manifest" href="manifest.json">
+<title>Ọjọ́ọ̀la – Your AI Study Partner</title>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-:root{--bg:#F0F7FF;--card:#ffffff;--text:#0F172A;--muted:#64748B;--border:#DBEAFE;--input:#F1F5F9;--grad:linear-gradient(135deg,#2563EB,#06B6D4);--grad2:linear-gradient(90deg,#2563EB,#06B6D4)}
-body.dark{--bg:#0F172A;--card:#1E293B;--text:#F1F5F9;--muted:#94A3B8;--border:#334155;--input:#0F172A}
-body{background:var(--bg);color:var(--text);transition:.3s}
-button{cursor:pointer;border:none;font-family:inherit}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#f4f7fb;color:#172033}
+body.dark{background:#0f172a;color:#e5e7eb}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
 .hidden{display:none!important}
-#welcome{min-height:100vh;background:linear-gradient(180deg,#FFFFFF 0%,#EFF6FF 35%,#DBEAFE 55%,#2563EB 82%,#06B6D4 100%);color:#0F172A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;position:relative;overflow:hidden}
-.acad{position:absolute;font-size:30px;animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;z-index:1}
-@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-14px) rotate(4deg)}}
-.acad.jump{animation:jump .6s ease}
-@keyframes jump{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(-38px) rotate(20deg) scale(1.2)}100%{transform:translateY(0) rotate(360deg)}}
-.logoCircle{width:96px;height:96px;background:linear-gradient(135deg,#2563EB,#06B6D4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;box-shadow:0 14px 28px rgba(37,99,235,.35);z-index:2;animation:float 3.5s ease-in-out infinite}
-#welcome h1{font-size:28px;margin:18px 0 6px;z-index:2;line-height:1.2;color:#0F172A;white-space:nowrap}
-#welcome .subtitle{color:#475569;font-size:14px;z-index:2;white-space:nowrap;line-height:1.4;max-width:100%}
-.wBtn{width:100%;max-width:360px;background:linear-gradient(90deg,#2563EB,#06B6D4);color:white;font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:22px;z-index:2;box-shadow:0 10px 25px rgba(37,99,235,.3)}
-.wBtn2{width:100%;max-width:360px;background:white;color:#1D4ED8;border:2px solid #2563EB;font-weight:800;font-size:17px;padding:15px;border-radius:16px;margin-top:12px;z-index:2}
-.wHint{margin-top:16px;font-size:12px;color:#64748B;z-index:2}
-header{background:var(--grad);color:white;padding:18px 16px 22px;border-radius:0 0 24px 24px;position:sticky;top:0;z-index:10}
-.topRow{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.topRow h1{font-size:24px;display:flex;align-items:center;gap:8px}
-.topRow p{font-size:13px;opacity:.92;margin-top:4px}
-.setBtn{background:white;color:#1D4ED8;padding:9px 14px;border-radius:999px;font-weight:700;display:flex;align-items:center;gap:6px;font-size:14px}
-.wrap{padding:16px;max-width:900px;margin:0 auto;padding-bottom:90px}
-.card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:14px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(37,99,235,.06)}
-.card h3{font-size:17px;display:flex;align-items:center;gap:8px}
-.card p{color:var(--muted);font-size:14px;line-height:1.5;margin-top:6px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(min-width:700px){.grid{grid-template-columns:1fr 1fr 1fr}}
-.course{cursor:pointer;padding:16px 14px;display:flex;flex-direction:column;gap:6px;min-height:92px;justify-content:center;position:relative;overflow:hidden}
-.course:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad2)}
-.course .num{font-size:12px;font-weight:800;color:#2563EB;letter-spacing:.5px;text-transform:uppercase}
-.course .title{font-size:17px;font-weight:800;line-height:1.2}
-.course .sub{font-size:13px;color:var(--muted)}
-.course:active{transform:scale(.98)}
-.switchRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);border-radius:14px;padding:12px;margin-top:12px}
-.switch{width:52px;height:30px;background:#CBD5E1;border-radius:999px;position:relative;transition:.2s;flex-shrink:0}
-.switch:after{content:"";position:absolute;width:24px;height:24px;background:white;border-radius:50%;top:3px;left:3px;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-.switch.on{background:#2563EB}
-.switch.on:after{left:25px}
-input,textarea{width:100%;background:var(--input);border:1px solid var(--border);color:var(--text);padding:13px;border-radius:12px;font-size:15px;outline:none;margin-top:8px}
-textarea{min-height:80px;resize:vertical}
-.primary{background:var(--grad2);color:white;padding:14px;border-radius:12px;font-weight:800;width:100%;font-size:15px}
-.ghost{background:var(--input);color:var(--text);padding:12px;border-radius:12px;font-weight:700;width:100%;margin-top:8px}
-.smallBtn{background:#16A34A;color:white;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700}
-.editBtn{background:#2563EB;color:white;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;flex-shrink:0}
-.lockBox{background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.lockBox b{font-size:15px;color:var(--text)}
-.lockBox span{font-size:12px;color:var(--muted)}
-.toast{background:#DCFCE7;color:#166534;padding:10px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;margin-top:10px}
-.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 6px calc(10px + env(safe-area-inset-bottom));z-index:20}
-.nav button{background:none;color:var(--muted);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600}
-.nav button.active{color:#2563EB}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:12px 0}
-.modalBox{background:var(--card);width:100%;max-width:620px;max-height:none;overflow:visible;border-radius:24px;padding:20px;margin:auto 0}
-.seg{display:flex;background:var(--input);border-radius:12px;padding:4px;gap:4px;margin-top:10px}
-.seg button{flex:1;padding:10px;border-radius:9px;background:transparent;color:var(--muted);font-weight:700}
-.seg button.active{background:#2563EB;color:white}
-.chatList{display:flex;flex-direction:column;gap:10px;width:100%;overflow:visible;max-height:none}
-.msg{padding:12px 14px;border-radius:18px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-width:88%;overflow:visible}
-.msg.me{background:var(--grad2);color:white;margin-left:auto;margin-right:0;border-bottom-right-radius:4px;align-self:flex-end;text-align:left}
-.msg.ai{background:var(--input);color:var(--text);margin-right:auto;margin-left:0;border-bottom-left-radius:4px;align-self:flex-start;text-align:left}
-@media(min-width:700px){.msg.ai{max-width:82%}.msg.me{max-width:75%}}
-.fileRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px;gap:8px}
-.thumb{width:64px;height:64px;object-fit:cover;border-radius:10px}
-.flex{display:flex;gap:8px;align-items:center}
-.chatInputWrap{position:sticky;bottom:0;background:var(--card);padding:10px 0 4px;margin-top:12px}
+.wrap{max-width:900px;margin:auto;padding:18px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;box-shadow:0 5px 20px rgba(0,0,0,.05)}
+.dark .card{background:#172033;border-color:#263247}
+.flex{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.column{flex-direction:column}
+.center{text-align:center}
+.muted{color:#64748b;font-size:13px}
+.dark .muted{color:#94a3b8}
+.primary{background:#2563eb;color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:700}
+.secondary{background:#e8eefc;color:#2563eb;border:0;border-radius:12px;padding:11px 15px;font-weight:700}
+.dark .secondary{background:#263b68;color:#bfdbfe}
+.danger{background:#fee2e2;color:#b91c1c;border:0;border-radius:12px;padding:11px 15px;font-weight:700}
+.iconBtn{width:42px;height:42px;border:0;border-radius:12px;background:#eef3fa;color:#1e3a8a;font-size:19px}
+.dark .iconBtn{background:#243047;color:#dbeafe}
+input,textarea{width:100%;border:1px solid #dbe3ef;border-radius:12px;padding:12px;background:#fff;color:#172033;outline:none}
+input:focus,textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.dark input,.dark textarea{background:#101827;color:#e5e7eb;border-color:#334155}
+textarea{resize:vertical}
+h1,h2,h3,p{margin-top:0}
+#app{min-height:100vh}
+#topHeader{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb}
+.dark #topHeader{background:rgba(15,23,42,.94);border-color:#263247}
+.headerInner{max-width:900px;margin:auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-size:19px;font-weight:800;color:#2563eb}
+.badge{font-size:11px;background:#e8eefc;color:#2563eb;padding:6px 9px;border-radius:999px;font-weight:700}
+.dark .badge{background:#263b68;color:#bfdbfe}
+main{padding-bottom:90px}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid #e5e7eb}
+.dark .nav{background:#111827;border-color:#263247}
+.navInner{max-width:900px;margin:auto;display:flex;justify-content:space-around;padding:8px}
+.nav button{background:none;border:0;padding:8px 15px;color:#64748b;font-size:12px}
+.nav button.active{color:#2563eb;font-weight:800}
+.welcome{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.welcomeBox{max-width:480px;text-align:center}
+.logo{width:82px;height:82px;margin:0 auto 18px;border-radius:24px;background:linear-gradient(135deg,#2563eb,#60a5fa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;box-shadow:0 12px 30px rgba(37,99,235,.25)}
+.heroTitle{font-size:30px;font-weight:900;margin-bottom:8px}
+.heroText{color:#64748b;line-height:1.6}
+.dark .heroText{color:#94a3b8}
+.courseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.courseBox{border:1px solid #dbe3ef;background:#fff;border-radius:16px;padding:15px;min-height:110px;text-align:left;transition:.2s}
+.courseBox:hover{transform:translateY(-2px);border-color:#2563eb}
+.dark .courseBox{background:#172033;border-color:#334155}
+.courseCode{font-size:11px;color:#2563eb;font-weight:800;margin-bottom:8px}
+.courseName{font-weight:800;line-height:1.3}
+.courseRef{font-size:11px;color:#64748b;margin-top:8px}
+.chatArea{height:calc(100vh - 230px);min-height:300px;overflow-y:auto;padding:15px;scroll-behavior:smooth}
+.message{display:flex;margin:9px 0}
+.message.user{justify-content:flex-end}
+.bubble{max-width:85%;padding:11px 13px;border-radius:16px;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere}
+.message.ai .bubble{background:#eef3f9;border-bottom-left-radius:5px}
+.message.user .bubble{background:#2563eb;color:#fff;border-bottom-right-radius:5px}
+.dark .message.ai .bubble{background:#263247}
+.messageText p:last-child{margin-bottom:0}
+.messageText strong{font-weight:800}
+.messageText em{font-style:italic}
+.messageActions{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.messageActions button{border:0;background:transparent;color:#64748b;font-size:11px;padding:4px 5px}
+.messageActions button:hover{color:#2563eb}
+.dark .messageActions button{color:#94a3b8}
+.chatInputWrap{position:sticky;bottom:0;background:rgba(244,247,251,.96);padding:10px 0}
+.dark .chatInputWrap{background:rgba(15,23,42,.96)}
+.inputRow{display:flex;gap:8px;align-items:flex-end}
+.inputRow textarea{min-height:48px;max-height:150px;resize:vertical}
+.sendBtn{width:50px;height:48px;flex:0 0 50px;border:0;border-radius:14px;background:#2563eb;color:#fff;font-size:18px}
+.stopBtn{background:#dc2626}
+.searchBar{display:flex;gap:8px;margin-bottom:10px}
+.searchBar input{flex:1}
+.searchCount{font-size:11px;color:#64748b;padding:10px 2px}
+.highlight{background:#fde68a;color:#111827;border-radius:3px}
+.downBtn{position:fixed;right:20px;bottom:95px;width:42px;height:42px;border:0;border-radius:50%;background:#2563eb;color:#fff;box-shadow:0 5px 15px rgba(0,0,0,.2);z-index:15}
+.status{font-size:12px;color:#64748b;padding:6px 10px;white-space:pre-wrap}
+.dark .status{color:#94a3b8}
+.typing{display:inline-flex;gap:4px}
+.typing span{width:6px;height:6px;background:#64748b;border-radius:50%;animation:bounce 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:flex-end}
+.modalBox{background:#fff;width:100%;max-height:90vh;border-radius:22px 22px 0 0;padding:20px;overflow-y:auto}
+.dark .modalBox{background:#172033}
+.fileList{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.fileItem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #dbe3ef;border-radius:10px;min-width:0}
+.dark .fileItem{border-color:#334155}
+.pageHeader{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pageHeader h2{margin:0;font-size:20px}
+.infoSection{margin-top:15px}
+.infoSection h3{font-size:14px;margin-bottom:8px}
+.installBox{background:#eff6ff;border:1px solid #bfdbfe;border-radius:15px;padding:13px}
+.dark .installBox{background:#172d4d;border-color:#31598d}
+.playback{margin-top:8px;padding:9px;border:1px solid #dbe3ef;border-radius:12px;background:rgba(255,255,255,.7)}
+.dark .playback{border-color:#334155;background:#111827}
+.playbackTop{display:flex;align-items:center;gap:7px}
+.playback button{border:0;background:transparent;color:#2563eb;font-size:16px}
+.playback input[type=range]{flex:1;min-width:50px}
+.time{font-size:10px;color:#64748b;min-width:68px;text-align:center}
+.courseThumb{width:48px;height:48px;object-fit:cover;border-radius:8px}
+.errorPanel{position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;background:#fff1f2;color:#881337;border:1px solid #fb7185;border-radius:14px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);max-height:45vh;overflow:auto}
+.errorPanel pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace;margin:9px 0}
+.errorPanel button{border:0;border-radius:8px;padding:8px 10px;background:#9f1239;color:#fff}
+.errorPanel .errorClose{background:#ffe4e6;color:#881337;font-size:18px;padding:4px 10px}
+.dark .errorPanel{background:#3b1020;color:#ffe4e6;border-color:#fb7185}
+@media(max-width:600px){
+  .courseGrid{grid-template-columns:repeat(2,1fr)}
+  .bubble{max-width:92%}
+  .wrap{padding:14px}
+  .heroTitle{font-size:26px}
+}
 </style>
 </head>
+
 <body>
 
-<div id="welcome">
-  <span class="acad" style="top:10%;left:10%;animation-delay:0s" onclick="bounce(this)">📚</span>
-  <span class="acad" style="top:14%;right:12%;animation-delay:.6s" onclick="bounce(this)">✏️</span>
-  <span class="acad" style="top:38%;left:4%;animation-delay:1.2s" onclick="bounce(this)">📝</span>
-  <span class="acad" style="top:34%;right:5%;animation-delay:1.8s" onclick="bounce(this)">🔬</span>
-  <span class="acad" style="top:68%;left:8%;animation-delay:.3s" onclick="bounce(this)">🧮</span>
-  <span class="acad" style="top:72%;right:9%;animation-delay:1s" onclick="bounce(this)">📐</span>
-  <span class="acad" style="top:82%;left:42%;animation-delay:1.5s" onclick="bounce(this)">💡</span>
-  <span class="acad" style="top:8%;left:46%;animation-delay:2s" onclick="bounce(this)">🎓</span>
-  <div class="logoCircle">🎓</div>
-  <h1>Welcome to Ojoola AI</h1>
-  <div class="subtitle">Your AI Study Partner - Learn Smarter, Not Harder.</div>
-  <button class="wBtn" onclick="goHome()">🏠 Proceed to Home Page</button>
-  <button class="wBtn2" onclick="goStudy()">📚 Proceed to Study</button>
-  <div class="wHint">Tap any book, pen or lightbulb - it will jump ✨</div>
+<div id="welcome" class="welcome">
+  <div class="welcomeBox">
+    <div class="logo">O</div>
+    <div class="heroTitle">Ọjọ́ọ̀la</div>
+    <div class="heroText">Your AI Study Partner</div>
+    <br>
+    <button class="primary" onclick="enterApp()">Get Started</button>
+  </div>
 </div>
 
 <div id="app" class="hidden">
-<header>
-  <div class="topRow">
-    <div><h1>🎓 Ojoola AI</h1><p>Your AI Study Partner</p></div>
-    <button class="setBtn" onclick="openSettings()"><i data-lucide="settings" style="width:16px;height:16px"></i> Settings</button>
+
+<header id="topHeader">
+  <div class="headerInner">
+    <div class="brand">Ọjọ́ọ̀la</div>
+    <div class="flex">
+      <span id="modelBadge" class="badge">AI READY</span>
+      <button class="iconBtn" onclick="openSettings()">⚙</button>
+    </div>
   </div>
 </header>
-<div class="wrap" id="homeView">
+
+<main>
+
+<section id="homeView" class="wrap">
   <div class="card">
-    <h3><i data-lucide="sparkles" style="color:#2563EB"></i> How Referencing Works</h3>
-    <p>Turn <b style="color:var(--text)">Referencing ON</b> inside a course to let AI use it. Turn it OFF to exclude it. Default is ON for all courses.</p>
-    <button class="primary" style="margin-top:12px" onclick="turnAllOn()">Turn All Referencing ON ✅</button>
-    <div id="allOnToast" class="toast hidden">All Referencing ON ✅</div>
+    <h2>Welcome back</h2>
+    <p class="muted">Choose a course or start a general conversation with Ọjọ́ọ̀la.</p>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:14px">
-    <button class="primary" style="flex:1" onclick="showView('home')">📚 My Courses</button>
-    <button class="ghost" style="flex:1;margin:0" onclick="goGeneral()">💬 General Chat</button>
+
+  <br>
+
+  <div class="card">
+    <div class="flex between">
+      <div>
+        <h3 style="margin-bottom:4px">My Courses</h3>
+        <div class="muted">15 course spaces</div>
+      </div>
+      <button class="secondary" onclick="openCourseManager()">Edit</button>
+    </div>
+
+    <br>
+    <div id="courseGrid" class="courseGrid"></div>
   </div>
-  <div class="grid" id="courseGrid"></div>
-</div>
-<div class="wrap hidden" id="generalView">
-  <div class="card"><h3>💬 General Chat</h3><p>Ask anything. This chat uses courses with Referencing ON.</p><p id="modelBadge" style="font-size:12px;font-weight:700;color:#2563EB;margin-top:6px">Model: Auto-Pick - will find best flash model for your key</p></div>
-  <div class="card"><div id="generalMsgs" class="chatList"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
-    <div class="chatInputWrap"><textarea id="generalInput" placeholder="Ask me anything..."></textarea>
-    <button class="primary" id="generalSendBtn" onclick="sendGeneral()">Send Message 🚀</button></div>
+
+  <br>
+
+  <div class="card" onclick="openGeneral()" style="cursor:pointer">
+    <div class="flex">
+      <div style="font-size:28px">💬</div>
+      <div>
+        <h3 style="margin-bottom:4px">General Chat</h3>
+        <div class="muted">Ask anything outside a specific course.</div>
+      </div>
+    </div>
   </div>
-</div>
-<div class="nav">
-  <button class="active" id="navHome" onclick="showView('home')"><i data-lucide="home"></i>Home</button>
-  <button id="navGeneral" onclick="showView('general')"><i data-lucide="message-circle"></i>General Chat</button>
-  <button onclick="openSettings()"><i data-lucide="settings"></i>Settings</button>
-</div>
+</section>
+
+<section id="generalView" class="wrap hidden">
+  <div class="pageHeader">
+    <button class="iconBtn" onclick="goHome()">←</button>
+    <div>
+      <h2>General Chat</h2>
+      <div class="muted">Your general AI conversation</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="searchBar">
+      <input id="generalSearch" placeholder="Search this conversation..." oninput="runGeneralSearch()">
+      <button class="secondary" onclick="clearGeneralSearch()">✕</button>
+    </div>
+
+    <div id="generalSearchCount" class="searchCount"></div>
+    <div id="generalMsgs" class="chatArea"></div>
+    <div id="generalStatus" class="status hidden"></div>
+
+    <div class="chatInputWrap">
+      <div class="inputRow">
+        <textarea id="generalInput" placeholder="Ask Ọjọ́ọ̀la anything..." rows="1"></textarea>
+        <button id="generalSendBtn" class="sendBtn" onclick="sendGeneral()">➤</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="courseInfoView" class="wrap hidden">
+  <div class="pageHeader">
+    <button class="iconBtn" onclick="goHome()">←</button>
+
+    <div style="flex:1">
+      <h2 id="courseInfoTitle">Course</h2>
+      <div id="courseInfoCode" class="muted"></div>
+    </div>
+
+    <button class="iconBtn" onclick="openCourseEditor()">✎</button>
+  </div>
+
+  <div class="card">
+    <div id="courseInfoDescription" class="muted"></div>
+
+    <div class="infoSection">
+      <h3>Course Reference</h3>
+
+      <div class="flex between">
+        <div>
+          <div style="font-weight:700">Use course materials as reference</div>
+          <div class="muted">
+            When enabled, attached PDFs and pictures are included with course questions.
+          </div>
+        </div>
+
+        <input id="courseRefToggle" type="checkbox"
+          style="width:20px;height:20px"
+          onchange="toggleCourseReference()">
+      </div>
+    </div>
+
+    <div class="infoSection">
+      <h3>PDF Materials</h3>
+      <div id="coursePdfList" class="fileList"></div>
+      <br>
+
+      <label class="secondary" style="display:inline-block">
+        + Add PDF
+        <input id="coursePdfInput"
+          type="file"
+          accept="application/pdf"
+          multiple
+          hidden
+          onchange="addCoursePDFs(this.files)">
+      </label>
+    </div>
+
+    <div class="infoSection">
+      <h3>Pictures</h3>
+      <div id="coursePictureList" class="fileList"></div>
+      <br>
+
+      <label class="secondary" style="display:inline-block">
+        + Add Pictures
+        <input id="coursePictureInput"
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onchange="addCoursePictures(this.files)">
+      </label>
+    </div>
+
+    <br>
+    <button class="primary" style="width:100%" onclick="proceedToCourseChat()">
+      Proceed to Conversation →
+    </button>
+  </div>
+</section>
+
+<section id="courseChatView" class="wrap hidden">
+  <div class="pageHeader">
+    <button class="iconBtn" onclick="backToCourseInfo()">←</button>
+
+    <div style="flex:1">
+      <h2 id="courseChatTitle">Course Chat</h2>
+      <div id="courseChatSubtitle" class="muted"></div>
+    </div>
+
+    <button class="iconBtn" onclick="clearCourseChat()">🗑</button>
+  </div>
+
+  <div class="card">
+    <div class="searchBar">
+      <input id="courseSearch"
+        placeholder="Search this course conversation..."
+        oninput="runCourseSearch()">
+      <button class="secondary" onclick="clearCourseSearch()">✕</button>
+    </div>
+
+    <div id="courseSearchCount" class="searchCount"></div>
+    <div id="courseMsgs" class="chatArea"></div>
+    <div id="courseStatus" class="status hidden"></div>
+
+    <div class="chatInputWrap">
+      <div class="inputRow">
+        <textarea id="courseInput" placeholder="Ask about this course..." rows="1"></textarea>
+        <button id="courseSendBtn" class="sendBtn" onclick="sendCourseChat()">➤</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav id="bottomNav" class="nav">
+  <div class="navInner">
+    <button id="navHome" class="active" onclick="goHome()">⌂<br>Home</button>
+    <button id="navGeneral" onclick="openGeneral()">💬<br>General</button>
+    <button onclick="openSettings()">⚙<br>Settings</button>
+  </div>
+</nav>
+
 </div>
 
-<div id="courseModal" class="modal hidden"><div class="modalBox">
-  <div class="flex" style="justify-content:space-between"><h2 id="modalTitle">Course 1</h2><button class="ghost" style="width:auto;margin:0;padding:8px 12px" onclick="closeCourse()">Close ✕</button></div>
-  <p style="color:var(--muted);font-size:14px;margin-top:6px">Fields are locked. Tap Edit to change, then Save to lock again.</p>
-  <div id="courseToast" class="toast hidden">Saved 🔒</div>
-  <label style="font-weight:700;margin-top:14px;display:block">Course Name 🔒</label>
-  <div id="nameView" class="lockBox"><div><b id="nameText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
-  <div id="nameEdit" class="hidden"><input id="courseName" placeholder="e.g. Anatomy 101"></div>
-  <label style="font-weight:700;margin-top:12px;display:block">Course Code 🔒</label>
-  <div id="codeView" class="lockBox"><div><b id="codeText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
-  <div id="codeEdit" class="hidden"><input id="courseCode" placeholder="e.g. ANA 101"></div>
-  <div id="saveCourseRow" class="hidden"><button class="primary" style="margin-top:10px" onclick="saveCourseName()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelCourseEdit()">Cancel</button></div>
-  <div class="switchRow"><div><b>Referencing</b><div style="font-size:12px;color:var(--muted)" id="refLabel">AI will use this course</div></div><div class="switch on" id="refSwitch" onclick="toggleRef()"></div></div>
-  <h3 style="margin-top:18px">📄 PDFs - Max 4</h3>
-  <div id="pdfList"></div>
-  <h3 style="margin-top:16px">🖼️ Pictures - Many Allowed</h3>
-  <button class="smallBtn" onclick="document.getElementById('picInput').click()">+ Add Pictures</button>
-  <input type="file" id="picInput" accept="image/*" multiple class="hidden" onchange="addPics(event)">
-  <div id="picList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
-  <h3 style="margin-top:18px">💬 Chat For This Course Only</h3>
-  <div id="courseMsgs" class="chatList" style="margin-top:8px"></div>
-  <div class="chatInputWrap"><textarea id="courseInput" placeholder="Ask about this course..."></textarea>
-  <button class="primary" onclick="sendCourseChat()">Send Message 🚀</button>
-  <button class="ghost" onclick="clearCourseChat()">Clear Chat</button></div>
-</div></div>
+<div id="settingsModal"
+ class="modal hidden"
+ onclick="if(event.target===this)closeSettings()">
 
-<div id="settingsModal" class="modal hidden"><div class="modalBox">
-  <h2>Settings</h2>
-  <div class="card" style="margin-top:14px">
-    <h3>🎨 Appearance</h3>
-    <div class="seg"><button id="thSystem" onclick="setTheme('system')">System</button><button id="thLight" onclick="setTheme('light')">Light</button><button id="thDark" onclick="setTheme('dark')">Dark</button></div>
-    <p>System follows your phone. Light is bright. Dark is navy.</p>
+  <div class="modalBox">
+
+    <div class="flex between">
+      <h2>Settings</h2>
+      <button class="iconBtn" onclick="closeSettings()">✕</button>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <h3>Gemini API Key</h3>
+
+      <p class="muted">
+        Your key is stored locally on this device. For a public app,
+        use a secure backend instead of exposing a shared key in browser code.
+      </p>
+
+      <input id="apiKeyInput"
+        type="password"
+        placeholder="Paste Gemini API key"
+        autocomplete="off">
+
+      <br><br>
+
+      <button class="primary" onclick="saveApiKey()">Save API Key</button>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <h3>Appearance</h3>
+
+      <div class="flex between">
+        <span>Dark mode</span>
+        <input id="darkToggle"
+          type="checkbox"
+          style="width:20px;height:20px"
+          onchange="toggleDarkMode()">
+      </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <h3>App Installation</h3>
+
+      <div class="installBox">
+        <div style="font-weight:700">Install Ọjọ́ọ̀la</div>
+
+        <div class="muted" style="margin:5px 0 10px">
+          Install Ọjọ́ọ̀la on your phone like a normal app.
+        </div>
+
+        <button id="installBtn"
+          class="primary"
+          onclick="installApp()">Install App</button>
+
+        <div id="installMessage"
+          class="muted"
+          style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <h3>Data</h3>
+      <button class="danger" onclick="clearAllData()">Clear Local App Data</button>
+    </div>
+
   </div>
-  <div class="card">
-    <h3>🔑 Gemini API Key 🔒</h3>
-    <p>Locked by default. Tap Edit to change, then Save to lock again. Saved only in YOUR browser.</p>
-    <div id="keyView" class="lockBox"><div><b id="keyText">••••••••</b><br><span id="keyStatus">❌ No key yet</span></div><button class="editBtn" onclick="editKey()">✏️ Edit</button></div>
-    <div id="keyEdit" class="hidden"><input id="apiKeyInput" type="password" placeholder="AIza..."><button class="primary" style="margin-top:10px" onclick="saveKey()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelKeyEdit()">Cancel</button></div>
-    <div id="keyToast" class="toast hidden">Saved 🔒</div>
-    <button class="primary" style="margin-top:12px;background:#0F172A" onclick="testConnection()">🔍 Test Connection - Is My Key Working?</button>
-    <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
-    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - app finds the best flash model for your key every time. No hardcoded model.</p>
+</div>
+
+<div id="courseManagerModal"
+ class="modal hidden"
+ onclick="if(event.target===this)closeCourseManager()">
+
+  <div class="modalBox">
+
+    <div class="flex between">
+      <h2>Edit Courses</h2>
+      <button class="iconBtn" onclick="closeCourseManager()">✕</button>
+    </div>
+
+    <p class="muted">
+      Edit the names and codes of your 15 course spaces.
+    </p>
+
+    <div id="courseEditorList"></div>
+
+    <br>
+
+    <button class="primary"
+      style="width:100%"
+      onclick="saveCourseNames()">Save Courses</button>
+
   </div>
-  <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
-  <button class="ghost" onclick="closeSettings()">Close</button>
-</div></div>
+</div>
+
+<div id="courseEditorModal"
+ class="modal hidden"
+ onclick="if(event.target===this)closeCourseEditor()">
+
+  <div class="modalBox">
+
+    <div class="flex between">
+      <h2>Edit Course</h2>
+      <button class="iconBtn" onclick="closeCourseEditor()">✕</button>
+    </div>
+
+    <br>
+
+    <input id="editCourseName" placeholder="Course name">
+    <br><br>
+
+    <input id="editCourseCode" placeholder="Course code">
+    <br><br>
+
+    <textarea id="editCourseDescription"
+      rows="4"
+      placeholder="Course description"></textarea>
+
+    <br><br>
+
+    <button class="primary" onclick="saveCurrentCourseEdit()">
+      Save Changes
+    </button>
+
+  </div>
+</div>
+
+<div id="appErrorPanel"
+ class="errorPanel hidden"
+ role="alert"
+ aria-live="assertive">
+
+  <div class="flex between">
+    <strong>Ọjọ́ọ̀la detected an error</strong>
+
+    <button class="errorClose"
+      onclick="hideAppError()"
+      aria-label="Close error">✕</button>
+  </div>
+
+  <pre id="appErrorDetails"></pre>
+
+  <button onclick="copyAppError()">Copy error details</button>
+</div>
 
 <script>
-let raw = JSON.parse(localStorage.getItem('ojoola_courses')||'null');
-let courses;
-if(raw && raw.length===15){ courses = raw.map(c=>({name:c.name||'',code:c.code||'',pdfs:c.pdfs||[null,null,null,null],pics:c.pics||[],ref:true,chat:c.chat||[]})); } else { courses = Array.from({length:15},()=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]})); }
-let current = 0;
-let theme = localStorage.getItem('ojoola_theme')||'system';
-let apiKey = localStorage.getItem('ojoola_key')||'';
-let cachedModel = null;
-let cachedModelTime = 0;
-function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
-function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
-function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
-function applyTheme(){document.body.classList.remove('dark');let t=theme;if(t==='system') t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(t==='dark') document.body.classList.add('dark');document.getElementById('thSystem').className=theme==='system'?'active':'';document.getElementById('thLight').className=theme==='light'?'active':'';document.getElementById('thDark').className=theme==='dark'?'active':''}
-function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
-if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
-function goWelcome(){document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden');window.scrollTo(0,0)}
-function enterApp(view){
-  document.getElementById('welcome').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  showView(view); render();
-  try{ history.pushState({page:'app',view:view},'', '#app'); }catch(e){}
-  window.scrollTo(0,0);
+"use strict";
+
+/* Error reporting */
+let lastAppError="";
+
+function reportAppError(message,source="",line="",column="",stack=""){
+  try{
+    const safeSource=String(source||"")
+      .replace(/[?&](key|api_key|token)=[^\s&]*/gi,"?$1=[redacted]");
+
+    lastAppError=[
+      "Message: "+String(message||"Unknown error"),
+      safeSource?"File: "+safeSource:"",
+      line?"Line: "+line:"",
+      column?"Column: "+column:"",
+      stack?"Stack: "+String(stack).slice(0,5000):""
+    ].filter(Boolean).join("\n");
+
+    $("appErrorDetails").textContent=lastAppError;
+    $("appErrorPanel").classList.remove("hidden");
+  }catch(_){}
 }
-function goHome(){ enterApp('home'); }
-function goStudy(){ enterApp('home'); }
-function goGeneral(){ enterApp('general'); }
-window.addEventListener('popstate', function(e){
-  if(!e.state || e.state.page!=='app'){ goWelcome(); }
+
+function hideAppError(){
+  $("appErrorPanel").classList.add("hidden");
+}
+
+async function copyAppError(){
+  if(!lastAppError)return;
+
+  try{
+    await navigator.clipboard.writeText(lastAppError);
+  }catch(_){
+    const t=document.createElement("textarea");
+    t.value=lastAppError;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    t.remove();
+  }
+}
+
+window.addEventListener("error",e=>
+  reportAppError(
+    e.message,
+    e.filename,
+    e.lineno,
+    e.colno,
+    e.error?.stack
+  )
+);
+
+window.addEventListener("unhandledrejection",e=>{
+  const r=e.reason;
+  reportAppError(
+    r?.message||String(r),
+    "",
+    "",
+    "",
+    r?.stack
+  );
 });
-function showView(v){document.getElementById('homeView').classList.toggle('hidden',v!=='home');document.getElementById('generalView').classList.toggle('hidden',v!=='general');document.getElementById('navHome').classList.toggle('active',v==='home');document.getElementById('navGeneral').classList.toggle('active',v==='general')}
-function turnAllOn(){courses.forEach(c=>c.ref=true);save();render();showToast('allOnToast')}
-function render(){let g=document.getElementById('courseGrid');g.innerHTML='';courses.forEach((c,i)=>{let display=c.name?c.name:'Course '+(i+1);let sub=c.name?(c.code?c.code:'Tap to open'):'Tap to open';let d=document.createElement('div');d.className='card course';d.onclick=()=>openCourse(i);d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';g.appendChild(d)});if(window.lucide) lucide.createIcons()}
-function openCourse(i){current=i;let c=courses[i];document.getElementById('modalTitle').textContent=c.name||('Course '+(i+1));lockCourseFields();updateRefUI();renderPdfs();renderPics();renderCourseChat();document.getElementById('courseModal').classList.remove('hidden');document.getElementById('courseModal').scrollTop=0}
-function closeCourse(){document.getElementById('courseModal').classList.add('hidden');render()}
-function lockCourseFields(){let c=courses[current];document.getElementById('nameText').textContent=c.name||'Not set yet';document.getElementById('codeText').textContent=c.code||'Not set yet';document.getElementById('courseName').value=c.name;document.getElementById('courseCode').value=c.code;document.getElementById('nameView').classList.remove('hidden');document.getElementById('codeView').classList.remove('hidden');document.getElementById('nameEdit').classList.add('hidden');document.getElementById('codeEdit').classList.add('hidden');document.getElementById('saveCourseRow').classList.add('hidden')}
-function editCourseFields(){document.getElementById('nameView').classList.add('hidden');document.getElementById('codeView').classList.add('hidden');document.getElementById('nameEdit').classList.remove('hidden');document.getElementById('codeEdit').classList.remove('hidden');document.getElementById('saveCourseRow').classList.remove('hidden');document.getElementById('courseName').focus()}
-function cancelCourseEdit(){lockCourseFields()}
-function saveCourseName(){courses[current].name=document.getElementById('courseName').value.trim();courses[current].code=document.getElementById('courseCode').value.trim();save();document.getElementById('modalTitle').textContent=courses[current].name||('Course '+(current+1));lockCourseFields();showToast('courseToast')}
-function updateRefUI(){let on=courses[current].ref;document.getElementById('refSwitch').className='switch '+(on?'on':'');document.getElementById('refLabel').textContent=on?'AI will use this course':'AI will skip this course'}
-function toggleRef(){courses[current].ref=!courses[current].ref;save();updateRefUI()}
-function renderPdfs(){let el=document.getElementById('pdfList');el.innerHTML='';courses[current].pdfs.forEach((p,idx)=>{let row=document.createElement('div');row.className='fileRow';row.innerHTML='<span><b>PDF '+(idx+1)+':</b> '+(p?p.name:'Empty')+'</span>';let b=document.createElement('button');b.className='smallBtn';b.textContent=p?'Replace':'Upload PDF';b.onclick=()=>{let inp=document.createElement('input');inp.type='file';inp.accept='application/pdf';inp.onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{courses[current].pdfs[idx]={name:f.name,data:r.result};save();renderPdfs()};r.readAsDataURL(f)};inp.click()};row.appendChild(b);el.appendChild(row)})}
-function addPics(e){Array.from(e.target.files).forEach(f=>{let r=new FileReader();r.onload=()=>{courses[current].pics.push({name:f.name,data:r.result});save();renderPics()};r.readAsDataURL(f)});e.target.value=''}
-function renderPics(){let el=document.getElementById('picList');el.innerHTML='';courses[current].pics.forEach((p,idx)=>{let w=document.createElement('div');w.style.position='relative';w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';el.appendChild(w)})}
-function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
-function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
-async function testConnection(){
-  let el=document.getElementById('testResult');
-  if(!apiKey){el.textContent='❌ No key saved yet. Tap Edit and paste your key.';el.style.color='#DC2626';return}
-  el.textContent='Testing... please wait...';el.style.color='#64748B';
-  try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey);
-    let j=await res.json();
-    if(j.error){el.textContent='❌ Key FAILED: '+j.error.message;el.style.color='#DC2626';return}
-    let names=(j.models||[]).map(m=>m.name.replace('models/','')).filter(n=>n.includes('flash')).slice(0,5).join(', ');
-    el.textContent='✅ Key WORKS! Found: '+names;el.style.color='#16A34A';
-  }catch(e){el.textContent='❌ Network error: '+e.message;el.style.color='#DC2626'}
+
+const $=id=>document.getElementById(id);
+
+const uid=()=>Date.now()+"_"+Math.random().toString(36).slice(2,9);
+
+function escapeHTML(s){
+  return String(s??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 }
-// *** AUTO-PICK - NO HARDCODED MODEL. Ask Google what flash models work for THIS key, pick best one. ***
-function scoreModel(name){
-  let n=name.toLowerCase();
-  if(n.includes('tts')||n.includes('image')||n.includes('embedding')||n.includes('preview-tts')||n.includes('robotics')||n.includes('veo')||n.includes('imagen')) return -100;
-  if(!n.includes('flash')) return -100;
-  if(n.includes('latest')) return 85;
-  if(n.includes('3.8-flash') && !n.includes('lite')) return 100;
-  if(n.includes('3-flash') && !n.includes('lite')) return 95;
-  if(n.includes('2.5-flash') && !n.includes('lite')) return 40;
-  if(n.includes('2.0-flash')) return 30;
-  if(n.includes('flash') && n.includes('lite')) return 60;
-  if(n.includes('flash')) return 70;
-  return 0;
-}
-async function getBestModel(){
-  if(cachedModel && (Date.now()-cachedModelTime)<60000) return cachedModel;
-  let controller=new AbortController();
-  let timer=setTimeout(()=>controller.abort(),8000);
+
+function safeJSON(value,fallback){
   try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey,{signal:controller.signal});
-    clearTimeout(timer);
-    let j=await res.json().catch(()=>({}));
-    if(j.error) throw new Error('Google said: '+(j.error.message||'models list failed'));
-    let cands=(j.models||[]).map(m=>{
-      let nm=(m.name||'').replace('models/','');
-      let supports=m.supportedGenerationMethods||[];
-      let canGen=supports.length===0 || supports.includes('generateContent');
-      return {name:nm,score:scoreModel(nm),canGen:canGen};
-    }).filter(x=>x.canGen && x.score>0);
-    cands.sort((a,b)=>b.score-a.score);
-    if(!cands.length) throw new Error('Google returned no flash model for this key. Create a new key in Google AI Studio.');
-    cachedModel=cands[0].name;
-    cachedModelTime=Date.now();
-    let badge=document.getElementById('modelBadge');
-    if(badge) badge.textContent='Model: Auto-Picked - '+cachedModel+' (from your key)';
-    return cachedModel;
-  }catch(e){
-    clearTimeout(timer);
-    if(cachedModel) return cachedModel;
-    throw e;
+    const x=JSON.parse(value);
+    return x??fallback;
+  }catch(_){
+    return fallback;
   }
 }
-async function tryOneModel(modelName, parts){
-  let controller=new AbortController();
-  let timer=setTimeout(()=>controller.abort(),10000);
+
+function saveJSON(key,value){
   try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+modelName+':generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
-    clearTimeout(timer);
-    let j=await res.json().catch(()=>({}));
-    if(!res.ok || j.error){
-      let msg=(j.error && j.error.message) || ('HTTP '+res.status);
-      if(msg.toLowerCase().includes('api key') || msg.includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
-      throw new Error('Google said: '+res.status+' - '+msg);
+    localStorage.setItem(key,JSON.stringify(value));
+    return true;
+  }catch(e){
+    alert("This device may be out of storage space. Remove some large PDFs or pictures and try again.");
+    reportAppError("Could not save local data: "+e.message);
+    return false;
+  }
+}
+
+function trimHistory(h,max=20){
+  return h.slice(-max);
+}
+
+function saveGeneral(){
+  saveJSON("ojoola_general_chat",generalChat);
+}
+
+function saveCourses(){
+  saveJSON("ojoola_courses",courses);
+}
+
+function scrollToBottom(id){
+  const box=$(id);
+  if(!box)return;
+
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      box.scrollTop=box.scrollHeight;
+    });
+  });
+}
+
+function isNearBottom(box){
+  return box.scrollHeight-box.scrollTop-box.clientHeight<150;
+}
+
+function setPage(page,opts={}){
+  const map={
+    home:"homeView",
+    general:"generalView",
+    courseInfo:"courseInfoView",
+    courseChat:"courseChatView"
+  };
+
+  Object.values(map).forEach(id=>
+    $(id).classList.add("hidden")
+  );
+
+  $(map[page]||map.home).classList.remove("hidden");
+
+  $("bottomNav").style.display=
+    (page==="courseInfo"||page==="courseChat")
+      ?"none"
+      :"block";
+
+  $("navHome").classList.toggle("active",page==="home");
+  $("navGeneral").classList.toggle("active",page==="general");
+
+  if(!opts.noHistory){
+    const state={
+      page,
+      course:currentCourseIndex
+    };
+
+    const hash=
+      page==="courseInfo"
+        ?"#course-"+currentCourseIndex
+        :page==="courseChat"
+          ?"#course-chat-"+currentCourseIndex
+          :page==="general"
+            ?"#general"
+            :"";
+
+    history.pushState(
+      state,
+      "",
+      location.pathname+location.search+hash
+    );
+  }
+}
+
+function goHome(){
+  stopAI(false);
+  setPage("home");
+  renderCourses();
+}
+
+function openGeneral(){
+  setPage("general");
+  renderGeneralChat();
+  scrollToBottom("generalMsgs");
+}
+
+function openCourse(i){
+  currentCourseIndex=i;
+  setPage("courseInfo");
+  renderCourseInfo();
+}
+
+function proceedToCourseChat(){
+  if(currentCourseIndex===null)return;
+  setPage("courseChat");
+  renderCourseChat();
+  scrollToBottom("courseMsgs");
+}
+
+function backToCourseInfo(){
+  if(currentCourseIndex===null){
+    goHome();
+    return;
+  }
+
+  history.replaceState(
+    {page:"courseInfo",course:currentCourseIndex},
+    "",
+    location.pathname+
+    location.search+
+    "#course-"+currentCourseIndex
+  );
+
+  setPage("courseInfo",{noHistory:true});
+  renderCourseInfo();
+}
+
+window.addEventListener("popstate",e=>{
+  const s=e.state||{page:"home"};
+
+  stopAI(false);
+
+  if(
+    s.course!==undefined &&
+    s.course!==null &&
+    courses[s.course]
+  ){
+    currentCourseIndex=s.course;
+  }
+
+  const page=[
+    "home",
+    "general",
+    "courseInfo",
+    "courseChat"
+  ].includes(s.page)
+    ?s.page
+    :"home";
+
+  setPage(page,{noHistory:true});
+
+  if(page==="home")renderCourses();
+
+  if(page==="general"){
+    renderGeneralChat();
+    scrollToBottom("generalMsgs");
+  }
+
+  if(page==="courseInfo"){
+    renderCourseInfo();
+  }
+
+  if(page==="courseChat"){
+    renderCourseChat();
+    scrollToBottom("courseMsgs");
+  }
+});
+
+let deferredInstallPrompt=null;
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",async()=>{
+    try{
+      const reg=
+        await navigator.serviceWorker.register("./service-worker.js");
+
+      await reg.update();
+
+      console.log(
+        "Ọjọ́ọ̀la service worker registered; update checked."
+      );
+
+      reg.addEventListener(
+        "updatefound",
+        ()=>console.log("Ọjọ́ọ̀la service worker update found.")
+      );
+
+    }catch(e){
+      console.warn(
+        "Service worker registration/update failed:",
+        e
+      );
+
+      reportAppError(
+        "Service worker registration failed: "+e.message
+      );
     }
-    if(j.candidates && j.candidates[0] && j.candidates[0].content) return j.candidates[0].content.parts.map(p=>p.text||'').join('');
-    throw new Error('Google returned no answer. Status: '+res.status);
-  }catch(e){
-    clearTimeout(timer);
-    if(e.name==='AbortError') throw new Error('Google did not answer in 10s (timeout). Your network is fine - Google was slow. Try again.');
-    throw e;
-  }
+  });
 }
-async function callGeminiFast(prompt, images){
-  if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
-  let parts=[{text:prompt}];
-  (images||[]).slice(0,2).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inlineData:{mimeType:mt,data:b}})});
-  let model=await getBestModel();
+
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  $("installMessage").textContent=
+    "Ọjọ́ọ̀la is ready to be installed.";
+});
+
+window.addEventListener("appinstalled",()=>{
+  deferredInstallPrompt=null;
+  $("installMessage").textContent=
+    "Ọjọ́ọ̀la has been installed.";
+});
+
+async function installApp(){
+  if(!deferredInstallPrompt){
+    $("installMessage").textContent=
+      "If no install prompt appears, open your browser menu and choose Add to Home screen or Install app.";
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+
   try{
-    return await tryOneModel(model, parts);
-  }catch(e){
-    let msg=String(e.message||'');
-    if(msg.includes('404') || msg.toLowerCase().includes('no longer available') || msg.includes('not found')){
-      cachedModel=null;
-      let model2=await getBestModel();
-      if(model2!==model) return await tryOneModel(model2, parts);
-      // If same model returned, force refresh by clearing cache and trying list again once
-      cachedModel=null; cachedModelTime=0;
-      let m3=await getBestModel();
-      if(m3!==model) return await tryOneModel(m3, parts);
+    await deferredInstallPrompt.userChoice;
+  }catch(_){}
+
+  deferredInstallPrompt=null;
+}
+
+function enterApp(){
+  $("welcome").classList.add("hidden");
+  $("app").classList.remove("hidden");
+
+  localStorage.setItem("ojoola_entered","1");
+
+  renderCourses();
+  renderGeneralChat();
+
+  setPage("home",{noHistory:true});
+
+  history.replaceState(
+    {page:"home"},
+    "",
+    location.pathname+location.search
+  );
+}
+
+function loadDarkMode(){
+  const d=localStorage.getItem("ojoola_dark")==="1";
+
+  document.body.classList.toggle("dark",d);
+  $("darkToggle").checked=d;
+}
+
+function toggleDarkMode(){
+  const d=$("darkToggle").checked;
+
+  document.body.classList.toggle("dark",d);
+
+  localStorage.setItem(
+    "ojoola_dark",
+    d?"1":"0"
+  );
+}
+
+function openSettings(){
+  $("settingsModal").classList.remove("hidden");
+
+  $("apiKeyInput").value=
+    localStorage.getItem("ojoola_gemini_key")||"";
+}
+
+function closeSettings(){
+  $("settingsModal").classList.add("hidden");
+}
+
+function saveApiKey(){
+  const k=$("apiKeyInput").value.trim();
+
+  if(k){
+    localStorage.setItem("ojoola_gemini_key",k);
+  }else{
+    localStorage.removeItem("ojoola_gemini_key");
+  }
+
+  alert(
+    k
+      ?"API key saved on this device."
+      :"API key removed."
+  );
+
+  $("apiKeyInput").value="";
+}
+
+function clearAllData(){
+  if(!confirm(
+    "Clear all Ọjọ́ọ̀la local data on this device? This also removes your saved API key, courses and conversations."
+  ))return;
+
+  localStorage.clear();
+  location.reload();
+}
+
+/* Legacy-data recovery.
+   Older versions used several LocalStorage key names.
+   This migration never deletes the original records. */
+
+function looksLikeMessageArray(v){
+  return Array.isArray(v)&&
+    v.some(
+      x=>x&&
+      typeof x==="object"&&
+      ("text"in x)&&
+      ("role"in x)
+    );
+}
+
+function normalizeMessages(v){
+  return Array.isArray(v)
+    ?v
+      .filter(
+        x=>x&&
+        typeof x==="object"&&
+        typeof x.text!=="undefined"
+      )
+      .map(x=>({
+        id:x.id||uid(),
+        role:x.role==="user"?"user":"ai",
+        text:String(x.text??""),
+        time:x.time||Date.now()
+      }))
+    :[];
+}
+
+function recoverLegacyData(){
+  try{
+    const currentCourses=
+      safeJSON(
+        localStorage.getItem("ojoola_courses"),
+        null
+      );
+
+    const currentGeneral=
+      safeJSON(
+        localStorage.getItem("ojoola_general_chat"),
+        null
+      );
+
+    let recoveredGeneral=
+      Array.isArray(currentGeneral)
+        ?currentGeneral
+        :[];
+
+    let recoveredCourses=
+      Array.isArray(currentCourses)
+        ?currentCourses
+        :[];
+
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      const raw=localStorage.getItem(key);
+
+      if(!raw)continue;
+
+      const value=safeJSON(raw,null);
+
+      if(value===null)continue;
+
+      if(
+        !recoveredGeneral.length &&
+        (
+          key.toLowerCase().includes("general")||
+          key.toLowerCase().includes("chat")
+        )&&
+        looksLikeMessageArray(value)
+      ){
+        recoveredGeneral=
+          normalizeMessages(value);
+      }
+
+      if(
+        !recoveredCourses.length &&
+        Array.isArray(value)
+      ){
+        const courseLike=
+          value.filter(
+            c=>c&&
+            typeof c==="object"&&
+            (
+              Array.isArray(c.chat)||
+              typeof c.name==="string"||
+              typeof c.code==="string"
+            )
+          );
+
+        if(courseLike.length>=3){
+          recoveredCourses=courseLike;
+        }
+      }
+
+      if(
+        !recoveredGeneral.length &&
+        value&&
+        typeof value==="object"
+      ){
+        for(
+          const k of [
+            "generalChat",
+            "general",
+            "messages"
+          ]
+        ){
+          if(looksLikeMessageArray(value[k])){
+            recoveredGeneral=
+              normalizeMessages(value[k]);
+            break;
+          }
+        }
+      }
     }
-    throw e;
+
+    if(
+      !Array.isArray(currentGeneral)&&
+      recoveredGeneral.length
+    ){
+      localStorage.setItem(
+        "ojoola_general_chat",
+        JSON.stringify(recoveredGeneral)
+      );
+    }
+
+    if(
+      !Array.isArray(currentCourses)&&
+      recoveredCourses.length
+    ){
+      localStorage.setItem(
+        "ojoola_courses",
+        JSON.stringify(recoveredCourses)
+      );
+    }
+
+  }catch(e){
+    console.warn(
+      "Legacy data recovery could not complete:",
+      e
+    );
   }
 }
-function buildContext(courseList){let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples.\n\n';courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});return txt}
-async function sendCourseChat(){let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';try{let ans=await callGeminiFast(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message}save();renderCourseChat()}
+
+recoverLegacyData();
+
+const defaultCourses=
+  Array.from(
+    {length:15},
+    (_,i)=>({
+      code:"CSC "+(301+i),
+      name:"Course "+(i+1)
+    })
+  );
+
+let courses=
+  safeJSON(
+    localStorage.getItem("ojoola_courses"),
+    null
+  );
+
+if(!Array.isArray(courses)){
+  courses=
+    defaultCourses.map(
+      (c,i)=>({
+        id:i,
+        ...c,
+        description:"",
+        ref:true,
+        chat:[],
+        pdfs:[],
+        pictures:[]
+      })
+    );
+}
+
+courses=
+  courses.map(
+    (c,i)=>({
+      id:c.id??i,
+      code:c.code||"CSC "+(301+i),
+      name:c.name||"Course "+(i+1),
+      description:c.description||"",
+      ref:c.ref!==false,
+      chat:Array.isArray(c.chat)?c.chat:[],
+      pdfs:Array.isArray(c.pdfs)?c.pdfs:[],
+      pictures:Array.isArray(c.pictures)?c.pictures:[]
+    })
+  );
+
+let currentCourseIndex=null;
+
+function renderCourses(){
+  const grid=$("courseGrid");
+
+  grid.innerHTML="";
+
+  courses.forEach((c,i)=>{
+    const b=document.createElement("button");
+
+    b.className="courseBox";
+
+    b.innerHTML=
+      `<div class="courseCode">${escapeHTML(c.code)}</div>
+       <div class="courseName">${escapeHTML(c.name)}</div>
+       <div class="courseRef">${c.ref?"Reference enabled":"Reference disabled"}</div>`;
+
+    b.onclick=()=>openCourse(i);
+
+    grid.appendChild(b);
+  });
+}
+
+function openCourseManager(){
+  const list=$("courseEditorList");
+
+  list.innerHTML="";
+
+  courses.forEach((c,i)=>{
+    const d=document.createElement("div");
+
+    d.className="card";
+    d.style.marginBottom="10px";
+
+    d.innerHTML=
+      `<div class="muted">Course ${i+1}</div>
+       <br>
+       <input id="managerName${i}" placeholder="Course name">
+       <br><br>
+       <input id="managerCode${i}" placeholder="Course code">`;
+
+    list.appendChild(d);
+
+    $("managerName"+i).value=c.name;
+    $("managerCode"+i).value=c.code;
+  });
+
+  $("courseManagerModal").classList.remove("hidden");
+}
+
+function closeCourseManager(){
+  $("courseManagerModal").classList.add("hidden");
+}
+
+function saveCourseNames(){
+  courses.forEach((c,i)=>{
+    const n=$("managerName"+i).value.trim();
+    const code=$("managerCode"+i).value.trim();
+
+    if(n)c.name=n;
+    if(code)c.code=code;
+  });
+
+  saveCourses();
+  renderCourses();
+
+  if(currentCourseIndex!==null){
+    renderCourseInfo();
+    renderCourseChat();
+  }
+
+  closeCourseManager();
+}
+
+function renderCourseInfo(){
+  const c=courses[currentCourseIndex];
+
+  if(!c)return;
+
+  $("courseInfoTitle").textContent=c.name;
+  $("courseInfoCode").textContent=c.code;
+
+  $("courseInfoDescription").textContent=
+    c.description||
+    "This is your dedicated study space for this course.";
+
+  $("courseRefToggle").checked=c.ref;
+
+  renderCourseFiles();
+}
+
+function toggleCourseReference(){
+  const c=courses[currentCourseIndex];
+
+  if(c){
+    c.ref=$("courseRefToggle").checked;
+    saveCourses();
+  }
+}
+
+function openCourseEditor(){
+  const c=courses[currentCourseIndex];
+
+  if(!c)return;
+
+  $("editCourseName").value=c.name;
+  $("editCourseCode").value=c.code;
+  $("editCourseDescription").value=c.description||"";
+
+  $("courseEditorModal").classList.remove("hidden");
+}
+
+function closeCourseEditor(){
+  $("courseEditorModal").classList.add("hidden");
+}
+
+function saveCurrentCourseEdit(){
+  const c=courses[currentCourseIndex];
+
+  if(!c)return;
+
+  const n=$("editCourseName").value.trim();
+  const code=$("editCourseCode").value.trim();
+
+  if(n)c.name=n;
+  if(code)c.code=code;
+
+  c.description=
+    $("editCourseDescription").value.trim();
+
+  saveCourses();
+
+  renderCourses();
+  renderCourseInfo();
+  renderCourseChat();
+
+  closeCourseEditor();
+}
+
+function addCoursePDFs(files){
+  const c=courses[currentCourseIndex];
+
+  if(!c)return;
+
+  [...files].forEach(file=>{
+    if(file.type!=="application/pdf"){
+      alert(file.name+" is not a PDF file.");
+      return;
+    }
+
+    if(file.size>15*1024*1024){
+      alert(
+        file.name+
+        " is larger than 15 MB. Please choose a smaller PDF."
+      );
+      return;
+    }
+
+    const reader=new FileReader();
+
+    reader.onload=()=>{
+      c.pdfs.push({
+        id:uid(),
+        name:file.name,
+        size:file.size,
+        mimeType:"application/pdf",
+        data:String(reader.result).split(",")[1]||""
+      });
+
+      if(saveCourses())renderCourseFiles();
+    };
+
+    reader.onerror=()=>{
+      alert("Could not read "+file.name+".");
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  $("coursePdfInput").value="";
+}
+
+function addCoursePictures(files){
+  const c=courses[currentCourseIndex];
+
+  if(!c)return;
+
+  [...files].forEach(file=>{
+    if(!file.type.startsWith("image/")){
+      alert(file.name+" is not an image.");
+      return;
+    }
+
+    if(file.size>8*1024*1024){
+      alert(
+        file.name+
+        " is larger than 8 MB. Please choose a smaller image."
+      );
+      return;
+    }
+
+    const reader=new FileReader();
+
+    reader.onload=()=>{
+      c.pictures.push({
+        id:uid(),
+        name:file.name,
+        size:file.size,
+        mimeType:file.type,
+        data:String(reader.result).split(",")[1]||""
+      });
+
+      if(saveCourses())renderCourseFiles();
+    };
+
+    reader.onerror=()=>{
+      alert("Could not read "+file.name+".");
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  $("coursePictureInput").value="";
+}
+
+function renderCourseFiles(){
+  const c=courses[currentCourseIndex];
+
+  if(!c)return;
+
+  const p=$("coursePdfList");
+  const im=$("coursePictureList");
+
+  p.innerHTML="";
+  im.innerHTML="";
+
+  if(!c.pdfs.length){
+    p.innerHTML=
+      '<div class="muted">No PDF materials added yet.</div>';
+  }
+
+  c.pdfs.forEach((f,i)=>{
+    const d=document.createElement("div");
+    d.className="fileItem";
+
+    const info=document.createElement("div");
+    info.style.minWidth="0";
+
+    info.innerHTML=
+      `<div style="font-weight:700;overflow-wrap:anywhere">
+        📄 ${escapeHTML(f.name)}
+       </div>
+       <div class="muted">${formatBytes(f.size||0)}</div>`;
+
+    const b=document.createElement("button");
+
+    b.className="danger";
+    b.textContent="Delete";
+    b.onclick=()=>deleteCoursePDF(i);
+
+    d.append(info,b);
+    p.appendChild(d);
+  });
+
+  if(!c.pictures.length){
+    im.innerHTML=
+      '<div class="muted">No pictures added yet.</div>';
+  }
+
+  c.pictures.forEach((f,i)=>{
+    const d=document.createElement("div");
+
+    d.className="fileItem";
+
+    const left=document.createElement("div");
+    left.className="flex";
+
+    const img=document.createElement("img");
+    img.className="courseThumb";
+    img.alt=f.name;
+
+    img.src=
+      `data:${f.mimeType||"image/jpeg"};base64,${f.data}`;
+
+    const label=document.createElement("div");
+
+    label.innerHTML=
+      `<div style="font-weight:700;overflow-wrap:anywhere">
+        ${escapeHTML(f.name)}
+       </div>
+       <div class="muted">${formatBytes(f.size||0)}</div>`;
+
+    left.append(img,label);
+
+    const b=document.createElement("button");
+
+    b.className="danger";
+    b.textContent="Delete";
+    b.onclick=()=>deleteCoursePicture(i);
+
+    d.append(left,b);
+    im.appendChild(d);
+  });
+}
+
+function deleteCoursePDF(i){
+  const c=courses[currentCourseIndex];
+
+  if(c&&confirm("Delete this PDF?")){
+    c.pdfs.splice(i,1);
+    saveCourses();
+    renderCourseFiles();
+  }
+}
+
+function deleteCoursePicture(i){
+  const c=courses[currentCourseIndex];
+
+  if(c&&confirm("Delete this picture?")){
+    c.pictures.splice(i,1);
+    saveCourses();
+    renderCourseFiles();
+  }
+}
+
+function formatBytes(n){
+  if(!n)return"";
+
+  const u=["B","KB","MB","GB"];
+
+  let i=0;
+  let v=n;
+
+  while(
+    v>=1024&&
+    i<u.length-1
+  ){
+    v/=1024;
+    i++;
+  }
+
+  return v.toFixed(i?1:0)+" "+u[i];
+}
+
+let generalChat=
+  safeJSON(
+    localStorage.getItem("ojoola_general_chat"),
+    []
+  )||[];
+
+let activeController=null;
+let activeRun=null;
+let stoppedByUser=false;
+let requestToken=0;
+
+function renderGeneralChat(){
+  const box=$("generalMsgs");
+  const near=isNearBottom(box);
+
+  box.innerHTML="";
+
+  generalChat.forEach((m,i)=>
+    box.appendChild(
+      createMessageElement(m,i,"general")
+    )
+  );
+
+  if(near)scrollToBottom("generalMsgs");
+}
+
+function renderCourseChat(){
+  const c=courses[currentCourseIndex];
+
+  if(!c)return;
+
+  $("courseChatTitle").textContent=c.name;
+  $("courseChatSubtitle").textContent=c.code;
+
+  const box=$("courseMsgs");
+  const near=isNearBottom(box);
+
+  box.innerHTML="";
+
+  c.chat.forEach((m,i)=>
+    box.appendChild(
+      createMessageElement(m,i,"course")
+    )
+  );
+
+  if(near)scrollToBottom("courseMsgs");
+}
+
+function renderMarkdown(text){
+  let s=escapeHTML(text||"");
+
+  s=s.replace(
+    /```([\s\S]*?)```/g,
+    (_,code)=>
+      "<pre style='white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(100,116,139,.12);padding:9px;border-radius:8px'><code>"+
+      code.trim()+
+      "</code></pre>"
+  );
+
+  s=s.replace(
+    /^#{1,6}\s+(.+)$/gm,
+    "<strong>$1</strong>"
+  );
+
+  s=s.replace(
+    /\*\*(.+?)\*\*/g,
+    "<strong>$1</strong>"
+  );
+
+  s=s.replace(
+    /__(.+?)__/g,
+    "<strong>$1</strong>"
+  );
+
+  s=s.replace(
+    /(^|[^\*])\*([^*]+)\*(?!\*)/g,
+    "$1<em>$2</em>"
+  );
+
+  s=s.replace(
+    /(^|[^_])_([^_]+)_(?!_)/g,
+    "$1<em>$2</em>"
+  );
+
+  s=s.replace(
+    /^[\-*]\s+(.+)$/gm,
+    "• $1"
+  );
+
+  s=s.replace(/\n/g,"<br>");
+
+  return s;
+}
+
+function createMessageElement(msg,index,type){
+  const w=document.createElement("div");
+
+  w.className=
+    "message "+
+    (msg.role==="user"?"user":"ai");
+
+  const b=document.createElement("div");
+  b.className="bubble";
+
+  const t=document.createElement("div");
+  t.className="messageText";
+
+  t.innerHTML=
+    renderMarkdown(msg.text||"");
+
+  b.appendChild(t);
+
+  addMessageActions(
+    b,
+    msg,
+    index,
+    type
+  );
+
+  w.appendChild(b);
+
+  return w;
+}
+
+function addMessageActions(container,msg){
+  const a=document.createElement("div");
+  a.className="messageActions";
+
+  const c=document.createElement("button");
+  c.textContent="📋 Copy";
+  c.onclick=()=>copyText(msg.text||"",c);
+
+  const s=document.createElement("button");
+  s.textContent="↗ Share";
+  s.onclick=()=>shareText(msg.text||"");
+
+  const r=document.createElement("button");
+  r.textContent="🔊 Read";
+  r.onclick=()=>toggleReadAloud(
+    msg.text||"",
+    container
+  );
+
+  a.append(c,s,r);
+  container.appendChild(a);
+}
+
+async function copyText(text,button){
+  try{
+    await navigator.clipboard.writeText(text);
+
+    if(button){
+      const old=button.textContent;
+
+      button.textContent="✓ Copied";
+
+      setTimeout(
+        ()=>button.textContent=old,
+        1200
+      );
+    }
+
+  }catch(_){
+    const t=document.createElement("textarea");
+
+    t.value=text;
+
+    document.body.appendChild(t);
+
+    t.select();
+
+    document.execCommand("copy");
+
+    t.remove();
+  }
+}
+
+async function shareText(text){
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"Ọjọ́ọ̀la",
+        text
+      });
+    }catch(_){}
+  }else{
+    await copyText(text);
+  }
+}
+
+/* Speech synthesis controls */
+let speechPlayer={
+  text:"",
+  position:0,
+  total:0,
+  speaking:false,
+  paused:false,
+  timer:null,
+  container:null,
+  token:0
+};
+
+function estimateDuration(t){
+  const words=
+    t.trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .length;
+
+  return Math.max(
+    1,
+    Math.round(words/145*60)
+  );
+}
+
+function formatTime(s){
+  s=Math.max(0,Math.floor(s));
+
+  return Math.floor(s/60)+
+    ":"+
+    String(s%60).padStart(2,"0");
+}
+
+function createPlaybackUI(container){
+  container.querySelector(".playback")?.remove();
+
+  const p=document.createElement("div");
+
+  p.className="playback";
+
+  p.innerHTML=
+    `<div class="playbackTop">
+      <button title="Rewind 10 seconds" onclick="rewindSpeech()">↶10</button>
+      <button id="speechPlayBtn" title="Play/Pause" onclick="toggleSpeechPlay()">▶</button>
+      <button title="Forward 10 seconds" onclick="forwardSpeech()">10↷</button>
+      <input id="speechSeek" type="range" min="0" max="100" value="0" oninput="seekSpeech(this.value)">
+      <span id="speechTime" class="time">0:00 / 0:00</span>
+      <button title="Stop" onclick="stopSpeech()">■</button>
+    </div>`;
+
+  container.appendChild(p);
+}
+
+function toggleReadAloud(text,container){
+  if(!("speechSynthesis" in window)){
+    alert(
+      "Read aloud is not supported by this browser."
+    );
+    return;
+  }
+
+  if(
+    speechPlayer.text===text&&
+    speechPlayer.container===container
+  ){
+    toggleSpeechPlay();
+    return;
+  }
+
+  stopSpeech();
+
+  speechPlayer={
+    text,
+    position:0,
+    total:estimateDuration(text),
+    speaking:true,
+    paused:false,
+    timer:null,
+    container,
+    token:speechPlayer.token+1
+  };
+
+  createPlaybackUI(container);
+
+  startSpeechFromPosition();
+}
+
+function startSpeechFromPosition(){
+  if(!speechPlayer.text)return;
+
+  const token=speechPlayer.token;
+
+  speechSynthesis.cancel();
+
+  const ratio=
+    speechPlayer.total
+      ?speechPlayer.position/speechPlayer.total
+      :0;
+
+  let at=Math.max(
+    0,
+    Math.min(
+      speechPlayer.text.length-1,
+      Math.floor(
+        ratio*speechPlayer.text.length
+      )
+    )
+  );
+
+  if(at>0){
+    const space=
+      speechPlayer.text.indexOf(" ",at);
+
+    if(space>0)at=space+1;
+  }
+
+  const remaining=
+    speechPlayer.text.slice(at);
+
+  if(!remaining.trim()){
+    finishSpeech();
+    return;
+  }
+
+  const u=
+    new SpeechSynthesisUtterance(
+      remaining
+    );
+
+  u.lang="en-US";
+  u.rate=.95;
+
+  u.onend=()=>{
+    if(token===speechPlayer.token){
+      finishSpeech();
+    }
+  };
+
+  u.onerror=e=>{
+    if(
+      token===speechPlayer.token&&
+      e.error!=="canceled"
+    ){
+      speechPlayer.speaking=false;
+      updateSpeechUI();
+    }
+  };
+
+  speechSynthesis.speak(u);
+
+  startSpeechTimer();
+  updateSpeechUI();
+}
+
+function startSpeechTimer(){
+  clearInterval(speechPlayer.timer);
+
+  speechPlayer.timer=
+    setInterval(()=>{
+      if(
+        !speechPlayer.speaking||
+        speechPlayer.paused
+      )return;
+
+      speechPlayer.position=
+        Math.min(
+          speechPlayer.total,
+          speechPlayer.position+.25
+        );
+
+      updateSpeechUI();
+
+    },250);
+}
+
+function updateSpeechUI(){
+  const c=speechPlayer.container;
+
+  if(!c)return;
+
+  const seek=
+    c.querySelector("#speechSeek");
+
+  const time=
+    c.querySelector("#speechTime");
+
+  const play=
+    c.querySelector("#speechPlayBtn");
+
+  if(seek){
+    seek.value=
+      speechPlayer.total
+        ?speechPlayer.position/
+          speechPlayer.total*100
+        :0;
+  }
+
+  if(time){
+    time.textContent=
+      formatTime(
+        speechPlayer.position
+      )+
+      " / "+
+      formatTime(
+        speechPlayer.total
+      );
+  }
+
+  if(play){
+    play.textContent=
+      speechPlayer.speaking&&
+      !speechPlayer.paused
+        ?"❚❚"
+        :"▶";
+  }
+}
+
+function toggleSpeechPlay(){
+  if(!speechPlayer.text)return;
+
+  if(speechPlayer.speaking){
+    if(speechPlayer.paused){
+      speechSynthesis.resume();
+      speechPlayer.paused=false;
+    }else{
+      speechSynthesis.pause();
+      speechPlayer.paused=true;
+    }
+
+    updateSpeechUI();
+    return;
+  }
+
+  speechPlayer.speaking=true;
+  speechPlayer.paused=false;
+  speechPlayer.token++;
+
+  startSpeechFromPosition();
+}
+
+function stopSpeech(){
+  const token=
+    (speechPlayer.token||0)+1;
+
+  if("speechSynthesis" in window){
+    speechSynthesis.cancel();
+  }
+
+  clearInterval(
+    speechPlayer.timer
+  );
+
+  speechPlayer.container
+    ?.querySelector(".playback")
+    ?.remove();
+
+  speechPlayer={
+    text:"",
+    position:0,
+    total:0,
+    speaking:false,
+    paused:false,
+    timer:null,
+    container:null,
+    token
+  };
+}
+
+function finishSpeech(){
+  clearInterval(
+    speechPlayer.timer
+  );
+
+  speechPlayer.timer=null;
+  speechPlayer.position=
+    speechPlayer.total;
+  speechPlayer.speaking=false;
+  speechPlayer.paused=false;
+
+  updateSpeechUI();
+}
+
+function seekSpeech(v){
+  if(!speechPlayer.text)return;
+
+  speechPlayer.position=
+    Number(v)/100*
+    speechPlayer.total;
+
+  if(speechPlayer.speaking){
+    speechPlayer.token++;
+
+    speechSynthesis.cancel();
+
+    speechPlayer.paused=false;
+
+    startSpeechFromPosition();
+  }else{
+    updateSpeechUI();
+  }
+}
+
+function rewindSpeech(){
+  if(!speechPlayer.text)return;
+
+  speechPlayer.position=
+    Math.max(
+      0,
+      speechPlayer.position-10
+    );
+
+  if(speechPlayer.speaking){
+    speechPlayer.token++;
+    speechSynthesis.cancel();
+    speechPlayer.paused=false;
+    startSpeechFromPosition();
+  }else{
+    updateSpeechUI();
+  }
+}
+
+function forwardSpeech(){
+  if(!speechPlayer.text)return;
+
+  speechPlayer.position=
+    Math.min(
+      speechPlayer.total,
+      speechPlayer.position+10
+    );
+
+  if(
+    speechPlayer.position>=
+    speechPlayer.total
+  ){
+    finishSpeech();
+    return;
+  }
+
+  if(speechPlayer.speaking){
+    speechPlayer.token++;
+    speechSynthesis.cancel();
+    speechPlayer.paused=false;
+    startSpeechFromPosition();
+  }else{
+    updateSpeechUI();
+  }
+}
+
+let generalSearchMatches=[];
+let generalSearchIndex=-1;
+
+let courseSearchMatches=[];
+let courseSearchIndex=-1;
+
+function escapeRegex(s){
+  return s.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+}
+
+function applySearch(type,q,matches){
+  const isGeneral=
+    type==="general";
+
+  const msgs=
+    isGeneral
+      ?generalChat
+      :(courses[currentCourseIndex]?.chat||[]);
+
+  const box=
+    $(isGeneral
+      ?"generalMsgs"
+      :"courseMsgs");
+
+  matches.forEach(i=>{
+    const el=
+      box.querySelectorAll(
+        ".messageText"
+      )[i];
+
+    if(!el)return;
+
+    const raw=
+      msgs[i]?.text||"";
+
+    const html=
+      renderMarkdown(raw);
+
+    const re=
+      new RegExp(
+        escapeRegex(q),
+        "gi"
+      );
+
+    el.innerHTML=
+      html.replace(
+        re,
+        m=>
+          `<mark class="highlight">${m}</mark>`
+      );
+  });
+}
+
+function runGeneralSearch(){
+  const q=
+    $("generalSearch")
+      .value
+      .trim()
+      .toLowerCase();
+
+  generalSearchMatches=[];
+  generalSearchIndex=-1;
+
+  if(!q){
+    $("generalSearchCount")
+      .textContent="";
+
+    renderGeneralChat();
+    return;
+  }
+
+  generalChat.forEach((m,i)=>{
+    if(
+      String(m.text||"")
+        .toLowerCase()
+        .includes(q)
+    ){
+      generalSearchMatches.push(i);
+    }
+  });
+
+  $("generalSearchCount")
+    .textContent=
+      generalSearchMatches.length
+        ?`${generalSearchMatches.length} result(s) — Enter: next, Shift+Enter: previous`
+        :"No results";
+
+  renderGeneralChat();
+
+  applySearch(
+    "general",
+    q,
+    generalSearchMatches
+  );
+}
+
+function clearGeneralSearch(){
+  $("generalSearch").value="";
+  $("generalSearchCount").textContent="";
+  generalSearchMatches=[];
+  generalSearchIndex=-1;
+
+  renderGeneralChat();
+}
+
+function runCourseSearch(){
+  const q=
+    $("courseSearch")
+      .value
+      .trim()
+      .toLowerCase();
+
+  const c=
+    courses[currentCourseIndex];
+
+  courseSearchMatches=[];
+  courseSearchIndex=-1;
+
+  if(!q){
+    $("courseSearchCount")
+      .textContent="";
+
+    renderCourseChat();
+    return;
+  }
+
+  if(!c)return;
+
+  c.chat.forEach((m,i)=>{
+    if(
+      String(m.text||"")
+        .toLowerCase()
+        .includes(q)
+    ){
+      courseSearchMatches.push(i);
+    }
+  });
+
+  $("courseSearchCount")
+    .textContent=
+      courseSearchMatches.length
+        ?`${courseSearchMatches.length} result(s) — Enter: next, Shift+Enter: previous`
+        :"No results";
+
+  renderCourseChat();
+
+  applySearch(
+    "course",
+    q,
+    courseSearchMatches
+  );
+}
+
+function clearCourseSearch(){
+  $("courseSearch").value="";
+  $("courseSearchCount").textContent="";
+  courseSearchMatches=[];
+  courseSearchIndex=-1;
+
+  renderCourseChat();
+}
+
+function moveSearch(type,direction){
+  const general=
+    type==="general";
+
+  const matches=
+    general
+      ?generalSearchMatches
+      :courseSearchMatches;
+
+  if(!matches.length)return;
+
+  let idx=
+    general
+      ?generalSearchIndex
+      :courseSearchIndex;
+
+  idx=
+    (idx+direction+matches.length)%
+    matches.length;
+
+  if(general){
+    generalSearchIndex=idx;
+  }else{
+    courseSearchIndex=idx;
+  }
+
+  const target=
+    $(general
+      ?"generalMsgs"
+      :"courseMsgs")
+      .querySelectorAll(".message")
+      [matches[idx]];
+
+  target?.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+$("generalSearch")
+.addEventListener(
+  "keydown",
+  e=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+
+      moveSearch(
+        "general",
+        e.shiftKey?-1:1
+      );
+    }
+
+    if(e.key==="Escape"){
+      clearGeneralSearch();
+    }
+  }
+);
+
+$("courseSearch")
+.addEventListener(
+  "keydown",
+  e=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+
+      moveSearch(
+        "course",
+        e.shiftKey?-1:1
+      );
+    }
+
+    if(e.key==="Escape"){
+      clearCourseSearch();
+    }
+  }
+);
+
+function setGenerating(button,on){
+  if(!button)return;
+
+  button.classList.toggle(
+    "stopBtn",
+    on
+  );
+
+  button.textContent=
+    on
+      ?"■"
+      :"➤";
+
+  button.onclick=
+    on
+      ?stopAI
+      :(button.id==="generalSendBtn"
+        ?sendGeneral
+        :sendCourseChat);
+}
+
+function stopAI(showStatus=true){
+  stoppedByUser=true;
+  requestToken++;
+
+  if(activeController){
+    try{
+      activeController.abort();
+    }catch(_){}
+  }
+
+  activeController=null;
+
+  if(
+    activeRun&&
+    !activeRun.ai.text
+  ){
+    activeRun.ai.text=
+      "Response stopped.";
+
+    if(activeRun.type==="general"){
+      saveGeneral();
+      renderGeneralChat();
+    }else{
+      saveCourses();
+      renderCourseChat();
+    }
+  }
+
+  activeRun=null;
+
+  if("speechSynthesis" in window){
+    speechSynthesis.cancel();
+  }
+
+  [
+    "generalStatus",
+    "courseStatus"
+  ].forEach(id=>
+    $(id).classList.add("hidden")
+  );
+
+  setGenerating(
+    $("generalSendBtn"),
+    false
+  );
+
+  setGenerating(
+    $("courseSendBtn"),
+    false
+  );
+
+  if(showStatus){
+    const id=
+      $("courseChatView")
+        .classList
+        .contains("hidden")
+        ?"generalStatus"
+        :"courseStatus";
+
+    $(id).textContent=
+      "Generation stopped.";
+
+    $(id).classList.remove("hidden");
+  }
+}
+
+/* Gemini REST generation.
+   Full-response generation is deliberately used here first because it is more reliable on weak mobile networks.
+   The API key is sent in a request header and never placed in the URL. */
+
+const GEMINI_MODELS=[
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-2.5-flash-lite"
+];
+
+function getApiKey(){
+  return localStorage.getItem(
+    "ojoola_gemini_key"
+  )||"";
+}
+
+function makeHistory(history){
+  return trimHistory(history,20)
+    .filter(
+      m=>
+        m.text&&
+        m.text!=="Thinking..."&&
+        m.text!=="Response stopped."
+    )
+    .map(m=>({
+      role:
+        m.role==="user"
+          ?"user"
+          :"model",
+      parts:[
+        {text:m.text}
+      ]
+    }));
+}
+
+function makeCourseContext(c){
+  if(!c)return"";
+
+  if(!c.ref){
+    return `Course: ${c.name}
+Course code: ${c.code}
+Course reference materials are disabled.`;
+  }
+
+  return `Course: ${c.name}
+Course code: ${c.code}
+The student has attached ${c.pdfs.length} PDF file(s) and ${c.pictures.length} picture(s). Use the attached file contents as the primary study reference. If the materials do not contain the answer, clearly say so before adding general explanation.`;
+}
+
+function fileParts(c){
+  if(!c||!c.ref)return[];
+
+  const parts=[];
+
+  for(const f of c.pdfs){
+    if(f.data){
+      parts.push({
+        inline_data:{
+          mime_type:
+            f.mimeType||
+            "application/pdf",
+          data:f.data
+        }
+      });
+    }
+  }
+
+  for(const f of c.pictures){
+    if(f.data){
+      parts.push({
+        inline_data:{
+          mime_type:
+            f.mimeType||
+            "image/jpeg",
+          data:f.data
+        }
+      });
+    }
+  }
+
+  return parts;
+}
+
+function isRetryableGeminiError(e){
+  return !!e&&(
+    [429,500,502,503,504]
+      .includes(Number(e.status))||
+    /Gemini API (429|500|502|503|504):/i
+      .test(e.message||"")
+  );
+}
+
+function sleep(ms){
+  return new Promise(r=>setTimeout(r,ms));
+}
+
+async function callGemini(
+  prompt,
+  history,
+  attachments,
+  onChunk,
+  onStatus,
+  signal
+){
+  const key=getApiKey();
+
+  if(!key){
+    throw new Error(
+      "No Gemini API key saved. Open Settings and add your API key."
+    );
+  }
+
+  const contents=[
+    ...makeHistory(history),
+    {
+      role:"user",
+      parts:[
+        {text:prompt},
+        ...(attachments||[])
+      ]
+    }
+  ];
+
+  let lastError;
+
+  for(
+    let i=0;
+    i<GEMINI_MODELS.length;
+    i++
+  ){
+    if(signal.aborted){
+      throw new DOMException(
+        "Stopped",
+        "AbortError"
+      );
+    }
+
+    const model=
+      GEMINI_MODELS[i];
+
+    onStatus?.(
+      i
+        ?`Trying backup model ${model}…`
+        :`Connecting to ${model}…`
+    );
+
+    try{
+      const result=
+        await generateOneModel(
+          model,
+          contents,
+          key,
+          onStatus,
+          signal
+        );
+
+      if(result.trim()){
+        onChunk?.(result);
+        return result;
+      }
+
+      throw new Error(
+        "The model returned an empty response."
+      );
+
+    }catch(e){
+      lastError=e;
+
+      if(
+        e.name==="AbortError"||
+        signal.aborted
+      ){
+        throw e;
+      }
+
+      if(
+        !isRetryableGeminiError(e)&&
+        i===GEMINI_MODELS.length-1
+      ){
+        break;
+      }
+
+      if(
+        i<GEMINI_MODELS.length-1
+      ){
+        onStatus?.(
+          `That model was unavailable. Trying backup ${i+1} of ${GEMINI_MODELS.length-1}…`
+        );
+
+        await sleep(
+          700*(i+1)
+        );
+      }
+    }
+  }
+
+  throw lastError||
+    new Error(
+      "All Gemini models failed."
+    );
+}
+
+async function generateOneModel(
+  model,
+  contents,
+  key,
+  onStatus,
+  signal
+){
+  const controller=
+    new AbortController();
+
+  const timeout=
+    setTimeout(
+      ()=>controller.abort("timeout"),
+      60000
+    );
+
+  const abortForward=
+    ()=>controller.abort("user");
+
+  if(signal.aborted){
+    controller.abort("user");
+  }else{
+    signal.addEventListener(
+      "abort",
+      abortForward,
+      {once:true}
+    );
+  }
+
+  try{
+    onStatus?.(
+      "Sending your question…"
+    );
+
+    const url=
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+
+    const response=
+      await fetch(
+        url,
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json",
+
+            "x-goog-api-key":
+              key
+          },
+
+          body:JSON.stringify({
+            contents,
+
+            generationConfig:{
+              temperature:.7,
+              maxOutputTokens:4096
+            }
+          }),
+
+          signal:
+            controller.signal
+        }
+      );
+
+    if(!response.ok){
+      let detail="";
+
+      try{
+        const j=
+          await response.json();
+
+        detail=
+          j.error?.message||
+          JSON.stringify(j);
+
+      }catch(_){
+        detail=
+          "HTTP "+response.status;
+      }
+
+      const err=
+        new Error(
+          `Gemini API ${response.status}: ${detail.slice(0,700)}`
+        );
+
+      err.status=
+        response.status;
+
+      throw err;
+    }
+
+    onStatus?.(
+      "Receiving answer…"
+    );
+
+    const j=
+      await response.json();
+
+    const parts=
+      j.candidates?.[0]?.content?.parts||
+      [];
+
+    const text=
+      parts
+        .map(p=>p.text||"")
+        .join("");
+
+    if(
+      j.candidates?.[0]?.finishReason===
+      "SAFETY"
+    ){
+      throw new Error(
+        "Gemini stopped this answer because its safety filters were triggered. Try rephrasing the question."
+      );
+    }
+
+    if(!text.trim()){
+      const block=
+        j.promptFeedback?.blockReason||
+        j.candidates?.[0]?.finishReason;
+
+      throw new Error(
+        block
+          ?`Gemini returned no text (${block}).`
+          :"Gemini returned an empty response."
+      );
+    }
+
+    return text;
+
+  }catch(e){
+
+    if(e.name==="AbortError"){
+
+      if(signal.aborted){
+        throw new DOMException(
+          "Stopped",
+          "AbortError"
+        );
+      }
+
+      const err=
+        new Error(
+          "Gemini took too long to respond. Check your connection and try again."
+        );
+
+      err.status=408;
+
+      throw err;
+    }
+
+    throw e;
+
+  }finally{
+
+    clearTimeout(timeout);
+
+    signal.removeEventListener(
+      "abort",
+      abortForward
+    );
+  }
+}
+
+async function runChat(type,prompt){
+  const isGeneral=
+    type==="general";
+
+  const course=
+    isGeneral
+      ?null
+      :courses[currentCourseIndex];
+
+  const chat=
+    isGeneral
+      ?generalChat
+      :course.chat;
+
+  const boxId=
+    isGeneral
+      ?"generalMsgs"
+      :"courseMsgs";
+
+  const statusId=
+    isGeneral
+      ?"generalStatus"
+      :"courseStatus";
+
+  const button=
+    $(isGeneral
+      ?"generalSendBtn"
+      :"courseSendBtn");
+
+  const controller=
+    new AbortController();
+
+  const token=
+    ++requestToken;
+
+  activeController=
+    controller;
+
+  stoppedByUser=false;
+
+  const user={
+    id:uid(),
+    role:"user",
+    text:prompt,
+    time:Date.now()
+  };
+
+  chat.push(user);
+
+  if(isGeneral){
+    saveGeneral();
+  }else{
+    saveCourses();
+  }
+
+  const ai={
+    id:uid(),
+    role:"ai",
+    text:"",
+    time:Date.now()
+  };
+
+  chat.push(ai);
+
+  activeRun={
+    type,
+    ai,
+    chat
+  };
+
+  if(isGeneral){
+    saveGeneral();
+  }else{
+    saveCourses();
+  }
+
+  if(isGeneral){
+    renderGeneralChat();
+  }else{
+    renderCourseChat();
+  }
+
+  scrollToBottom(boxId);
+
+  setGenerating(
+    button,
+    true
+  );
+
+  $(statusId)
+    .classList
+    .remove("hidden");
+
+  $(statusId).textContent=
+    "Preparing your question…";
+
+  const context=
+    isGeneral
+      ?""
+      :`${makeCourseContext(course)}
+
+You are Ọjọ́ọ̀la, the student's AI study partner. Answer clearly and accurately. Prioritize the actual attached course material. Do not claim that a file says something unless its contents support it.`;
+
+  const finalPrompt=
+    isGeneral
+      ?prompt
+      :`${context}
+
+Student question:
+${prompt}`;
+
+  try{
+
+    const attachments=
+      isGeneral
+        ?[]
+        :fileParts(course);
+
+    const attachmentSize=
+      attachments.reduce(
+        (sum,part)=>
+          sum+
+          (
+            part.inline_data?.data?.length||
+            0
+          ),
+        0
+      );
+
+    if(
+      attachmentSize>
+      18*1024*1024
+    ){
+      throw new Error(
+        "The selected course materials are too large to send together. Remove some files or use smaller PDFs and pictures, then try again."
+      );
+    }
+
+    await callGemini(
+      finalPrompt,
+      chat.slice(0,-2),
+      attachments,
+
+      full=>{
+        if(token!==requestToken)return;
+
+        ai.text=full;
+
+        if(isGeneral){
+          saveGeneral();
+        }else{
+          saveCourses();
+        }
+
+        const box=$(boxId);
+        const near=
+          isNearBottom(box);
+
+        if(isGeneral){
+          renderGeneralChat();
+        }else{
+          renderCourseChat();
+        }
+
+        if(near){
+          scrollToBottom(boxId);
+        }
+      },
+
+      s=>{
+        if(token===requestToken){
+          $(statusId).textContent=s;
+        }
+      },
+
+      controller.signal
+    );
+
+    if(
+      token===requestToken&&
+      !ai.text
+    ){
+      ai.text=
+        "I couldn't produce a response. Please try again.";
+
+      if(isGeneral){
+        saveGeneral();
+      }else{
+        saveCourses();
+      }
+    }
+
+  }catch(e){
+
+    if(token===requestToken){
+
+      if(e.name==="AbortError"){
+
+        if(!stoppedByUser){
+          ai.text=
+            "Generation timed out. The request took too long. Please try again.";
+
+          if(isGeneral){
+            saveGeneral();
+          }else{
+            saveCourses();
+          }
+        }
+
+      }else{
+
+        ai.text=
+          "I couldn't complete that response.\n\n"+
+          (e.message||"Unknown error");
+
+        if(isGeneral){
+          saveGeneral();
+        }else{
+          saveCourses();
+        }
+
+        reportAppError(
+          e.message||String(e),
+          "Gemini API"
+        );
+      }
+    }
+
+  }finally{
+
+    if(token===requestToken){
+
+      activeController=null;
+      activeRun=null;
+
+      $(statusId)
+        .classList
+        .add("hidden");
+
+      setGenerating(
+        button,
+        false
+      );
+
+      if(isGeneral){
+        renderGeneralChat();
+      }else{
+        renderCourseChat();
+      }
+
+      scrollToBottom(boxId);
+    }
+  }
+}
+
 async function sendGeneral(){
-  let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;
-  let btn=document.getElementById('generalSendBtn');btn.disabled=true;btn.textContent='Thinking... 🤔';
-  let box=document.getElementById('generalMsgs');
-  let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);
-  let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking... 🤔';box.appendChild(a);
-  inp.value='';
-  let start=Date.now();
-  try{
-    let ans=await callGeminiFast('You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. General question: '+q, []);
-    a.textContent=ans;
-    console.log('General chat took ' + ((Date.now()-start)/1000) + 's');
-  }catch(e){a.textContent='Error: '+e.message}
-  btn.disabled=false;btn.textContent='Send Message 🚀';
+  const input=$("generalInput");
+
+  const prompt=
+    input.value.trim();
+
+  if(!prompt)return;
+
+  if(!getApiKey()){
+    openSettings();
+
+    alert(
+      "Please add your Gemini API key in Settings first."
+    );
+
+    return;
+  }
+
+  if(activeController){
+    alert(
+      "An answer is already being generated. Stop it before sending another question."
+    );
+
+    return;
+  }
+
+  input.value="";
+
+  await runChat(
+    "general",
+    prompt
+  );
 }
-function openSettings(){lockKeyView();document.getElementById('settingsModal').classList.remove('hidden')}
-function closeSettings(){document.getElementById('settingsModal').classList.add('hidden')}
-function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'••••••••'+apiKey.slice(-4):'••••••••';document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved - Locked':'❌ No key yet';document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyView').classList.remove('hidden');document.getElementById('keyEdit').classList.add('hidden')}
-function editKey(){document.getElementById('keyView').classList.add('hidden');document.getElementById('keyEdit').classList.remove('hidden');document.getElementById('apiKeyInput').focus()}
-function cancelKeyEdit(){lockKeyView()}
-function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);cachedModel=null;cachedModelTime=0;lockKeyView();showToast('keyToast')}
-applyTheme();render();if(window.lucide) lucide.createIcons();
+
+async function sendCourseChat(){
+  if(currentCourseIndex===null)return;
+
+  const prompt=
+    $("courseInput")
+      .value
+      .trim();
+
+  if(!prompt)return;
+
+  if(!getApiKey()){
+    openSettings();
+
+    alert(
+      "Please add your Gemini API key in Settings first."
+    );
+
+    return;
+  }
+
+  if(activeController){
+    alert(
+      "An answer is already being generated. Stop it before sending another question."
+    );
+
+    return;
+  }
+
+  $("courseInput").value="";
+
+  await runChat(
+    "course",
+    prompt
+  );
+}
+
+function clearCourseChat(){
+  if(currentCourseIndex===null)return;
+
+  if(!confirm(
+    "Clear the entire conversation for this course?"
+  ))return;
+
+  courses[currentCourseIndex].chat=[];
+
+  saveCourses();
+
+  renderCourseChat();
+}
+
+$("generalInput")
+.addEventListener(
+  "keydown",
+  e=>{
+    if(
+      e.key==="Enter"&&
+      !e.shiftKey
+    ){
+      e.preventDefault();
+      sendGeneral();
+    }
+  }
+);
+
+$("courseInput")
+.addEventListener(
+  "keydown",
+  e=>{
+    if(
+      e.key==="Enter"&&
+      !e.shiftKey
+    ){
+      e.preventDefault();
+      sendCourseChat();
+    }
+  }
+);
+
+const generalDownBtn=
+  document.createElement("button");
+
+generalDownBtn.className=
+  "downBtn hidden";
+
+generalDownBtn.textContent="↓";
+
+generalDownBtn.setAttribute(
+  "aria-label",
+  "Scroll to latest message"
+);
+
+generalDownBtn.onclick=
+  ()=>scrollToBottom("generalMsgs");
+
+document.body.appendChild(
+  generalDownBtn
+);
+
+const courseDownBtn=
+  document.createElement("button");
+
+courseDownBtn.className=
+  "downBtn hidden";
+
+courseDownBtn.textContent="↓";
+
+courseDownBtn.setAttribute(
+  "aria-label",
+  "Scroll to latest message"
+);
+
+courseDownBtn.onclick=
+  ()=>scrollToBottom("courseMsgs");
+
+document.body.appendChild(
+  courseDownBtn
+);
+
+$("generalMsgs")
+.addEventListener(
+  "scroll",
+  ()=>{
+    generalDownBtn.classList.toggle(
+      "hidden",
+      isNearBottom(
+        $("generalMsgs")
+      )||
+      $("generalView")
+        .classList
+        .contains("hidden")
+    );
+  }
+);
+
+$("courseMsgs")
+.addEventListener(
+  "scroll",
+  ()=>{
+    courseDownBtn.classList.toggle(
+      "hidden",
+      isNearBottom(
+        $("courseMsgs")
+      )||
+      $("courseChatView")
+        .classList
+        .contains("hidden")
+    );
+  }
+);
+
+function refreshDownButtons(){
+  generalDownBtn.classList.toggle(
+    "hidden",
+    $("generalView")
+      .classList
+      .contains("hidden")||
+    isNearBottom(
+      $("generalMsgs")
+    )
+  );
+
+  courseDownBtn.classList.toggle(
+    "hidden",
+    $("courseChatView")
+      .classList
+      .contains("hidden")||
+    isNearBottom(
+      $("courseMsgs")
+    )
+  );
+}
+
+window.addEventListener(
+  "resize",
+  refreshDownButtons
+);
+
+loadDarkMode();
+
+if(
+  localStorage.getItem(
+    "ojoola_entered"
+  )==="1"
+){
+  $("welcome")
+    .classList
+    .add("hidden");
+
+  $("app")
+    .classList
+    .remove("hidden");
+
+  renderCourses();
+  renderGeneralChat();
+
+  history.replaceState(
+    {page:"home"},
+    "",
+    location.pathname+
+    location.search
+  );
+
+  setPage(
+    "home",
+    {noHistory:true}
+  );
+
+}else{
+
+  $("app")
+    .classList
+    .add("hidden");
+
+  $("welcome")
+    .classList
+    .remove("hidden");
+}
 </script>
+
 </body>
 </html>
