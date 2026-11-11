@@ -94,8 +94,8 @@ body.dark .msgBtn{background:#0F172A;color:#E2E8F0}
   <div class="logoCircle">🎓</div>
   <h1>Welcome to Ojoola AI</h1>
   <div class="subtitle">Your AI Study Partner - Learn Smarter, Not Harder.</div>
-  <button class="wBtn" onclick="goHome()">🏠 Proceed to Home Page</button>
-  <button class="wBtn2" onclick="goStudy()">📚 Proceed to Study</button>
+  <button class="wBtn" id="btnHome" onclick="goHome()">🏠 Proceed to Home Page</button>
+  <button class="wBtn2" id="btnStudy" onclick="goStudy()">📚 Proceed to Study</button>
   <div class="wHint">Tap any book, pen or lightbulb - it will jump ✨</div>
 </div>
 
@@ -188,7 +188,16 @@ body.dark .msgBtn{background:#0F172A;color:#E2E8F0}
 </div></div>
 
 <script>
-let raw = JSON.parse(localStorage.getItem('ojoola_courses')||'null');
+// SAFE WELCOME BUTTONS - defined FIRST, so they work even if later code fails
+function goWelcome(){try{if(window.speechSynthesis) window.speechSynthesis.cancel();}catch(e){} var w=document.getElementById('welcome'); var a=document.getElementById('app'); if(w) w.classList.remove('hidden'); if(a) a.classList.add('hidden'); window.scrollTo(0,0);}
+function enterApp(view){ var w=document.getElementById('welcome'); var a=document.getElementById('app'); if(w) w.classList.add('hidden'); if(a) a.classList.remove('hidden'); try{showView(view);}catch(e){} try{render();}catch(e){} try{renderGenFiles();}catch(e){} try{if(!document.getElementById('generalMsgs').children.length) addGeneralMsg('ai','Hello! I am Ojoola AI. Ask me anything, or attach a picture or PDF and ask me about it.');}catch(e){} try{if(cachedModel){var b=document.getElementById('modelBadge'); if(b) b.textContent='Model: Saved - '+cachedModel+' (fast, will re-pick if Google kills it)';}}catch(e){} try{history.pushState({page:'app',view:view},'', '#app');}catch(e){} window.scrollTo(0,0); }
+function goHome(){ enterApp('home'); }
+function goStudy(){ enterApp('home'); }
+function goGeneral(){ enterApp('general'); }
+function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
+
+let raw = null;
+try{ raw = JSON.parse(localStorage.getItem('ojoola_courses')||'null'); }catch(e){ raw=null; }
 let courses;
 if(raw && raw.length===15){ courses = raw.map(c=>({name:c.name||'',code:c.code||'',pdfs:c.pdfs||[null,null,null,null],pics:c.pics||[],ref:true,chat:c.chat||[]})); } else { courses = Array.from({length:15},()=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]})); }
 let current = 0;
@@ -197,7 +206,6 @@ let apiKey = localStorage.getItem('ojoola_key')||'';
 let genFiles = [];
 let cachedModel = localStorage.getItem('ojoola_model')||null;
 let speakingId = null;
-function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
 function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
 function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
 function cleanText(t){
@@ -211,25 +219,10 @@ function cleanText(t){
   s=s.replace(/\*\*/g,'').replace(/__/g,'');
   return s.trim();
 }
-function applyTheme(){document.body.classList.remove('dark');let t=theme;if(t==='system') t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(t==='dark') document.body.classList.add('dark');document.getElementById('thSystem').className=theme==='system'?'active':'';document.getElementById('thLight').className=theme==='light'?'active':'';document.getElementById('thDark').className=theme==='dark'?'active':''}
+function applyTheme(){document.body.classList.remove('dark');let t=theme;if(t==='system') t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(t==='dark') document.body.classList.add('dark');var s=document.getElementById('thSystem'); var l=document.getElementById('thLight'); var d=document.getElementById('thDark'); if(s) s.className=theme==='system'?'active':''; if(l) l.className=theme==='light'?'active':''; if(d) d.className=theme==='dark'?'active':'';}
 function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
 if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
-function goWelcome(){stopSpeaking();document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden');window.scrollTo(0,0)}
-function enterApp(view){
-  document.getElementById('welcome').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  showView(view); render(); renderGenFiles();
-  if(!document.getElementById('generalMsgs').children.length) addGeneralMsg('ai','Hello! I am Ojoola AI. Ask me anything, or attach a picture or PDF and ask me about it.');
-  if(cachedModel){let b=document.getElementById('modelBadge');if(b) b.textContent='Model: Saved - '+cachedModel+' (fast, will re-pick if Google kills it)'}
-  try{ history.pushState({page:'app',view:view},'', '#app'); }catch(e){}
-  window.scrollTo(0,0);
-}
-function goHome(){ enterApp('home'); }
-function goStudy(){ enterApp('home'); }
-function goGeneral(){ enterApp('general'); }
-window.addEventListener('popstate', function(e){
-  if(!e.state || e.state.page!=='app'){ goWelcome(); }
-});
+window.addEventListener('popstate', function(e){ if(!e.state || e.state.page!=='app'){ goWelcome(); } });
 function showView(v){document.getElementById('homeView').classList.toggle('hidden',v!=='home');document.getElementById('generalView').classList.toggle('hidden',v!=='general');document.getElementById('navHome').classList.toggle('active',v==='home');document.getElementById('navGeneral').classList.toggle('active',v==='general')}
 function turnAllOn(){courses.forEach(c=>c.ref=true);save();render();showToast('allOnToast')}
 function render(){let g=document.getElementById('courseGrid');g.innerHTML='';courses.forEach((c,i)=>{let display=c.name?c.name:'Course '+(i+1);let sub=c.name?(c.code?c.code:'Tap to open'):'Tap to open';let d=document.createElement('div');d.className='card course';d.onclick=()=>openCourse(i);d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';g.appendChild(d)});if(window.lucide) lucide.createIcons()}
@@ -246,10 +239,20 @@ function addPics(e){Array.from(e.target.files).forEach(f=>{let r=new FileReader(
 function renderPics(){let el=document.getElementById('picList');el.innerHTML='';courses[current].pics.forEach((p,idx)=>{let w=document.createElement('div');w.style.position='relative';w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';el.appendChild(w)})}
 function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=cleanText(m.text);el.appendChild(d)})}
 function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
-function addGenFiles(e,kind){Array.from(e.target.files).forEach(f=>{let r=new FileReader();r.onload=()=>{genFiles.push({name:f.name,data:r.result,[STRIPPED]
+function addGenFiles(e,kind){
+  var files = Array.from(e.target.files);
+  files.forEach(function(f){
+    var r = new FileReader();
+    r.onload = function(){
+      genFiles.push({name:f.name, data:r.result, kind:kind});
+      renderGenFiles();
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value='';
+}
 function renderGenFiles(){let el=document.getElementById('genFilesList');if(!el) return;el.innerHTML='';if(!genFiles.length){el.innerHTML='<span style="font-size:13px;color:var(--muted)">No attachment yet. Add a picture or PDF, then ask about it.</span>';return}genFiles.forEach((f,idx)=>{let chip=document.createElement('span');chip.className='chip';chip.innerHTML=(f.kind==='pdf'?'📄 ':'🖼️ ')+f.name+' <b onclick="genFiles.splice('+idx+',1);renderGenFiles()" style="cursor:pointer;color:#EF4444;margin-left:4px">✕</b>';el.appendChild(chip)})}
 function clearGenFiles(){genFiles=[];renderGenFiles()}
-// --- GENERAL CHAT: Copy / Share / Read Aloud ---
 function addGeneralMsg(role, text){
   let box=document.getElementById('generalMsgs');
   let wrap=document.createElement('div');
@@ -438,7 +441,15 @@ function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'�
 function editKey(){document.getElementById('keyView').classList.add('hidden');document.getElementById('keyEdit').classList.remove('hidden');document.getElementById('apiKeyInput').focus()}
 function cancelKeyEdit(){lockKeyView()}
 function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);cachedModel=null;localStorage.removeItem('ojoola_model');lockKeyView();showToast('keyToast')}
-applyTheme();render();renderGenFiles();if(cachedModel){let b=document.getElementById('modelBadge');if(b) b.textContent='Model: Saved - '+cachedModel+' (fast, will re-pick if Google kills it)'}if(window.lucide) lucide.createIcons();
+try{applyTheme();}catch(e){}
+try{render();}catch(e){}
+try{renderGenFiles();}catch(e){}
+try{if(cachedModel){let b=document.getElementById('modelBadge');if(b) b.textContent='Model: Saved - '+cachedModel+' (fast, will re-pick if Google kills it)'}}catch(e){}
+try{if(window.lucide) lucide.createIcons();}catch(e){}
+try{
+  document.getElementById('btnHome').addEventListener('click', function(){ goHome(); });
+  document.getElementById('btnStudy').addEventListener('click', function(){ goStudy(); });
+}catch(e){}
 </script>
 </body>
 </html>
