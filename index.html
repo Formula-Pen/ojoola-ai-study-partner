@@ -5159,7 +5159,7 @@ let courseLive = {
 };
 
 const LIVE_TOKEN_ENDPOINT = "https://ojoola-live-token.babatundexwale.workers.dev/";
-const LIVE_MODEL = "models/gemini-3.8-live";
+const LIVE_MODEL = "models/gemini-3.1-flash-live-preview";
 
 
 function liveSetStatus(text) {
@@ -5526,7 +5526,7 @@ ${history || "No previous messages."}
     liveSetStatus("Opening live voice connection…");
 
     const ws = new WebSocket(
-      "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=" +
+      "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained?access_token=" +
       encodeURIComponent(tokenData.token)
     );
 
