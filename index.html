@@ -3,234 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ojoola - Your AI Study Partner</title>
+<title>Ojoola AI - Study Partner</title>
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
-  *{box-sizing:border-box;font-family:system-ui,Arial}
-  body{margin:0;background:#0f172a;color:white}
-  header{padding:14px 16px;background:#1e293b;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
-  header b{font-size:20px} header b span{color:#22c55e}
-  button{border:0;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
-  .top-btn{background:#334155;color:white}
-  .tabs{display:flex;gap:8px;padding:12px}
-  .tabs button{flex:1;background:#1e293b;color:white;padding:12px}
-  .tabs button.active{background:#22c55e;color:#052e16}
-  #page{padding:0 16px 20px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(min-width:700px){.grid{grid-template-columns:1fr 1fr 1fr}}
-  .course{background:#1e293b;border-radius:16px;padding:14px;cursor:pointer;border:2px solid transparent}
-  .course.complete{border-color:#22c55e}
-  .course h3{margin:0 0 6px;font-size:16px}
-  .course p{margin:4px 0;font-size:13px;color:#cbd5e1}
-  .badge{display:inline-block;background:#334155;padding:4px 8px;border-radius:20px;font-size:11px}
-  .badge.done{background:#22c55e;color:#052e16}
-  /* Modal */
-  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);overflow-y:auto;padding:16px;z-index:10}
-  .card{background:white;color:#111;border-radius:16px;padding:18px;max-width:600px;margin:20px auto}
-  .card input{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
-  .file-row{background:#f1f5f9;border-radius:12px;padding:10px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .file-row small{word-break:break-all}
-  .small{font-size:12px;padding:7px 10px}
-  .green{background:#22c55e}.red{background:#fee2e2;color:#991b1b}.grey{background:#e2e8f0}
-  .pics{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
-  .pic{position:relative;width:100px;height:100px}
-  .pic img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-  .pic button{position:absolute;top:2px;right:2px;padding:4px 7px;font-size:11px}
-  #chat{height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:#f8fafc;padding:10px;border-radius:12px}
-  .msg{max-width:90%;padding:10px 12px;border-radius:12px;line-height:1.5;white-space:pre-wrap;font-size:14px}
-  .user{background:#22c55e;align-self:flex-end}.ai{background:#e2e8f0;align-self:flex-start}
-  .row{display:flex;gap:8px;margin-top:10px}.row input{flex:1}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{margin:0;background:linear-gradient(180deg,#eaf2ff 0%,#ffffff 45%,#dbeaff 100%);color:#0f2040;min-height:100vh}
+header{background:linear-gradient(135deg,#0b5cff,#00a8ff 55%,#7b5cff);color:#fff;padding:18px 16px 22px;position:sticky;top:0;z-index:10;box-shadow:0 8px 24px rgba(11,92,255,.25);border-radius:0 0 22px 22px}
+header h1{margin:0;font-size:26px;letter-spacing:.2px} header p{margin:4px 0 0;opacity:.92;font-size:13px}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.btn{border:0;cursor:pointer;border-radius:999px;padding:12px 16px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-blue{background:linear-gradient(135deg,#0b5cff,#00a8ff);color:#fff;box-shadow:0 6px 16px rgba(11,92,255,.3)}
+.btn-white{background:#fff;color:#0b5cff;border:1px solid #dbe6ff}
+.btn-ghost{background:#fff;color:#0f2040}
+.wrap{padding:16px;max-width:900px;margin:0 auto}
+.card{background:#fff;border:1px solid #e2ecff;border-radius:18px;padding:14px;box-shadow:0 6px 20px rgba(11,92,255,.08);margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1fr}}
+.course{cursor:pointer;position:relative;overflow:hidden}
+.course:before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:linear-gradient(90deg,#0b5cff,#00c2ff,#7b5cff)}
+.course h3{margin:8px 0 4px;font-size:16px}
+.course p{margin:0;font-size:12px;color:#5b6b85}
+.badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#eaf2ff,#dbeaff);color:#0b5cff;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;margin-top:8px}
+input,textarea{width:100%;padding:13px;border:1px solid #dbe6ff;border-radius:14px;background:#f8fbff;outline:none;font-size:15px}
+input:focus{border-color:#0b5cff;background:#fff}
+label{font-weight:800;font-size:14px;display:block;margin:12px 0 6px}
+.row{display:flex;gap:8px;align-items:center}
+.pdfrow{display:flex;justify-content:space-between;align-items:center;background:#f0f6ff;border:1px solid #e2ecff;border-radius:14px;padding:10px 10px 10px 12px;margin-bottom:8px;font-size:13px;font-weight:700}
+.chatbox{background:#f8fbff;border:1px solid #e2ecff;border-radius:16px;padding:12px;min-height:120px;max-height:320px;overflow:auto}
+.msg{background:#fff;border:1px solid #e2ecff;padding:10px 12px;border-radius:14px;margin-bottom:8px;font-size:14px;line-height:1.5;white-space:pre-wrap}
+.msg.me{background:linear-gradient(135deg,#0b5cff,#00a8ff);color:#fff;border:0}
+.switch{position:relative;width:52px;height:28px;flex-shrink:0;display:inline-block}
+.switch input{display:none}
+.slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s;cursor:pointer}
+.slider:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.switch input:checked + .slider{background:linear-gradient(135deg,#0b5cff,#00a8ff)}
+.switch input:checked + .slider:before{transform:translateX(24px)}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:linear-gradient(135deg,#eaf2ff,#ffffff);border:1px solid #dbe6ff;padding:12px;border-radius:16px;margin:10px 0}
+.toggle-row b{font-size:13px;display:flex;align-items:center;gap:6px} .toggle-row small{display:block;color:#5b6b85;font-weight:500;font-size:11px}
+.modal{position:fixed;inset:0;background:rgba(10,20,40,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal.open{display:flex} .modal .card{width:100%;max-width:420px}
+.hidden{display:none}
+.flex-title{display:flex;align-items:center;gap:8px;margin:0}
 </style>
 </head>
 <body>
-
 <header>
-  <b>Ojoola <span>AI</span></b>
-  <div><button class="top-btn" onclick="openSettings()">⚙️ Settings</button></div>
+<div class="toprow"><div><h1 style="display:flex;align-items:center;gap:8px"><i data-lucide="graduation-cap" style="width:28px;height:28px"></i> Ojoola AI</h1><p>Your blue study partner • 15 Courses • PDFs + Pictures</p></div><button class="btn btn-white" onclick="openSettings()"><i data-lucide="settings" style="width:18px;height:18px"></i> Settings</button></div>
 </header>
+<div class="wrap" id="home"></div>
+<div class="wrap hidden" id="detail"></div>
 
-<div class="tabs">
-  <button id="tabCourses" class="active" onclick="showTab('courses')">📚 My 15 Courses</button>
-  <button id="tabChat" onclick="showTab('chat')">💬 General Chat</button>
-</div>
-
-<div id="page">
-  <div id="viewCourses">
-    <p style="color:#cbd5e1">Tap any course to upload its PDFs & pictures. You fill them one by one.</p>
-    <div class="grid" id="courseGrid"></div>
-  </div>
-
-  <div id="viewChat" style="display:none">
-    <div style="background:#1e293b;padding:14px;border-radius:14px">
-      <h3 style="margin:0">General Chat with Ojoola</h3>
-      <p style="color:#cbd5e1;font-size:13px">For questions not tied to a course. For course questions, open that course.</p>
-      <div id="chatGeneral" style="height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:#0f172a;padding:10px;border-radius:12px"></div>
-      <div class="row"><input id="qGeneral" placeholder="Ask Ojoola..." style="background:white"><button class="green" onclick="askGeneral()">Send</button></div>
-    </div>
-  </div>
-</div>
-
-<!-- COURSE DETAIL MODAL -->
-<div class="modal" id="courseModal">
-  <div class="card">
-    <div style="display:flex;justify-content:space-between"><h2 id="modalTitle">Course 1</h2><button class="grey small" onclick="closeCourse()">✕ Close</button></div>
-    <label><b>Course Name</b></label><input id="cName" placeholder="e.g. Anatomy 101">
-    <label><b>Course Code (optional)</b></label><input id="cCode" placeholder="e.g. ANA 101">
-    <button class="green" style="width:100%;padding:12px" onclick="saveCourseInfo()">Save Name & Code</button>
-
-    <h3>📄 PDFs - Max 4</h3>
-    <div id="pdfList"></div>
-
-    <h3>🖼️ Pictures - Many allowed</h3>
-    <button class="green small" onclick="document.getElementById('picInput').click()">+ Add Pictures</button>
-    <input type="file" id="picInput" accept="image/*" multiple style="display:none" onchange="addPictures(this)">
-    <div class="pics" id="picList"></div>
-
-    <h3>💬 Chat for this course only</h3>
-    <div id="chat"></div>
-    <div class="row"><input id="q" placeholder="Ask about this course..."><button class="green" onclick="askCourse()">Send</button></div>
-
-    <hr>
-    <button class="red" style="width:100%;padding:12px" onclick="deleteCourse()">🗑️ Delete This Entire Course</button>
-    <p style="font-size:12px;color:#666">Delete Course = clears name, all 4 PDFs, and all pictures for this field. It becomes Empty again.</p>
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="modal" id="settingsModal">
-  <div class="card">
-    <h2>Settings</h2>
-    <p style="font-size:13px;color:#555">Paste Gemini API Key. Saved only in YOUR browser. Never in code / GitHub.</p>
-    <input id="apiKey" type="password" placeholder="AIza...">
-    <p id="keyStatus"></p>
-    <button class="green" style="width:100%;padding:12px" onclick="saveKey()">Save Key</button>
-    <button class="grey" style="width:100%;padding:12px;margin-top:8px" onclick="closeSettings()">Close</button>
-  </div>
-</div>
+<div class="modal" id="settingsModal"><div class="card">
+<h2 style="margin:0;display:flex;align-items:center;gap:8px"><i data-lucide="settings"></i> Settings</h2><p style="color:#5b6b85;font-size:13px">Paste Gemini API Key. Saved only in YOUR browser. Never in code / GitHub.</p>
+<input id="apiKeyInput" placeholder="AIza..."><p id="keyStatus">No key yet</p>
+<button class="btn btn-blue" style="width:100%" onclick="saveKey()"><i data-lucide="key-round"></i> Save Key</button><br><br>
+<button class="btn btn-ghost" style="width:100%" onclick="closeSettings()">Close</button>
+</div></div>
 
 <script>
-let courses = JSON.parse(localStorage.getItem('ojoola_courses') || 'null') || Array.from({length:15},(_,i)=>({id:i+1,name:'',code:'',pdfs:[null,null,null,null],pics:[]}));
-let currentId = 1;
-
-function saveAll(){ localStorage.setItem('ojoola_courses', JSON.stringify(courses)); renderGrid(); }
-function getKey(){ return localStorage.getItem('ojoola_gemini_key')||''; }
-
-function renderGrid(){
-  const g = document.getElementById('courseGrid'); g.innerHTML='';
-  courses.forEach(c=>{
-    const pdfCount = c.pdfs.filter(Boolean).length;
-    const isEmpty = !c.name && pdfCount===0 && c.pics.length===0;
-    const div = document.createElement('div');
-    div.className = 'course ' + (!isEmpty ? 'complete':'');
-    div.onclick = ()=> openCourse(c.id);
-    div.innerHTML = `<h3>${c.name || 'Course '+c.id+' - Empty'}</h3><p>${c.code || 'Tap to add course'}</p><p>📄 ${pdfCount}/4 PDFs &nbsp; 🖼️ ${c.pics.length} Pictures</p><span class="badge ${!isEmpty?'done':''}">${isEmpty?'Empty - Tap to Fill':'Saved ✓ Tap to Edit'}</span>`;
-    g.appendChild(div);
-  });
+let courses = JSON.parse(localStorage.getItem('ojoola_courses')||'null') || Array.from({length:15},(_,i)=>({id:i+1,name:'',code:'',pdfs:[null,null,null,null],pics:[],enabled:true,onlyThis:true}));
+let apiKey = localStorage.getItem('ojoola_gemini_key')||'';
+function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses));}
+function refreshIcons(){if(window.lucide) lucide.createIcons();}
+function renderHome(){
+  document.getElementById('detail').classList.add('hidden');
+  let h=document.getElementById('home'); h.classList.remove('hidden');
+  h.innerHTML=`<div class="card"><b style="display:flex;align-items:center;gap:8px"><i data-lucide="sparkles"></i> How referencing works</b><p style="margin:6px 0 0;color:#5b6b85;font-size:13px;line-height:1.5">Turn <b>Referencing ON</b> for courses you want AI to use. Turn it OFF to exclude that course. Inside a course, <b>Chat from THIS course only</b> limits AI to just that course.</p></div><div class="grid">`+courses.map(c=>`
+  <div class="card course" onclick="openCourse(${c.id})">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="badge"><i data-lucide="book-open" style="width:13px;height:13px"></i> Course ${c.id}</span><i data-lucide="chevron-right" style="width:18px;height:18px;color:#0b5cff"></i></div>
+    <h3>${c.name||'Empty Course'}</h3><p>${c.code||'Tap to add course'}</p>
+    <span class="badge"><i data-lucide="file-text" style="width:13px;height:13px"></i> ${c.pdfs.filter(Boolean).length}/4 PDFs &nbsp; <i data-lucide="image" style="width:13px;height:13px"></i> ${c.pics.length} Pictures</span><br>
+    <span class="badge">${c.name?'Tap to Open':'Empty - Tap to Fill'}</span>
+    <div class="toggle-row" onclick="event.stopPropagation()" style="margin-top:10px;padding:8px 10px">
+      <div><b><i data-lucide="toggle-right" style="width:16px;height:16px"></i> Referencing ${c.enabled?'ON':'OFF'}</b><small>${c.enabled?'AI will use this course':'AI will ignore this course'}</small></div>
+      <label class="switch"><input type="checkbox" ${c.enabled?'checked':''} onchange="toggleEnabled(${c.id},this.checked)"><span class="slider"></span></label>
+    </div>
+  </div>`).join('')+`</div>`;
+  refreshIcons();
 }
-
-function showTab(t){
-  document.getElementById('viewCourses').style.display = t==='courses'?'block':'none';
-  document.getElementById('viewChat').style.display = t==='chat'?'block':'none';
-  document.getElementById('tabCourses').className = t==='courses'?'active':'';
-  document.getElementById('tabChat').className = t==='chat'?'active':'';
-}
-
+function toggleEnabled(id,val){let c=courses.find(x=>x.id===id);c.enabled=val;save();renderHome();}
 function openCourse(id){
-  currentId = id;
-  const c = courses.find(x=>x.id===id);
-  document.getElementById('modalTitle').innerText = 'Course '+id;
-  document.getElementById('cName').value = c.name;
-  document.getElementById('cCode').value = c.code;
-  renderPDFs(); renderPics();
-  document.getElementById('chat').innerHTML = `<div class="msg ai">Ask me anything about ${c.name || 'Course '+id}. I will use your uploaded PDFs & pictures for this course.</div>`;
-  document.getElementById('courseModal').style.display='block';
-}
-function closeCourse(){ document.getElementById('courseModal').style.display='none'; }
+  let c=courses.find(x=>x.id===id);
+  document.getElementById('home').classList.add('hidden');
+  let d=document.getElementById('detail'); d.classList.remove('hidden');
+  d.innerHTML=`<button class="btn btn-white" onclick="renderHome()"><i data-lucide="arrow-left"></i> Back to All Courses</button>
+  <div class="card"><h2 style="margin:0;display:flex;gap:8px;align-items:center"><i data-lucide="book-open"></i> Course ${c.id}</h2>
+  <label>Course Name</label><input id="cname" value="${c.name}" placeholder="e.g. Anatomy 101">
+  <label>Course Code (optional)</label><input id="ccode" value="${c.code}" placeholder="e.g. ANA 101">
+  <button class="btn btn-blue" style="width:100%;margin-top:12px" onclick="saveName(${c.id})"><i data-lucide="save"></i> Save Name & Code</button></div>
 
-function saveCourseInfo(){
-  const c = courses.find(x=>x.id===currentId);
-  c.name = document.getElementById('cName').value.trim();
-  c.code = document.getElementById('cCode').value.trim();
-  saveAll(); alert('Course name saved!'); renderPDFs();
-}
+  <div class="card"><h3 class="flex-title"><i data-lucide="file-text"></i> PDFs - Max 4</h3>${c.pdfs.map((p,i)=>`<div class="pdfrow"><span style="display:flex;gap:6px;align-items:center"><i data-lucide="file" style="width:16px;height:16px"></i> PDF ${i+1}: ${p?p.name:'Empty'}</span><button class="btn btn-blue" style="padding:8px 12px" onclick="document.getElementById('pdf${i}').click()"><i data-lucide="upload" style="width:16px;height:16px"></i> Upload</button><input type="file" id="pdf${i}" accept="application/pdf" style="display:none" onchange="uploadPDF(${c.id},${i},this)"></div>`).join('')}
+  ${c.pdfs.map((p,i)=>p?`<button class="btn btn-white" onclick="removePDF(${c.id},${i})"><i data-lucide="trash-2" style="width:16px;height:16px"></i> Remove PDF ${i+1}</button> `:'').join('')}
+  </div>
+  <div class="card"><h3 class="flex-title"><i data-lucide="image"></i> Pictures - Many allowed</h3><p style="color:#5b6b85;font-size:13px">${c.pics.length} pictures</p><button class="btn btn-blue" onclick="document.getElementById('picInput').click()"><i data-lucide="plus"></i> Add Pictures</button><input type="file" id="picInput" accept="image/*" multiple style="display:none" onchange="uploadPics(${c.id},this)"><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">${c.pics.map((p,i)=>`<img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:2px solid #dbeaff" onclick="removePic(${c.id},${i})">`).join('')}</div><p style="font-size:11px;color:#5b6b85">Tap a picture to remove it</p></div>
 
-function renderPDFs(){
-  const c = courses.find(x=>x.id===currentId);
-  const list = document.getElementById('pdfList'); list.innerHTML='';
-  c.pdfs.forEach((pdf,i)=>{
-    const row = document.createElement('div'); row.className='file-row';
-    if(pdf){
-      row.innerHTML = `<small><b>PDF ${i+1}:</b> ${pdf.name}</small><span><button class="small grey" onclick="replacePDF(${i})">Replace</button> <button class="small red" onclick="deletePDF(${i})">Delete</button></span>`;
-    } else {
-      row.innerHTML = `<small><b>PDF ${i+1}:</b> Empty</small><button class="small green" onclick="uploadPDF(${i})">Upload PDF</button>`;
-    }
-    list.appendChild(row);
-  });
+  <div class="card"><h3 class="flex-title"><i data-lucide="message-circle"></i> Chat for this course only</h3>
+  <div class="toggle-row"><div><b><i data-lucide="lock"></i> Chat from THIS course only: ${c.onlyThis?'ON':'OFF'}</b><small>${c.onlyThis?'AI uses ONLY Course '+c.id+' PDFs & pictures':'AI uses ALL courses with Referencing ON'}</small></div><label class="switch"><input type="checkbox" ${c.onlyThis?'checked':''} onchange="toggleOnly(${c.id},this.checked)"><span class="slider"></span></label></div>
+  <div class="toggle-row"><div><b><i data-lucide="toggle-right"></i> Referencing for this course: ${c.enabled?'ON':'OFF'}</b><small>${c.enabled?'This course is included when chatting across courses':'This course is excluded'}</small></div><label class="switch"><input type="checkbox" ${c.enabled?'checked':''} onchange="toggleEnabledDetail(${c.id},this.checked)"><span class="slider"></span></label></div>
+  <div class="chatbox" id="chatBox"><div class="msg">Ask me anything about ${c.onlyThis?'Course '+c.id+' only':'all enabled courses'}. I will use your uploaded PDFs & pictures.</div></div>
+  <div class="row" style="margin-top:10px"><input id="chatInput" placeholder="Ask about this course..." onkeydown="if(event.key==='Enter')askAI(${c.id})"><button class="btn btn-blue" onclick="askAI(${c.id})"><i data-lucide="send"></i> Send</button></div>
+  </div>`;
+  refreshIcons();
 }
-function uploadPDF(i){
-  const inp = document.createElement('input'); inp.type='file'; inp.accept='.pdf';
-  inp.onchange = ()=>{ const f = inp.files[0]; if(!f) return; const c = courses.find(x=>x.id===currentId); c.pdfs[i]={name:f.name}; saveAll(); renderPDFs(); alert('PDF saved: '+f.name); };
-  inp.click();
-}
-function replacePDF(i){ if(confirm('Replace PDF '+(i+1)+'? Old PDF will be removed.')) uploadPDF(i); }
-function deletePDF(i){ if(confirm('Delete PDF '+(i+1)+'?')){ const c = courses.find(x=>x.id===currentId); c.pdfs[i]=null; saveAll(); renderPDFs(); } }
-
-function addPictures(input){
-  const c = courses.find(x=>x.id===currentId);
-  Array.from(input.files).forEach(f=>{
-    const reader = new FileReader();
-    reader.onload = e=>{ c.pics.push({name:f.name, data:e.target.result}); saveAll(); renderPics(); };
-    reader.readAsDataURL(f);
-  });
-}
-function renderPics(){
-  const c = courses.find(x=>x.id===currentId);
-  const list = document.getElementById('picList'); list.innerHTML='';
-  c.pics.forEach((p,i)=>{
-    const d = document.createElement('div'); d.className='pic';
-    d.innerHTML = `<img src="${p.data}"><button class="red" onclick="deletePic(${i})">✕</button>`;
-    d.onclick = (e)=>{ if(e.target.tagName!=='BUTTON' && confirm('Replace this picture?')){ const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=()=>{ const f=inp.files[0]; const r=new FileReader(); r.onload=ev=>{ c.pics[i]={name:f.name,data:ev.target.result}; saveAll(); renderPics(); }; r.readAsDataURL(f); }; inp.click(); } };
-    list.appendChild(d);
-  });
-}
-function deletePic(i){ if(confirm('Delete this picture?')){ const c=courses.find(x=>x.id===currentId); c.pics.splice(i,1); saveAll(); renderPics(); } }
-
-function deleteCourse(){
-  if(!confirm('Delete ENTIRE Course '+currentId+'? This clears name, all PDFs and pictures.')) return;
-  courses = courses.map(c=> c.id===currentId ? {id:c.id,name:'',code:'',pdfs:[null,null,null,null],pics:[]} : c);
-  saveAll(); closeCourse(); alert('Course deleted. Field is Empty again.');
-}
-
-// Settings
-function openSettings(){ document.getElementById('settingsModal').style.display='block'; document.getElementById('apiKey').value=getKey(); document.getElementById('keyStatus').innerText = getKey()?'✅ Key saved in this browser':'❌ No key yet'; }
-function closeSettings(){ document.getElementById('settingsModal').style.display='none'; }
-function saveKey(){ const k=document.getElementById('apiKey').value.trim(); if(!k) return alert('Paste key first'); localStorage.setItem('ojoola_gemini_key',k); alert('Saved! Only in your browser.'); closeSettings(); }
-
-// Chat
-async function callGemini(prompt, boxId){
-  const key=getKey(); if(!key){ alert('Go to Settings and paste your Gemini API Key first'); openSettings(); return; }
-  const box=document.getElementById(boxId);
-  box.innerHTML += `<div class="msg user">${prompt}</div>`;
-  const th=document.createElement('div'); th.className='msg ai'; th.innerText='Ojoola is thinking...'; box.appendChild(th); box.scrollTop=box.scrollHeight;
+function toggleOnly(id,val){let c=courses.find(x=>x.id===id);c.onlyThis=val;save();openCourse(id);}
+function toggleEnabledDetail(id,val){let c=courses.find(x=>x.id===id);c.enabled=val;save();openCourse(id);}
+function saveName(id){let c=courses.find(x=>x.id===id);c.name=document.getElementById('cname').value;c.code=document.getElementById('ccode').value;save();alert('Saved!');openCourse(id);}
+function uploadPDF(id,idx,el){let f=el.files[0];if(!f)return;let r=new FileReader();r.onload=e=>{let c=courses.find(x=>x.id===id);c.pdfs[idx]={name:f.name,data:e.target.result};save();openCourse(id);};r.readAsDataURL(f);}
+function removePDF(id,idx){let c=courses.find(x=>x.id===id);c.pdfs[idx]=null;save();openCourse(id);}
+function uploadPics(id,el){let c=courses.find(x=>x.id===id);Array.from(el.files).forEach(f=>{let r=new FileReader();r.onload=e=>{c.pics.push(e.target.result);save();openCourse(id);};r.readAsDataURL(f);});}
+function removePic(id,idx){let c=courses.find(x=>x.id===id);c.pics.splice(idx,1);save();openCourse(id);}
+function openSettings(){document.getElementById('settingsModal').classList.add('open');document.getElementById('apiKeyInput').value=apiKey;updateKeyStatus();refreshIcons();}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+function updateKeyStatus(){document.getElementById('keyStatus').innerText=apiKey?'Key saved':'No key yet';}
+function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_gemini_key',apiKey);updateKeyStatus();alert('Key saved!');closeSettings();}
+async function askAI(id){
+  let c=courses.find(x=>x.id===id);let q=document.getElementById('chatInput').value.trim();if(!q)return;
+  if(!apiKey){alert('Please add your Gemini API Key in Settings first');openSettings();return;}
+  let box=document.getElementById('chatBox');box.innerHTML+=`<div class="msg me">${q}</div>`;document.getElementById('chatInput').value='';
+  let scope = c.onlyThis ? [c] : courses.filter(x=>x.enabled);
+  let context = scope.map(s=>`COURSE ${s.id} ${s.name} (${s.code}): PDFs: ${s.pdfs.filter(Boolean).map(p=>p.name).join(', ')||'none'}, Pictures: ${s.pics.length}`).join('\n');
+  let prompt=`You are Ojoola AI, a study partner. Scope: ${c.onlyThis?'ONLY Course '+c.id:'ALL enabled courses'}. Context:\n${context}\n\nQuestion about ${c.onlyThis?'Course '+c.id:c.name||'courses'}: ${q}\nAnswer clearly, with examples, and say if question is outside the uploaded materials.`;
+  let loading=document.createElement('div');loading.className='msg';loading.innerText='Thinking...';box.appendChild(loading);
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
-    const data=await res.json(); th.innerText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Check your key in Settings.';
-  }catch(e){ th.innerText='Error: Check internet and key.'; }
+    let res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+    let data=await res.json();let ans=data.candidates?.[0]?.content?.parts?.[0]?.text||'No answer. Check your API key.';
+    loading.innerText=ans;
+  }catch(e){loading.innerText='Error: '+e.message;}
   box.scrollTop=box.scrollHeight;
 }
-function askCourse(){
-  const c=courses.find(x=>x.id===currentId);
-  const q=document.getElementById('q').value.trim(); if(!q) return;
-  document.getElementById('q').value='';
-  const pdfNames = c.pdfs.filter(Boolean).map(p=>p.name).join(', ') || 'No PDFs uploaded yet';
-  callGemini(`You are Ojoola, Nigerian study partner. Course: ${c.name||'Course '+c.id} (${c.code}). PDFs in this course: ${pdfNames}. Pictures: ${c.pics.length} images. Answer simply with Nigerian examples, then 2 quiz questions. Question: ${q}`, 'chat');
-}
-function askGeneral(){
-  const q=document.getElementById('qGeneral').value.trim(); if(!q) return;
-  document.getElementById('qGeneral').value='';
-  callGemini(`You are Ojoola, friendly Nigerian study partner. Explain simply, Nigerian examples, end with 2 quiz questions. Question: ${q}`, 'chatGeneral');
-}
-
-renderGrid();
+renderHome();updateKeyStatus();refreshIcons();
 </script>
 </body>
 </html>
