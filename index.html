@@ -3385,403 +3385,8 @@ let speechPlayer={
   paused:false,
   timer:null,
   container:null,
-  token:0
-};
-
-function estimateDuration(t){
-
-  const words=
-    t.trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .length;
-
-  return Math.max(
-    1,
-    Math.round(
-      words/145*60
-    )
-  );
-}
-
-function formatTime(s){
-
-  s=Math.max(
-    0,
-    Math.floor(s)
-  );
-
-  return Math.floor(s/60)+
-    ":"+
-    String(
-      s%60
-    ).padStart(2,"0");
-}
-
-function createPlaybackUI(container){
-
-  container
-    .querySelector(
-      ".playback"
-    )
-    ?.remove();
-
-  const p=
-    document.createElement(
-      "div"
-    );
-
-  p.className="playback";
-
-  p.innerHTML=
-    `<div class="playbackTop">
-
-      <button
-        title="Rewind 10 seconds"
-        onclick="rewindSpeech()">
-        ↶10
-      </button>
-
-      <button
-        id="speechPlayBtn"
-        title="Play/Pause"
-        onclick="toggleSpeechPlay()">
-        ▶
-      </button>
-
-      <button
-        title="Forward 10 seconds"
-        onclick="forwardSpeech()">
-        10↷
-      </button>
-
-      <input
-        id="speechSeek"
-        type="range"
-        min="0"
-        max="100"
-        value="0"
-        oninput="seekSpeech(this.value)">
-
-      <span
-        id="speechTime"
-        class="time">
-        0:00 / 0:00
-      </span>
-
-      <button
-        title="Stop"
-        onclick="stopSpeech()">
-        ■
-      </button>
-
-    </div>`;
-
-  container.appendChild(p);
-}
-
-function toggleReadAloud(
-  text,
-  container
-){
-
-  if(
-    !("speechSynthesis" in window)
-  ){
-
-    alert(
-      "Read aloud is not supported by this browser."
-    );
-
-    return;
-  }
-
-  if(
-    speechPlayer.text===text&&
-    speechPlayer.container===container
-  ){
-
-    toggleSpeechPlay();
-
-    return;
-  }
-
-  stopSpeech();
-
-  speechPlayer={
-    text,
-    position:0,
-    total:estimateDuration(text),
-    speaking:true,
-    paused:false,
-    timer:null,
-    container,
-    token:
-      speechPlayer.token+1
-  };
-
-  createPlaybackUI(container);
-
-  startSpeechFromPosition();
-}
-
-function startSpeechFromPosition(){
-
-  if(!speechPlayer.text)return;
-
-  const token=
-    speechPlayer.token;
-
-  speechSynthesis.cancel();
-
-  const ratio=
-    speechPlayer.total
-      ?speechPlayer.position/
-        speechPlayer.total
-      :0;
-
-  let at=
-    Math.max(
-      0,
-      Math.min(
-        speechPlayer.text.length-1,
-        Math.floor(
-          ratio*
-          speechPlayer.text.length
-        )
-      )
-    );
-
-  if(at>0){
-
-    const space=
-      speechPlayer.text.indexOf(
-        " ",
-        at
-      );
-
-    if(space>0){
-      at=space+1;
-    }
-  }
-
-  const remaining=
-    speechPlayer.text.slice(at);
-
-  if(!remaining.trim()){
-
-    finishSpeech();
-
-    return;
-  }
-
-  const u=
-    new SpeechSynthesisUtterance(
-      remaining
-    );
-
-  u.lang="en-US";
-  u.rate=.95;
-
-  u.onend=()=>{
-
-    if(
-      token===
-      speechPlayer.token
-    ){
-
-      finishSpeech();
-    }
-  };
-
-  u.onerror=e=>{
-
-    if(
-      token===
-      speechPlayer.token&&
-      e.error!=="canceled"
-    ){
-
-      speechPlayer.speaking=false;
-
-      updateSpeechUI();
-    }
-  };
-
-  speechSynthesis.speak(u);
-
-  startSpeechTimer();
-
-  updateSpeechUI();
-}
-
-function startSpeechTimer(){clearInterval(speechPlayer.timer);speechPlayer.timer=setInterval(()=>{if(!speechPlayer.speaking||speechPlayer.paused||!speechSynthesis.speaking)return;speechPlayer.position=Math.min(speechPlayer.total,speechPlayer.position+.25);updateSpeechUI()},250)
-
-  speechPlayer.timer=
-    setInterval(()=>{
-
-      if(
-        !speechPlayer.speaking||
-        speechPlayer.paused
-      )return;
-
-      speechPlayer.position=
-        Math.min(
-          speechPlayer.total,
-          speechPlayer.position+.25
-        );
-
-      updateSpeechUI();
-
-    },250);
-}
-
-function updateSpeechUI(){
-
-  const c=
-    speechPlayer.container;
-
-  if(!c)return;
-
-  const seek=
-    c.querySelector(
-      "#speechSeek"
-    );
-
-  const time=
-    c.querySelector(
-      "#speechTime"
-    );
-
-  const play=
-    c.querySelector(
-      "#speechPlayBtn"
-    );
-
-  if(seek){
-
-    seek.value=
-      speechPlayer.total
-        ?speechPlayer.position/
-          speechPlayer.total*
-          100
-        :0;
-  }
-
-  if(time){
-
-    time.textContent=
-      formatTime(
-        speechPlayer.position
-      )+
-      " / "+
-      formatTime(
-        speechPlayer.total
-      );
-  }
-
-  if(play){
-
-    play.textContent=
-      speechPlayer.speaking&&
-      !speechPlayer.paused
-        ?"❚❚"
-        :"▶";
-  }
-}
-
-function toggleSpeechPlay(){if(!speechPlayer.text)return;if(speechPlayer.speaking&&!speechPlayer.paused){speechPlayer.paused=true;speechPlayer.speaking=false;clearInterval(speechPlayer.timer);speechPlayer.token++;speechSynthesis.cancel();updateSpeechUI();return}if(speechPlayer.paused){speechPlayer.paused=false;speechPlayer.speaking=false;speechPlayer.token++;startSpeechFromPosition();return}speechPlayer.speaking=true;speechPlayer.paused=false;speechPlayer.token++;startSpeechFromPosition();
-
-  if(speechPlayer.speaking){
-
-    if(speechPlayer.paused){
-
-      speechSynthesis.resume();
-
-      speechPlayer.paused=false;
-
-    }else{
-
-      speechSynthesis.pause();
-
-      speechPlayer.paused=true;
-    }
-
-    updateSpeechUI();
-
-    return;
-  }
-
-  speechPlayer.speaking=true;
-  speechPlayer.paused=false;
-  speechPlayer.token++;
-
-  startSpeechFromPosition();
-}
-
-function stopSpeech(){
-
-  const token=
-    (speechPlayer.token||0)+1;
-
-  if(
-    "speechSynthesis" in window
-  ){
-
-    speechSynthesis.cancel();
-  }
-
-  clearInterval(
-    speechPlayer.timer
-  );
-
-  speechPlayer.container
-    ?.querySelector(
-      ".playback"
-    )
-    ?.remove();
-
-  speechPlayer={
-    text:"",
-    position:0,
-    total:0,
-    speaking:false,
-    paused:false,
-    timer:null,
-    container:null,
-    token
-  };
-}
-
-function finishSpeech(){
-
-  clearInterval(
-    speechPlayer.timer
-  );
-
-  speechPlayer.timer=null;
-
-  speechPlayer.position=
-    speechPlayer.total;
-
-  speechPlayer.speaking=false;
-  speechPlayer.paused=false;
-
-  updateSpeechUI();
-}
-
-function seekSpeech(v){
-
-/* Speech synthesis controls */
-let speechPlayer={
-  text:"",
-  position:0,
-  total:0,
-  speaking:false,
-  paused:false,
-  timer:null,
-  container:null,
-  token:0
+  token:0,
+  utterance:null
 };
 
 function estimateDuration(t){
@@ -3801,32 +3406,46 @@ function createPlaybackUI(container){
   p.className="playback";
 
   p.innerHTML=`<div class="playbackTop">
-    <button onclick="rewindSpeech()">↶10</button>
-    <button id="speechPlayBtn" onclick="toggleSpeechPlay()">▶</button>
-    <button onclick="forwardSpeech()">10↷</button>
-    <input id="speechSeek" type="range" min="0" max="100" value="0">
+    <button title="Rewind 10 seconds" onclick="rewindSpeech()">↶10</button>
+    <button id="speechPlayBtn" title="Play/Pause" onclick="toggleSpeechPlay()">▶</button>
+    <button title="Forward 10 seconds" onclick="forwardSpeech()">10↷</button>
+    <input id="speechSeek" type="range" min="0" max="100" value="0" oninput="seekSpeech(this.value)">
     <span id="speechTime" class="time">0:00 / 0:00</span>
-    <button onclick="stopSpeech()">■</button>
+    <button title="Stop" onclick="stopSpeech()">■</button>
   </div>`;
 
   container.appendChild(p);
 }
 
 function cleanSpeechText(text){
-  return String(text||"")
-    .replace(/```[\s\S]*?```/g," ")
-    .replace(/`([^`]+)`/g,"$1")
-    .replace(/^#{1,6}\s*/gm,"")
-    .replace(/\*\*\*([^*]+)\*\*\*/g,"$1")
-    .replace(/\*\*([^*]+)\*\*/g,"$1")
-    .replace(/__([^_]+)__/g,"$1")
-    .replace(/\*([^*]+)\*/g,"$1")
-    .replace(/_([^_]+)_/g,"$1")
-    .replace(/[#*]+/g," ")
-    .replace(/^\s*[-*+]\s+/gm,"")
-    .replace(/^\s*\d+\.\s+/gm,"")
-    .replace(/\n{3,}/g,"\n\n")
-    .trim();
+  let s=String(text||"");
+
+  s=s.replace(/```[\s\S]*?```/g," ");
+  s=s.replace(/`([^`]+)`/g,"$1");
+  s=s.replace(/!\[([^\]]*)\]\([^)]+\)/g,"$1");
+  s=s.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1");
+
+  s=s.replace(/^#{1,6}\s*/gm,"");
+  s=s.replace(/^\s*[-*+]\s+/gm,"");
+  s=s.replace(/^\s*\d+\.\s+/gm,"");
+
+  s=s.replace(/\*\*\*([^*]+)\*\*\*/g,"$1");
+  s=s.replace(/\*\*([^*]+)\*\*/g,"$1");
+  s=s.replace(/__([^_]+)__/g,"$1");
+  s=s.replace(/\*([^*]+)\*/g,"$1");
+  s=s.replace(/_([^_]+)_/g,"$1");
+
+  s=s.replace(/[#*]+/g," ");
+
+  s=s.replace(/&nbsp;/gi," ");
+  s=s.replace(/&amp;/gi,"&");
+  s=s.replace(/&lt;/gi,"<");
+  s=s.replace(/&gt;/gi,">");
+
+  s=s.replace(/[ \t]+\n/g,"\n");
+  s=s.replace(/\n{3,}/g,"\n\n");
+
+  return s.trim();
 }
 
 function toggleReadAloud(text,container){
@@ -3857,23 +3476,59 @@ function toggleReadAloud(text,container){
     paused:false,
     timer:null,
     container:container,
-    token:speechPlayer.token+1
+    token:speechPlayer.token+1,
+    utterance:null
   };
 
   createPlaybackUI(container);
-  startSpeech();
+  startSpeechFromPosition();
 }
 
-function startSpeech(){
+function startSpeechFromPosition(){
+  if(!speechPlayer.text)return;
+
   const token=speechPlayer.token;
 
-  const u=
-    new SpeechSynthesisUtterance(
-      speechPlayer.text
-    );
+  speechSynthesis.cancel();
+
+  const ratio=
+    speechPlayer.total
+      ?speechPlayer.position/speechPlayer.total
+      :0;
+
+  let at=Math.floor(
+    ratio*speechPlayer.text.length
+  );
+
+  at=Math.max(
+    0,
+    Math.min(
+      speechPlayer.text.length-1,
+      at
+    )
+  );
+
+  if(at>0){
+    const space=speechPlayer.text.indexOf(" ",at);
+
+    if(space>0){
+      at=space+1;
+    }
+  }
+
+  const remaining=speechPlayer.text.slice(at);
+
+  if(!remaining.trim()){
+    finishSpeech();
+    return;
+  }
+
+  const u=new SpeechSynthesisUtterance(remaining);
 
   u.lang="en-US";
   u.rate=.95;
+
+  speechPlayer.utterance=u;
 
   u.onend=()=>{
     if(token===speechPlayer.token){
@@ -3904,17 +3559,18 @@ function startSpeechTimer(){
 
   speechPlayer.timer=setInterval(()=>{
     if(
-      speechPlayer.speaking &&
-      !speechPlayer.paused
+      !speechPlayer.speaking ||
+      speechPlayer.paused
     ){
-      speechPlayer.position=
-        Math.min(
-          speechPlayer.total,
-          speechPlayer.position+.25
-        );
-
-      updateSpeechUI();
+      return;
     }
+
+    speechPlayer.position=Math.min(
+      speechPlayer.total,
+      speechPlayer.position+.25
+    );
+
+    updateSpeechUI();
   },250);
 }
 
@@ -3923,21 +3579,14 @@ function updateSpeechUI(){
 
   if(!c)return;
 
-  const seek=
-    c.querySelector("#speechSeek");
-
-  const time=
-    c.querySelector("#speechTime");
-
-  const play=
-    c.querySelector("#speechPlayBtn");
+  const seek=c.querySelector("#speechSeek");
+  const time=c.querySelector("#speechTime");
+  const play=c.querySelector("#speechPlayBtn");
 
   if(seek){
-    seek.value=
-      speechPlayer.total
-        ? speechPlayer.position/
-          speechPlayer.total*100
-        : 0;
+    seek.value=speechPlayer.total
+      ?speechPlayer.position/speechPlayer.total*100
+      :0;
   }
 
   if(time){
@@ -3951,8 +3600,8 @@ function updateSpeechUI(){
     play.textContent=
       speechPlayer.speaking &&
       !speechPlayer.paused
-        ? "❚❚"
-        : "▶";
+        ?"❚❚"
+        :"▶";
   }
 }
 
@@ -3965,16 +3614,12 @@ function toggleSpeechPlay(){
   ){
     speechPlayer.paused=true;
 
-    clearInterval(
-      speechPlayer.timer
-    );
-
+    clearInterval(speechPlayer.timer);
     speechPlayer.timer=null;
 
     speechSynthesis.pause();
 
     updateSpeechUI();
-
     return;
   }
 
@@ -3987,9 +3632,7 @@ function toggleSpeechPlay(){
     speechSynthesis.resume();
 
     startSpeechTimer();
-
     updateSpeechUI();
-
     return;
   }
 
@@ -3997,18 +3640,17 @@ function toggleSpeechPlay(){
   speechPlayer.paused=false;
   speechPlayer.token++;
 
-  startSpeech();
+  startSpeechFromPosition();
 }
 
 function stopSpeech(){
-  const token=
-    (speechPlayer.token||0)+1;
+  const token=(speechPlayer.token||0)+1;
 
-  speechSynthesis.cancel();
+  if("speechSynthesis" in window){
+    speechSynthesis.cancel();
+  }
 
-  clearInterval(
-    speechPlayer.timer
-  );
+  clearInterval(speechPlayer.timer);
 
   speechPlayer.container
     ?.querySelector(".playback")
@@ -4022,19 +3664,19 @@ function stopSpeech(){
     paused:false,
     timer:null,
     container:null,
-    token
+    token,
+    utterance:null
   };
 }
 
 function finishSpeech(){
-  clearInterval(
-    speechPlayer.timer
-  );
+  clearInterval(speechPlayer.timer);
 
   speechPlayer.timer=null;
   speechPlayer.position=speechPlayer.total;
   speechPlayer.speaking=false;
   speechPlayer.paused=false;
+  speechPlayer.utterance=null;
 
   updateSpeechUI();
 }
@@ -4043,35 +3685,56 @@ function seekSpeech(v){
   if(!speechPlayer.text)return;
 
   speechPlayer.position=
-    Number(v)/100*
-    speechPlayer.total;
+    Number(v)/100*speechPlayer.total;
 
-  updateSpeechUI();
+  if(speechPlayer.speaking){
+    speechPlayer.token++;
+    speechSynthesis.cancel();
+    speechPlayer.paused=false;
+    startSpeechFromPosition();
+  }else{
+    updateSpeechUI();
+  }
 }
 
 function rewindSpeech(){
   if(!speechPlayer.text)return;
 
   speechPlayer.position=
-    Math.max(
-      0,
-      speechPlayer.position-10
-    );
+    Math.max(0,speechPlayer.position-10);
 
-  updateSpeechUI();
+  if(speechPlayer.speaking){
+    speechPlayer.token++;
+    speechSynthesis.cancel();
+    speechPlayer.paused=false;
+    startSpeechFromPosition();
+  }else{
+    updateSpeechUI();
+  }
 }
 
 function forwardSpeech(){
   if(!speechPlayer.text)return;
 
   speechPlayer.position=
-    Math.min(
-      speechPlayer.total,
-      speechPlayer.position+10
-    );
+    Math.min(speechPlayer.total,speechPlayer.position+10);
 
-  updateSpeechUI();
+  if(speechPlayer.position>=speechPlayer.total){
+    finishSpeech();
+    return;
+  }
+
+  if(speechPlayer.speaking){
+    speechPlayer.token++;
+    speechSynthesis.cancel();
+    speechPlayer.paused=false;
+    startSpeechFromPosition();
+  }else{
+    updateSpeechUI();
+  }
 }
+
+
 function escapeRegex(s){
 
   return s.replace(
