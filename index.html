@@ -12,8 +12,6 @@ body.dark{--bg:#0F172A;--card:#1E293B;--text:#F1F5F9;--muted:#94A3B8;--border:#3
 body{background:var(--bg);color:var(--text);transition:.3s}
 button{cursor:pointer;border:none;font-family:inherit}
 .hidden{display:none!important}
-
-/* WELCOME - WHITE + BLUE STUDY */
 #welcome{min-height:100vh;background:linear-gradient(180deg,#FFFFFF 0%,#EFF6FF 35%,#DBEAFE 55%,#2563EB 82%,#06B6D4 100%);color:#0F172A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;position:relative;overflow:hidden}
 .acad{position:absolute;font-size:30px;animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;z-index:1}
 @keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-14px) rotate(4deg)}}
@@ -24,9 +22,8 @@ button{cursor:pointer;border:none;font-family:inherit}
 #welcome .subtitle{color:#475569;font-size:14px;z-index:2;white-space:nowrap;line-height:1.4;max-width:100%}
 .wBtn{width:100%;max-width:360px;background:linear-gradient(90deg,#2563EB,#06B6D4);color:white;font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:22px;z-index:2;box-shadow:0 10px 25px rgba(37,99,235,.3)}
 .wBtn2{width:100%;max-width:360px;background:white;color:#1D4ED8;border:2px solid #2563EB;font-weight:800;font-size:17px;padding:15px;border-radius:16px;margin-top:12px;z-index:2}
+.wBtn3{width:100%;max-width:360px;background:#0F172A;color:white;font-weight:800;font-size:17px;padding:15px;border-radius:16px;margin-top:12px;z-index:2}
 .wHint{margin-top:16px;font-size:12px;color:#64748B;z-index:2}
-
-/* APP */
 header{background:var(--grad);color:white;padding:18px 16px 22px;border-radius:0 0 24px 24px;position:sticky;top:0;z-index:10}
 .topRow{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .topRow h1{font-size:24px;display:flex;align-items:center;gap:8px}
@@ -54,26 +51,38 @@ textarea{min-height:80px;resize:vertical}
 .primary{background:var(--grad2);color:white;padding:14px;border-radius:12px;font-weight:800;width:100%;font-size:15px}
 .ghost{background:var(--input);color:var(--text);padding:12px;border-radius:12px;font-weight:700;width:100%;margin-top:8px}
 .smallBtn{background:#16A34A;color:white;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.editBtn{background:#2563EB;color:white;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;flex-shrink:0}
+.lockBox{background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lockBox b{font-size:15px;color:var(--text)}
+.lockBox span{font-size:12px;color:var(--muted)}
+.toast{background:#DCFCE7;color:#166534;padding:10px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;margin-top:10px}
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 6px calc(10px + env(safe-area-inset-bottom));z-index:20}
 .nav button{background:none;color:var(--muted);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600}
 .nav button.active{color:#2563EB}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50}
-.modalBox{background:var(--card);width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:20px}
-@media(min-width:700px){.modal{align-items:center}.modalBox{border-radius:24px}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:12px 0}
+.modalBox{background:var(--card);width:100%;max-width:620px;max-height:none;overflow:visible;border-radius:24px;padding:20px;margin:auto 0}
+@media(min-width:700px){.modal{align-items:flex-start}.modalBox{border-radius:24px}}
 .seg{display:flex;background:var(--input);border-radius:12px;padding:4px;gap:4px;margin-top:10px}
 .seg button{flex:1;padding:10px;border-radius:9px;background:transparent;color:var(--muted);font-weight:700}
 .seg button.active{background:#2563EB;color:white}
-.msg{padding:11px 14px;border-radius:16px;margin:8px 0;max-width:88%;font-size:15px;line-height:1.5;white-space:pre-wrap}
-.me{background:var(--grad2);color:white;margin-left:auto;border-bottom-right-radius:4px}
-.ai{background:var(--input);border-bottom-left-radius:4px}
+.chatList{display:flex;flex-direction:column;gap:10px;width:100%;overflow:visible;max-height:none}
+.msg{padding:12px 14px;border-radius:18px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-width:88%;overflow:visible}
+.msg.me{background:var(--grad2);color:white;margin-left:auto;margin-right:0;border-bottom-right-radius:4px;align-self:flex-end;text-align:left}
+.msg.ai{background:var(--input);color:var(--text);margin-right:auto;margin-left:0;border-bottom-left-radius:4px;align-self:flex-start;text-align:left}
+@media(min-width:700px){.msg.ai{max-width:82%}.msg.me{max-width:75%}}
+.answerSplit{display:flex;flex-direction:column;gap:12px;width:100%}
+@media(min-width:800px){.answerSplit{flex-direction:row;align-items:flex-start}.answerSplit .answerText{flex:1;min-width:0}.answerSplit .chartCard{width:320px;flex-shrink:0;position:sticky;top:80px}}
+.chartCard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 4px 16px rgba(37,99,235,.08)}
+.chartCard h4{font-size:14px;margin-bottom:8px}
+.chartCard img,.chartCard canvas{width:100%;height:auto;border-radius:10px;display:block}
 .fileRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px;gap:8px}
 .thumb{width:64px;height:64px;object-fit:cover;border-radius:10px}
 .flex{display:flex;gap:8px;align-items:center}
+.chatInputWrap{position:sticky;bottom:0;background:var(--card);padding:10px 0 4px;margin-top:12px}
 </style>
 </head>
 <body>
 
-<!-- WELCOME - STUDY, NOT CHAT - NO SETTINGS HERE -->
 <div id="welcome">
   <span class="acad" style="top:10%;left:10%;animation-delay:0s" onclick="bounce(this)">📚</span>
   <span class="acad" style="top:14%;right:12%;animation-delay:.6s" onclick="bounce(this)">✏️</span>
@@ -83,32 +92,28 @@ textarea{min-height:80px;resize:vertical}
   <span class="acad" style="top:72%;right:9%;animation-delay:1s" onclick="bounce(this)">📐</span>
   <span class="acad" style="top:82%;left:42%;animation-delay:1.5s" onclick="bounce(this)">💡</span>
   <span class="acad" style="top:8%;left:46%;animation-delay:2s" onclick="bounce(this)">🎓</span>
-
   <div class="logoCircle">🎓</div>
   <h1>Welcome to Ojoola AI</h1>
   <div class="subtitle">Your AI Study Partner - Learn Smarter, Not Harder.</div>
-  <button class="wBtn" onclick="goStudy()">📚 Proceed to Study</button>
-  <button class="wBtn2" onclick="goGeneral()">💬 Proceed to General Chat</button>
+  <button class="wBtn" onclick="goHome()">🏠 Proceed to Home Page</button>
+  <button class="wBtn2" onclick="goStudy()">📚 Proceed to Study</button>
+  <button class="wBtn3" onclick="goGeneral()">💬 Proceed to General Chat</button>
   <div class="wHint">Tap any book, pen or lightbulb - it will jump ✨</div>
 </div>
 
-<!-- APP -->
 <div id="app" class="hidden">
 <header>
   <div class="topRow">
-    <div>
-      <h1>🎓 Ojoola AI</h1>
-      <p>Your AI Study Partner</p>
-    </div>
+    <div><h1>🎓 Ojoola AI</h1><p>Your AI Study Partner</p></div>
     <button class="setBtn" onclick="openSettings()"><i data-lucide="settings" style="width:16px;height:16px"></i> Settings</button>
   </div>
 </header>
-
 <div class="wrap" id="homeView">
   <div class="card">
     <h3><i data-lucide="sparkles" style="color:#2563EB"></i> How Referencing Works</h3>
     <p>Turn <b style="color:var(--text)">Referencing ON</b> inside a course to let AI use it. Turn it OFF to exclude it. Default is ON for all courses.</p>
     <button class="primary" style="margin-top:12px" onclick="turnAllOn()">Turn All Referencing ON ✅</button>
+    <div id="allOnToast" class="toast hidden">All Referencing ON ✅</div>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px">
     <button class="primary" style="flex:1" onclick="showView('home')">📚 My Courses</button>
@@ -116,35 +121,31 @@ textarea{min-height:80px;resize:vertical}
   </div>
   <div class="grid" id="courseGrid"></div>
 </div>
-
 <div class="wrap hidden" id="generalView">
-  <div class="card">
-    <h3>💬 General Chat</h3>
-    <p>Ask anything. This chat uses courses with Referencing ON. If no course has files, it answers from general knowledge.</p>
-  </div>
-  <div class="card"><div id="generalMsgs"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
-    <textarea id="generalInput" placeholder="Ask me anything..."></textarea>
-    <button class="primary" onclick="sendGeneral()">Send Message 🚀</button>
+  <div class="card"><h3>💬 General Chat</h3><p>Ask anything. This chat uses courses with Referencing ON.</p></div>
+  <div class="card"><div id="generalMsgs" class="chatList"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
+    <div class="chatInputWrap"><textarea id="generalInput" placeholder="Ask me anything..."></textarea>
+    <button class="primary" onclick="sendGeneral()">Send Message 🚀</button></div>
   </div>
 </div>
-
 <div class="nav">
   <button class="active" id="navHome" onclick="showView('home')"><i data-lucide="home"></i>Home</button>
   <button id="navGeneral" onclick="showView('general')"><i data-lucide="message-circle"></i>General Chat</button>
-  <button onclick="goWelcome()"><i data-lucide="sparkles"></i>Welcome</button>
   <button onclick="openSettings()"><i data-lucide="settings"></i>Settings</button>
 </div>
 </div>
 
-<!-- COURSE MODAL -->
 <div id="courseModal" class="modal hidden"><div class="modalBox">
   <div class="flex" style="justify-content:space-between"><h2 id="modalTitle">Course 1</h2><button class="ghost" style="width:auto;margin:0;padding:8px 12px" onclick="closeCourse()">Close ✕</button></div>
-  <p style="color:var(--muted);font-size:14px;margin-top:6px">Rename your course, upload PDFs and pictures, then chat.</p>
-  <label style="font-weight:700;margin-top:14px;display:block">Course Name</label>
-  <input id="courseName" placeholder="e.g. Anatomy 101">
-  <label style="font-weight:700;margin-top:10px;display:block">Course Code (optional)</label>
-  <input id="courseCode" placeholder="e.g. ANA 101">
-  <button class="primary" style="margin-top:10px" onclick="saveCourseName()">Save Name & Code</button>
+  <p style="color:var(--muted);font-size:14px;margin-top:6px">Fields are locked. Tap Edit to change, then Save to lock again.</p>
+  <div id="courseToast" class="toast hidden">Saved 🔒</div>
+  <label style="font-weight:700;margin-top:14px;display:block">Course Name 🔒</label>
+  <div id="nameView" class="lockBox"><div><b id="nameText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
+  <div id="nameEdit" class="hidden"><input id="courseName" placeholder="e.g. Anatomy 101"></div>
+  <label style="font-weight:700;margin-top:12px;display:block">Course Code 🔒</label>
+  <div id="codeView" class="lockBox"><div><b id="codeText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
+  <div id="codeEdit" class="hidden"><input id="courseCode" placeholder="e.g. ANA 101"></div>
+  <div id="saveCourseRow" class="hidden"><button class="primary" style="margin-top:10px" onclick="saveCourseName()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelCourseEdit()">Cancel</button></div>
   <div class="switchRow"><div><b>Referencing</b><div style="font-size:12px;color:var(--muted)" id="refLabel">AI will use this course</div></div><div class="switch on" id="refSwitch" onclick="toggleRef()"></div></div>
   <h3 style="margin-top:18px">📄 PDFs - Max 4</h3>
   <div id="pdfList"></div>
@@ -153,30 +154,25 @@ textarea{min-height:80px;resize:vertical}
   <input type="file" id="picInput" accept="image/*" multiple class="hidden" onchange="addPics(event)">
   <div id="picList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
   <h3 style="margin-top:18px">💬 Chat For This Course Only</h3>
-  <div id="courseMsgs" style="margin-top:8px"></div>
-  <textarea id="courseInput" placeholder="Ask about this course..."></textarea>
+  <div id="courseMsgs" class="chatList" style="margin-top:8px"></div>
+  <div class="chatInputWrap"><textarea id="courseInput" placeholder="Ask about this course..."></textarea>
   <button class="primary" onclick="sendCourseChat()">Send Message 🚀</button>
-  <button class="ghost" onclick="clearCourseChat()">Clear Chat</button>
+  <button class="ghost" onclick="clearCourseChat()">Clear Chat</button></div>
 </div></div>
 
-<!-- SETTINGS MODAL - ONLY INSIDE APP -->
 <div id="settingsModal" class="modal hidden"><div class="modalBox">
   <h2>Settings</h2>
   <div class="card" style="margin-top:14px">
     <h3>🎨 Appearance</h3>
-    <div class="seg">
-      <button id="thSystem" onclick="setTheme('system')">System</button>
-      <button id="thLight" onclick="setTheme('light')">Light</button>
-      <button id="thDark" onclick="setTheme('dark')">Dark</button>
-    </div>
+    <div class="seg"><button id="thSystem" onclick="setTheme('system')">System</button><button id="thLight" onclick="setTheme('light')">Light</button><button id="thDark" onclick="setTheme('dark')">Dark</button></div>
     <p>System follows your phone. Light is bright. Dark is navy.</p>
   </div>
   <div class="card">
-    <h3>🔑 Gemini API Key</h3>
-    <p>Paste Gemini API Key. Saved only in YOUR browser. Never in code / GitHub.</p>
-    <input id="apiKeyInput" type="password" placeholder="AIza...">
-    <div id="keyStatus" style="margin-top:8px;font-weight:700">❌ No key yet</div>
-    <button class="primary" style="margin-top:10px" onclick="saveKey()">Save Key</button>
+    <h3>🔑 Gemini API Key 🔒</h3>
+    <p>Locked by default. Tap Edit to change, then Save to lock again. Saved only in YOUR browser.</p>
+    <div id="keyView" class="lockBox"><div><b id="keyText">••••••••</b><br><span id="keyStatus">❌ No key yet</span></div><button class="editBtn" onclick="editKey()">✏️ Edit</button></div>
+    <div id="keyEdit" class="hidden"><input id="apiKeyInput" type="password" placeholder="AIza..."><button class="primary" style="margin-top:10px" onclick="saveKey()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelKeyEdit()">Cancel</button></div>
+    <div id="keyToast" class="toast hidden">Saved 🔒</div>
   </div>
   <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
   <button class="ghost" onclick="closeSettings()">Close</button>
@@ -185,51 +181,39 @@ textarea{min-height:80px;resize:vertical}
 <script>
 let raw = JSON.parse(localStorage.getItem('ojoola_courses')||'null');
 let courses;
-if(raw && raw.length===15){
-  courses = raw.map(c=>({name:c.name||'',code:c.code||'',pdfs:c.pdfs||[null,null,null,null],pics:c.pics||[],ref:true,chat:c.chat||[]}));
-} else {
-  courses = Array.from({length:15},()=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]}));
-}
+if(raw && raw.length===15){ courses = raw.map(c=>({name:c.name||'',code:c.code||'',pdfs:c.pdfs||[null,null,null,null],pics:c.pics||[],ref:true,chat:c.chat||[]})); } else { courses = Array.from({length:15},()=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]})); }
 let current = 0;
 let theme = localStorage.getItem('ojoola_theme')||'system';
 let apiKey = localStorage.getItem('ojoola_key')||'';
 function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
 function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
-function applyTheme(){
-  document.body.classList.remove('dark');
-  let t = theme;
-  if(t==='system') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light';
-  if(t==='dark') document.body.classList.add('dark');
-  document.getElementById('thSystem').className = theme==='system'?'active':'';
-  document.getElementById('thLight').className = theme==='light'?'active':'';
-  document.getElementById('thDark').className = theme==='dark'?'active':'';
-}
+function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
+function applyTheme(){document.body.classList.remove('dark');let t=theme;if(t==='system') t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(t==='dark') document.body.classList.add('dark');document.getElementById('thSystem').className=theme==='system'?'active':'';document.getElementById('thLight').className=theme==='light'?'active':'';document.getElementById('thDark').className=theme==='dark'?'active':''}
 function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
 if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
-function goWelcome(){document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
-function goStudy(){document.getElementById('welcome').classList.add('hidden');document.getElementById('app').classList.remove('hidden');showView('home');render()}
-function goGeneral(){document.getElementById('welcome').classList.add('hidden');document.getElementById('app').classList.remove('hidden');showView('general')}
-function showView(v){
-  document.getElementById('homeView').classList.toggle('hidden',v!=='home');
-  document.getElementById('generalView').classList.toggle('hidden',v!=='general');
-  document.getElementById('navHome').classList.toggle('active',v==='home');
-  document.getElementById('navGeneral').classList.toggle('active',v==='general');
+function goWelcome(){document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden');window.scrollTo(0,0)}
+function enterApp(view){
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  showView(view); render();
+  try{ history.pushState({page:'app',view:view},'', '#app'); }catch(e){}
+  window.scrollTo(0,0);
 }
-function turnAllOn(){courses.forEach(c=>c.ref=true);save();render();alert('All Referencing ON ✅')}
-function render(){
-  let g=document.getElementById('courseGrid');g.innerHTML='';
-  courses.forEach((c,i)=>{
-    let display = c.name ? c.name : 'Course '+(i+1);
-    let sub = c.name ? (c.code ? c.code : 'Tap to open') : 'Tap to open';
-    let d=document.createElement('div');d.className='card course';d.onclick=()=>openCourse(i);
-    d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';
-    g.appendChild(d);
-  });
-  if(window.lucide) lucide.createIcons();
-}
-function openCourse(i){current=i;let c=courses[i];document.getElementById('modalTitle').textContent=c.name || ('Course '+(i+1));document.getElementById('courseName').value=c.name;document.getElementById('courseCode').value=c.code;updateRefUI();renderPdfs();renderPics();renderCourseChat();document.getElementById('courseModal').classList.remove('hidden')}
+function goHome(){ enterApp('home'); }
+function goStudy(){ enterApp('home'); }
+function goGeneral(){ enterApp('general'); }
+window.addEventListener('popstate', function(e){
+  if(!e.state || e.state.page!=='app'){ goWelcome(); }
+});
+function showView(v){document.getElementById('homeView').classList.toggle('hidden',v!=='home');document.getElementById('generalView').classList.toggle('hidden',v!=='general');document.getElementById('navHome').classList.toggle('active',v==='home');document.getElementById('navGeneral').classList.toggle('active',v==='general')}
+function turnAllOn(){courses.forEach(c=>c.ref=true);save();render();showToast('allOnToast')}
+function render(){let g=document.getElementById('courseGrid');g.innerHTML='';courses.forEach((c,i)=>{let display=c.name?c.name:'Course '+(i+1);let sub=c.name?(c.code?c.code:'Tap to open'):'Tap to open';let d=document.createElement('div');d.className='card course';d.onclick=()=>openCourse(i);d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';g.appendChild(d)});if(window.lucide) lucide.createIcons()}
+function openCourse(i){current=i;let c=courses[i];document.getElementById('modalTitle').textContent=c.name||('Course '+(i+1));lockCourseFields();updateRefUI();renderPdfs();renderPics();renderCourseChat();document.getElementById('courseModal').classList.remove('hidden')}
 function closeCourse(){document.getElementById('courseModal').classList.add('hidden');render()}
-function saveCourseName(){courses[current].name=document.getElementById('courseName').value.trim();courses[current].code=document.getElementById('courseCode').value.trim();save();document.getElementById('modalTitle').textContent=courses[current].name || ('Course '+(current+1));alert('Saved ✅')}
+function lockCourseFields(){let c=courses[current];document.getElementById('nameText').textContent=c.name||'Not set yet';document.getElementById('codeText').textContent=c.code||'Not set yet';document.getElementById('courseName').value=c.name;document.getElementById('courseCode').value=c.code;document.getElementById('nameView').classList.remove('hidden');document.getElementById('codeView').classList.remove('hidden');document.getElementById('nameEdit').classList.add('hidden');document.getElementById('codeEdit').classList.add('hidden');document.getElementById('saveCourseRow').classList.add('hidden')}
+function editCourseFields(){document.getElementById('nameView').classList.add('hidden');document.getElementById('codeView').classList.add('hidden');document.getElementById('nameEdit').classList.remove('hidden');document.getElementById('codeEdit').classList.remove('hidden');document.getElementById('saveCourseRow').classList.remove('hidden');document.getElementById('courseName').focus()}
+function cancelCourseEdit(){lockCourseFields()}
+function saveCourseName(){courses[current].name=document.getElementById('courseName').value.trim();courses[current].code=document.getElementById('courseCode').value.trim();save();document.getElementById('modalTitle').textContent=courses[current].name||('Course '+(current+1));lockCourseFields();showToast('courseToast')}
 function updateRefUI(){let on=courses[current].ref;document.getElementById('refSwitch').className='switch '+(on?'on':'');document.getElementById('refLabel').textContent=on?'AI will use this course':'AI will skip this course'}
 function toggleRef(){courses[current].ref=!courses[current].ref;save();updateRefUI()}
 function renderPdfs(){let el=document.getElementById('pdfList');el.innerHTML='';courses[current].pdfs.forEach((p,idx)=>{let row=document.createElement('div');row.className='fileRow';row.innerHTML='<span><b>PDF '+(idx+1)+':</b> '+(p?p.name:'Empty')+'</span>';let b=document.createElement('button');b.className='smallBtn';b.textContent=p?'Replace':'Upload PDF';b.onclick=()=>{let inp=document.createElement('input');inp.type='file';inp.accept='application/pdf';inp.onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{courses[current].pdfs[idx]={name:f.name,data:r.result};save();renderPdfs()};r.readAsDataURL(f)};inp.click()};row.appendChild(b);el.appendChild(row)})}
@@ -238,35 +222,31 @@ function renderPics(){let el=document.getElementById('picList');el.innerHTML='';
 function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
 function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
 async function callGemini(prompt, images){
-  if(!apiKey){alert('No API Key. Go to Settings and paste your key first.');openSettings();return null}
+  if(!apiKey){openSettings();return null}
   let parts=[{text:prompt}];
   (images||[]).slice(0,4).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inline_data:{mime_type:mt,data:b}})});
-  let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]})});
-  let j=await res.json();
-  if(j.error) throw new Error(j.error.message);
-  return j.candidates[0].content.parts.map(p=>p.text).join('');
+  let models=['gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash-latest'];
+  let lastError='';
+  for(let m of models){
+    try{
+      let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]})});
+      let j=await res.json();
+      if(j.error){ lastError=j.error.message; continue; }
+      if(j.candidates && j.candidates[0] && j.candidates[0].content) return j.candidates[0].content.parts.map(p=>p.text||'').join('');
+      lastError='No answer from '+m;
+    }catch(e){ lastError=e.message; }
+  }
+  throw new Error(lastError || 'All models failed. Check your API Key in Settings.');
 }
-function buildContext(courseList){
-  let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. Use only the provided course info if given.\n\n';
-  courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});
-  return txt;
-}
-async function sendCourseChat(){
-  let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;
-  courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';
-  try{let ans=await callGemini(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message+' - Check your API Key in Settings.'}
-  save();renderCourseChat();
-}
-async function sendGeneral(){
-  let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;
-  let box=document.getElementById('generalMsgs');let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking... 🤔';box.appendChild(a);inp.value='';
-  let used=courses.filter(c=>c.ref);
-  let pics=[];used.forEach(c=>pics.push(...c.pics));
-  try{let ans=await callGemini(buildContext(used)+'General question: '+q, pics);a.textContent=ans}catch(e){a.textContent='Error: '+e.message}
-}
-function openSettings(){document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved':'❌ No key yet';document.getElementById('settingsModal').classList.remove('hidden')}
+function buildContext(courseList){let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. Use only the provided course info if given.\n\n';courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});return txt}
+async function sendCourseChat(){let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';try{let ans=await callGemini(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message}save();renderCourseChat()}
+async function sendGeneral(){let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;let box=document.getElementById('generalMsgs');let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking... 🤔';box.appendChild(a);inp.value='';let used=courses.filter(c=>c.ref);let pics=[];used.forEach(c=>pics.push(...c.pics));try{let ans=await callGemini(buildContext(used)+'General question: '+q, pics);a.textContent=ans}catch(e){a.textContent='Error: '+e.message}}
+function openSettings(){lockKeyView();document.getElementById('settingsModal').classList.remove('hidden')}
 function closeSettings(){document.getElementById('settingsModal').classList.add('hidden')}
-function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved':'❌ No key yet';alert(apiKey?'Key Saved ✅':'Key cleared')}
+function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'••••••••'+apiKey.slice(-4):'••••••••';document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved - Locked':'❌ No key yet';document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyView').classList.remove('hidden');document.getElementById('keyEdit').classList.add('hidden')}
+function editKey(){document.getElementById('keyView').classList.add('hidden');document.getElementById('keyEdit').classList.remove('hidden');document.getElementById('apiKeyInput').focus()}
+function cancelKeyEdit(){lockKeyView()}
+function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);lockKeyView();showToast('keyToast')}
 applyTheme();render();if(window.lucide) lucide.createIcons();
 </script>
 </body>
