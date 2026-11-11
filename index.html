@@ -4317,39 +4317,34 @@ The student has attached ${c.pdfs.length} PDF file(s) and ${c.pictures.length} p
 }
 
 function fileParts(c){
-
   if(!c||!c.ref)return[];
 
   const parts=[];
 
-  for(
-    const f of c.pdfs
-  ){
-
-    if(f.data){
-
+  for(const f of (c.pdfs||[])){
+    if(
+      f&&
+      typeof f==="object"&&
+      f.data
+    ){
       parts.push({
         inline_data:{
-          mime_type:
-            f.mimeType||
-            "application/pdf",
+          mime_type:f.mimeType||"application/pdf",
           data:f.data
         }
       });
     }
   }
 
-  for(
-    const f of c.pictures
-  ){
-
-    if(f.data){
-
+  for(const f of (c.pictures||[])){
+    if(
+      f&&
+      typeof f==="object"&&
+      f.data
+    ){
       parts.push({
         inline_data:{
-          mime_type:
-            f.mimeType||
-            "image/jpeg",
+          mime_type:f.mimeType||"image/jpeg",
           data:f.data
         }
       });
