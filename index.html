@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ojoola - Your AI Study Partner</title>
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#0f172a;color:white}
+  header{padding:14px 16px;background:#1e293b;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
+  header b{font-size:20px} header b span{color:#22c55e}
+  button{border:0;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .top-btn{background:#334155;color:white}
+  .tabs{display:flex;gap:8px;padding:12px}
+  .tabs button{flex:1;background:#1e293b;color:white;padding:12px}
+  .tabs button.active{background:#22c55e;color:#052e16}
+  #page{padding:0 16px 20px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(min-width:700px){.grid{grid-template-columns:1fr 1fr 1fr}}
+  .course{background:#1e293b;border-radius:16px;padding:14px;cursor:pointer;border:2px solid transparent}
+  .course.complete{border-color:#22c55e}
+  .course h3{margin:0 0 6px;font-size:16px}
+  .course p{margin:4px 0;font-size:13px;color:#cbd5e1}
+  .badge{display:inline-block;background:#334155;padding:4px 8px;border-radius:20px;font-size:11px}
+  .badge.done{background:#22c55e;color:#052e16}
+  /* Modal */
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);overflow-y:auto;padding:16px;z-index:10}
+  .card{background:white;color:#111;border-radius:16px;padding:18px;max-width:600px;margin:20px auto}
+  .card input{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
+  .file-row{background:#f1f5f9;border-radius:12px;padding:10px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .file-row small{word-break:break-all}
+  .small{font-size:12px;padding:7px 10px}
+  .green{background:#22c55e}.red{background:#fee2e2;color:#991b1b}.grey{background:#e2e8f0}
+  .pics{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .pic{position:relative;width:100px;height:100px}
+  .pic img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+  .pic button{position:absolute;top:2px;right:2px;padding:4px 7px;font-size:11px}
+  #chat{height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:#f8fafc;padding:10px;border-radius:12px}
+  .msg{max-width:90%;padding:10px 12px;border-radius:12px;line-height:1.5;white-space:pre-wrap;font-size:14px}
+  .user{background:#22c55e;align-self:flex-end}.ai{background:#e2e8f0;align-self:flex-start}
+  .row{display:flex;gap:8px;margin-top:10px}.row input{flex:1}
+</style>
+</head>
+<body>
+
+<header>
+  <b>Ojoola <span>AI</span></b>
+  <div><button class="top-btn" onclick="openSettings()">⚙️ Settings</button></div>
+</header>
+
+<div class="tabs">
+  <button id="tabCourses" class="active" onclick="showTab('courses')">📚 My 15 Courses</button>
+  <button id="tabChat" onclick="showTab('chat')">💬 General Chat</button>
+</div>
+
+<div id="page">
+  <div id="viewCourses">
+    <p style="color:#cbd5e1">Tap any course to upload its PDFs & pictures. You fill them one by one.</p>
+    <div class="grid" id="courseGrid"></div>
+  </div>
+
+  <div id="viewChat" style="display:none">
+    <div style="background:#1e293b;padding:14px;border-radius:14px">
+      <h3 style="margin:0">General Chat with Ojoola</h3>
+      <p style="color:#cbd5e1;font-size:13px">For questions not tied to a course. For course questions, open that course.</p>
+      <div id="chatGeneral" style="height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:#0f172a;padding:10px;border-radius:12px"></div>
+      <div class="row"><input id="qGeneral" placeholder="Ask Ojoola..." style="background:white"><button class="green" onclick="askGeneral()">Send</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- COURSE DETAIL MODAL -->
+<div class="modal" id="courseModal">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between"><h2 id="modalTitle">Course 1</h2><button class="grey small" onclick="closeCourse()">✕ Close</button></div>
+    <label><b>Course Name</b></label><input id="cName" placeholder="e.g. Anatomy 101">
+    <label><b>Course Code (optional)</b></label><input id="cCode" placeholder="e.g. ANA 101">
+    <button class="green" style="width:100%;padding:12px" onclick="saveCourseInfo()">Save Name & Code</button>
+
+    <h3>📄 PDFs - Max 4</h3>
+    <div id="pdfList"></div>
+
+    <h3>🖼️ Pictures - Many allowed</h3>
+    <button class="green small" onclick="document.getElementById('picInput').click()">+ Add Pictures</button>
+    <input type="file" id="picInput" accept="image/*" multiple style="display:none" onchange="addPictures(this)">
+    <div class="pics" id="picList"></div>
+
+    <h3>💬 Chat for this course only</h3>
+    <div id="chat"></div>
+    <div class="row"><input id="q" placeholder="Ask about this course..."><button class="green" onclick="askCourse()">Send</button></div>
+
+    <hr>
+    <button class="red" style="width:100%;padding:12px" onclick="deleteCourse()">🗑️ Delete This Entire Course</button>
+    <p style="font-size:12px;color:#666">Delete Course = clears name, all 4 PDFs, and all pictures for this field. It becomes Empty again.</p>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settingsModal">
+  <div class="card">
+    <h2>Settings</h2>
+    <p style="font-size:13px;color:#555">Paste Gemini API Key. Saved only in YOUR browser. Never in code / GitHub.</p>
+    <input id="apiKey" type="password" placeholder="AIza...">
+    <p id="keyStatus"></p>
+    <button class="green" style="width:100%;padding:12px" onclick="saveKey()">Save Key</button>
+    <button class="grey" style="width:100%;padding:12px;margin-top:8px" onclick="closeSettings()">Close</button>
+  </div>
+</div>
+
+<script>
+let courses = JSON.parse(localStorage.getItem('ojoola_courses') || 'null') || Array.from({length:15},(_,i)=>({id:i+1,name:'',code:'',pdfs:[null,null,null,null],pics:[]}));
+let currentId = 1;
+
+function saveAll(){ localStorage.setItem('ojoola_courses', JSON.stringify(courses)); renderGrid(); }
+function getKey(){ return localStorage.getItem('ojoola_gemini_key')||''; }
+
+function renderGrid(){
+  const g = document.getElementById('courseGrid'); g.innerHTML='';
+  courses.forEach(c=>{
+    const pdfCount = c.pdfs.filter(Boolean).length;
+    const isEmpty = !c.name && pdfCount===0 && c.pics.length===0;
+    const div = document.createElement('div');
+    div.className = 'course ' + (!isEmpty ? 'complete':'');
+    div.onclick = ()=> openCourse(c.id);
+    div.innerHTML = `<h3>${c.name || 'Course '+c.id+' - Empty'}</h3><p>${c.code || 'Tap to add course'}</p><p>📄 ${pdfCount}/4 PDFs &nbsp; 🖼️ ${c.pics.length} Pictures</p><span class="badge ${!isEmpty?'done':''}">${isEmpty?'Empty - Tap to Fill':'Saved ✓ Tap to Edit'}</span>`;
+    g.appendChild(div);
+  });
+}
+
+function showTab(t){
+  document.getElementById('viewCourses').style.display = t==='courses'?'block':'none';
+  document.getElementById('viewChat').style.display = t==='chat'?'block':'none';
+  document.getElementById('tabCourses').className = t==='courses'?'active':'';
+  document.getElementById('tabChat').className = t==='chat'?'active':'';
+}
+
+function openCourse(id){
+  currentId = id;
+  const c = courses.find(x=>x.id===id);
+  document.getElementById('modalTitle').innerText = 'Course '+id;
+  document.getElementById('cName').value = c.name;
+  document.getElementById('cCode').value = c.code;
+  renderPDFs(); renderPics();
+  document.getElementById('chat').innerHTML = `<div class="msg ai">Ask me anything about ${c.name || 'Course '+id}. I will use your uploaded PDFs & pictures for this course.</div>`;
+  document.getElementById('courseModal').style.display='block';
+}
+function closeCourse(){ document.getElementById('courseModal').style.display='none'; }
+
+function saveCourseInfo(){
+  const c = courses.find(x=>x.id===currentId);
+  c.name = document.getElementById('cName').value.trim();
+  c.code = document.getElementById('cCode').value.trim();
+  saveAll(); alert('Course name saved!'); renderPDFs();
+}
+
+function renderPDFs(){
+  const c = courses.find(x=>x.id===currentId);
+  const list = document.getElementById('pdfList'); list.innerHTML='';
+  c.pdfs.forEach((pdf,i)=>{
+    const row = document.createElement('div'); row.className='file-row';
+    if(pdf){
+      row.innerHTML = `<small><b>PDF ${i+1}:</b> ${pdf.name}</small><span><button class="small grey" onclick="replacePDF(${i})">Replace</button> <button class="small red" onclick="deletePDF(${i})">Delete</button></span>`;
+    } else {
+      row.innerHTML = `<small><b>PDF ${i+1}:</b> Empty</small><button class="small green" onclick="uploadPDF(${i})">Upload PDF</button>`;
+    }
+    list.appendChild(row);
+  });
+}
+function uploadPDF(i){
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='.pdf';
+  inp.onchange = ()=>{ const f = inp.files[0]; if(!f) return; const c = courses.find(x=>x.id===currentId); c.pdfs[i]={name:f.name}; saveAll(); renderPDFs(); alert('PDF saved: '+f.name); };
+  inp.click();
+}
+function replacePDF(i){ if(confirm('Replace PDF '+(i+1)+'? Old PDF will be removed.')) uploadPDF(i); }
+function deletePDF(i){ if(confirm('Delete PDF '+(i+1)+'?')){ const c = courses.find(x=>x.id===currentId); c.pdfs[i]=null; saveAll(); renderPDFs(); } }
+
+function addPictures(input){
+  const c = courses.find(x=>x.id===currentId);
+  Array.from(input.files).forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = e=>{ c.pics.push({name:f.name, data:e.target.result}); saveAll(); renderPics(); };
+    reader.readAsDataURL(f);
+  });
+}
+function renderPics(){
+  const c = courses.find(x=>x.id===currentId);
+  const list = document.getElementById('picList'); list.innerHTML='';
+  c.pics.forEach((p,i)=>{
+    const d = document.createElement('div'); d.className='pic';
+    d.innerHTML = `<img src="${p.data}"><button class="red" onclick="deletePic(${i})">✕</button>`;
+    d.onclick = (e)=>{ if(e.target.tagName!=='BUTTON' && confirm('Replace this picture?')){ const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=()=>{ const f=inp.files[0]; const r=new FileReader(); r.onload=ev=>{ c.pics[i]={name:f.name,data:ev.target.result}; saveAll(); renderPics(); }; r.readAsDataURL(f); }; inp.click(); } };
+    list.appendChild(d);
+  });
+}
+function deletePic(i){ if(confirm('Delete this picture?')){ const c=courses.find(x=>x.id===currentId); c.pics.splice(i,1); saveAll(); renderPics(); } }
+
+function deleteCourse(){
+  if(!confirm('Delete ENTIRE Course '+currentId+'? This clears name, all PDFs and pictures.')) return;
+  courses = courses.map(c=> c.id===currentId ? {id:c.id,name:'',code:'',pdfs:[null,null,null,null],pics:[]} : c);
+  saveAll(); closeCourse(); alert('Course deleted. Field is Empty again.');
+}
+
+// Settings
+function openSettings(){ document.getElementById('settingsModal').style.display='block'; document.getElementById('apiKey').value=getKey(); document.getElementById('keyStatus').innerText = getKey()?'✅ Key saved in this browser':'❌ No key yet'; }
+function closeSettings(){ document.getElementById('settingsModal').style.display='none'; }
+function saveKey(){ const k=document.getElementById('apiKey').value.trim(); if(!k) return alert('Paste key first'); localStorage.setItem('ojoola_gemini_key',k); alert('Saved! Only in your browser.'); closeSettings(); }
+
+// Chat
+async function callGemini(prompt, boxId){
+  const key=getKey(); if(!key){ alert('Go to Settings and paste your Gemini API Key first'); openSettings(); return; }
+  const box=document.getElementById(boxId);
+  box.innerHTML += `<div class="msg user">${prompt}</div>`;
+  const th=document.createElement('div'); th.className='msg ai'; th.innerText='Ojoola is thinking...'; box.appendChild(th); box.scrollTop=box.scrollHeight;
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+    const data=await res.json(); th.innerText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Check your key in Settings.';
+  }catch(e){ th.innerText='Error: Check internet and key.'; }
+  box.scrollTop=box.scrollHeight;
+}
+function askCourse(){
+  const c=courses.find(x=>x.id===currentId);
+  const q=document.getElementById('q').value.trim(); if(!q) return;
+  document.getElementById('q').value='';
+  const pdfNames = c.pdfs.filter(Boolean).map(p=>p.name).join(', ') || 'No PDFs uploaded yet';
+  callGemini(`You are Ojoola, Nigerian study partner. Course: ${c.name||'Course '+c.id} (${c.code}). PDFs in this course: ${pdfNames}. Pictures: ${c.pics.length} images. Answer simply with Nigerian examples, then 2 quiz questions. Question: ${q}`, 'chat');
+}
+function askGeneral(){
+  const q=document.getElementById('qGeneral').value.trim(); if(!q) return;
+  document.getElementById('qGeneral').value='';
+  callGemini(`You are Ojoola, friendly Nigerian study partner. Explain simply, Nigerian examples, end with 2 quiz questions. Question: ${q}`, 'chatGeneral');
+}
+
+renderGrid();
+</script>
+</body>
+</html>
