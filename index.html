@@ -114,7 +114,7 @@ textarea{min-height:80px;resize:vertical}
   <div class="grid" id="courseGrid"></div>
 </div>
 <div class="wrap hidden" id="generalView">
-  <div class="card"><h3>💬 General Chat</h3><p>Ask anything. This chat uses courses with Referencing ON.</p></div>
+  <div class="card"><h3>💬 General Chat</h3><p>Ask anything. This chat uses courses with Referencing ON.</p><p id="modelBadge" style="font-size:12px;font-weight:700;color:#2563EB;margin-top:6px">Model: Auto-Pick - will find best flash model for your key</p></div>
   <div class="card"><div id="generalMsgs" class="chatList"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
     <div class="chatInputWrap"><textarea id="generalInput" placeholder="Ask me anything..."></textarea>
     <button class="primary" id="generalSendBtn" onclick="sendGeneral()">Send Message 🚀</button></div>
@@ -167,7 +167,7 @@ textarea{min-height:80px;resize:vertical}
     <div id="keyToast" class="toast hidden">Saved 🔒</div>
     <button class="primary" style="margin-top:12px;background:#0F172A" onclick="testConnection()">🔍 Test Connection - Is My Key Working?</button>
     <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
-    <p style="margin-top:10px;font-size:13px">Now using: gemini-2.5-flash - the real model from your Test list.</p>
+    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - app finds the best flash model for your key every time. No hardcoded model.</p>
   </div>
   <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
   <button class="ghost" onclick="closeSettings()">Close</button>
@@ -180,6 +180,8 @@ if(raw && raw.length===15){ courses = raw.map(c=>({name:c.name||'',code:c.code||
 let current = 0;
 let theme = localStorage.getItem('ojoola_theme')||'system';
 let apiKey = localStorage.getItem('ojoola_key')||'';
+let cachedModel = null;
+let cachedModelTime = 0;
 function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
 function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
 function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
@@ -228,15 +230,53 @@ async function testConnection(){
     el.textContent='✅ Key WORKS! Found: '+names;el.style.color='#16A34A';
   }catch(e){el.textContent='❌ Network error: '+e.message;el.style.color='#DC2626'}
 }
-// *** FIX - USE REAL MODEL gemini-2.5-flash, NOT ALIAS. SHOW REAL GOOGLE ERROR. ***
-async function callGeminiFast(prompt, images){
-  if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
-  let parts=[{text:prompt}];
-  (images||[]).slice(0,2).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inlineData:{mimeType:mt,data:b}})});
-  let controller = new AbortController();
-  let timer = setTimeout(()=>controller.abort(), 10000);
+// *** AUTO-PICK - NO HARDCODED MODEL. Ask Google what flash models work for THIS key, pick best one. ***
+function scoreModel(name){
+  let n=name.toLowerCase();
+  if(n.includes('tts')||n.includes('image')||n.includes('embedding')||n.includes('preview-tts')||n.includes('robotics')||n.includes('veo')||n.includes('imagen')) return -100;
+  if(!n.includes('flash')) return -100;
+  if(n.includes('latest')) return 85;
+  if(n.includes('3.8-flash') && !n.includes('lite')) return 100;
+  if(n.includes('3-flash') && !n.includes('lite')) return 95;
+  if(n.includes('2.5-flash') && !n.includes('lite')) return 40;
+  if(n.includes('2.0-flash')) return 30;
+  if(n.includes('flash') && n.includes('lite')) return 60;
+  if(n.includes('flash')) return 70;
+  return 0;
+}
+async function getBestModel(){
+  if(cachedModel && (Date.now()-cachedModelTime)<60000) return cachedModel;
+  let controller=new AbortController();
+  let timer=setTimeout(()=>controller.abort(),8000);
   try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey,{signal:controller.signal});
+    clearTimeout(timer);
+    let j=await res.json().catch(()=>({}));
+    if(j.error) throw new Error('Google said: '+(j.error.message||'models list failed'));
+    let cands=(j.models||[]).map(m=>{
+      let nm=(m.name||'').replace('models/','');
+      let supports=m.supportedGenerationMethods||[];
+      let canGen=supports.length===0 || supports.includes('generateContent');
+      return {name:nm,score:scoreModel(nm),canGen:canGen};
+    }).filter(x=>x.canGen && x.score>0);
+    cands.sort((a,b)=>b.score-a.score);
+    if(!cands.length) throw new Error('Google returned no flash model for this key. Create a new key in Google AI Studio.');
+    cachedModel=cands[0].name;
+    cachedModelTime=Date.now();
+    let badge=document.getElementById('modelBadge');
+    if(badge) badge.textContent='Model: Auto-Picked - '+cachedModel+' (from your key)';
+    return cachedModel;
+  }catch(e){
+    clearTimeout(timer);
+    if(cachedModel) return cachedModel;
+    throw e;
+  }
+}
+async function tryOneModel(modelName, parts){
+  let controller=new AbortController();
+  let timer=setTimeout(()=>controller.abort(),10000);
+  try{
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+modelName+':generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
     clearTimeout(timer);
     let j=await res.json().catch(()=>({}));
     if(!res.ok || j.error){
@@ -248,7 +288,28 @@ async function callGeminiFast(prompt, images){
     throw new Error('Google returned no answer. Status: '+res.status);
   }catch(e){
     clearTimeout(timer);
-    if(e.name==='AbortError') throw new Error('Google did not answer in 10s (Status: timeout). Your network is fine - Google was slow. Try again.');
+    if(e.name==='AbortError') throw new Error('Google did not answer in 10s (timeout). Your network is fine - Google was slow. Try again.');
+    throw e;
+  }
+}
+async function callGeminiFast(prompt, images){
+  if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
+  let parts=[{text:prompt}];
+  (images||[]).slice(0,2).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inlineData:{mimeType:mt,data:b}})});
+  let model=await getBestModel();
+  try{
+    return await tryOneModel(model, parts);
+  }catch(e){
+    let msg=String(e.message||'');
+    if(msg.includes('404') || msg.toLowerCase().includes('no longer available') || msg.includes('not found')){
+      cachedModel=null;
+      let model2=await getBestModel();
+      if(model2!==model) return await tryOneModel(model2, parts);
+      // If same model returned, force refresh by clearing cache and trying list again once
+      cachedModel=null; cachedModelTime=0;
+      let m3=await getBestModel();
+      if(m3!==model) return await tryOneModel(m3, parts);
+    }
     throw e;
   }
 }
@@ -274,7 +335,7 @@ function closeSettings(){document.getElementById('settingsModal').classList.add(
 function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'••••••••'+apiKey.slice(-4):'••••••••';document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved - Locked':'❌ No key yet';document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyView').classList.remove('hidden');document.getElementById('keyEdit').classList.add('hidden')}
 function editKey(){document.getElementById('keyView').classList.add('hidden');document.getElementById('keyEdit').classList.remove('hidden');document.getElementById('apiKeyInput').focus()}
 function cancelKeyEdit(){lockKeyView()}
-function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);lockKeyView();showToast('keyToast')}
+function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);cachedModel=null;cachedModelTime=0;lockKeyView();showToast('keyToast')}
 applyTheme();render();if(window.lucide) lucide.createIcons();
 </script>
 </body>
