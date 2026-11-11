@@ -1,106 +1,101 @@
-"use strict";
+const CACHE_NAME = "ojooola-ai-v2";
 
-const CACHE_NAME = "ojooola-study-v6";
-const CACHE_PREFIX = "ojooola-study-";
-
-const APP_FILES = [
+const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./service-worker.js"
 ];
 
-/* INSTALL */
-self.addEventListener("install",event=>{
+self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache=>cache.addAll(APP_FILES))
-      .then(()=>self.skipWaiting())
+      .then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
 });
 
-/* ACTIVATE */
-self.addEventListener("activate",event=>{
+self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys()
-      .then(names=>
-        Promise.all(
-          names
-            .filter(name=>
-              name.startsWith(CACHE_PREFIX)&&
-              name!==CACHE_NAME
-            )
-            .map(name=>caches.delete(name))
-        )
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       )
-      .then(()=>self.clients.claim())
+    ).then(() => self.clients.claim())
   );
 });
 
-/* FETCH */
-self.addEventListener("fetch",event=>{
-  const request=event.request;
+self.addEventListener("fetch", event => {
+  const request = event.request;
 
-  if(request.method!=="GET")return;
+  // Only handle GET requests.
+  if (request.method !== "GET") return;
 
-  const url=new URL(request.url);
+  const url = new URL(request.url);
 
-  /* Never cache external requests or Gemini API calls. */
-  if(url.origin!==self.location.origin)return;
+  // Never cache Gemini API requests.
+  if (
+    url.hostname.includes("generativelanguage.googleapis.com")
+  ) {
+    return;
+  }
 
-  /* Navigation: network first, cache fallback. */
-  if(request.mode==="navigate"){
-    const networkPromise=fetch(request).then(response=>{
-      if(response.ok){
-        const copy=response.clone();
-
-        event.waitUntil(
-          caches.open(CACHE_NAME)
-            .then(cache=>cache.put("./index.html",copy))
-        );
-      }
-
-      return response;
-    });
-
+  // For the main app files, try the network first.
+  // If the network fails, use the cached version.
+  if (
+    request.mode === "navigate" ||
+    url.pathname.endsWith("/index.html") ||
+    url.pathname.endsWith("/manifest.json") ||
+    url.pathname.endsWith("/service-worker.js")
+  ) {
     event.respondWith(
-      networkPromise.catch(async()=>{
-        const cache=await caches.open(CACHE_NAME);
+      fetch(request)
+        .then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
 
-        return (
-          await cache.match(request)||
-          await cache.match("./index.html")||
-          await cache.match("./")
-        );
-      })
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, copy);
+            });
+          }
+
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then(cached => {
+            return cached || caches.match("./index.html");
+          });
+        })
     );
 
     return;
   }
 
-  /* Static same-origin files: cache first, network fallback/update. */
-  const networkPromise=fetch(request).then(response=>{
-    if(response.ok){
-      const copy=response.clone();
-
-      event.waitUntil(
-        caches.open(CACHE_NAME)
-          .then(cache=>cache.put(request,copy))
-      );
-    }
-
-    return response;
-  });
-
+  // For other same-origin resources:
+  // use cache if available, otherwise fetch and cache.
   event.respondWith(
-    caches.match(request).then(cached=>{
-      return cached||networkPromise;
-    }).catch(()=>networkPromise)
-  );
-});
+    caches.match(request).then(cached => {
+      if (cached) {
+        return cached;
+      }
 
-/* Allow the page to request immediate activation. */
-self.addEventListener("message",event=>{
-  if(event.data==="SKIP_WAITING"){
-    self.skipWaiting();
-  }
+      return fetch(request).then(response => {
+        if (
+          response &&
+          response.ok &&
+          url.origin === self.location.origin
+        ) {
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, copy);
+          });
+        }
+
+        return response;
+      });
+    })
+  );
 });
