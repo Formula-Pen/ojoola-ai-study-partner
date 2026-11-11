@@ -5142,187 +5142,778 @@ if(
 }
 
 /* GEMINI LIVE COURSE CONVERSATION */
+
 let courseLive = {
-  ws:null, stream:null, audioContext:null, processor:null,
-  micSource:null, playing:[], nextPlayTime:0,
-  inputText:"", outputText:"", setup:false, starting:false
+  ws: null,
+  stream: null,
+  audioContext: null,
+  processor: null,
+  micSource: null,
+  silentGain: null,
+  playing: [],
+  nextPlayTime: 0,
+  inputText: "",
+  outputText: "",
+  setup: false,
+  starting: false
 };
+
 const LIVE_TOKEN_ENDPOINT = "https://ojoola-live-token.babatundexwale.workers.dev/";
 const LIVE_MODEL = "models/gemini-3.8-live";
 
-function liveSetStatus(text){
-  const el=$("liveStatus"); if(el)el.textContent=text;
+
+function liveSetStatus(text) {
+  const el = $("liveStatus");
+  if (el) el.textContent = text;
 }
-function liveEscape(text){
-  return String(text||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+
+function liveEscape(text) {
+  return String(text || "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
 }
-function renderLiveTranscript(){
-  const box=$("liveTranscript");
-  const c=courses[currentCourseIndex];
-  if(!box||!c)return;
-  const entries=(c.chat||[]).filter(m=>m&&m.text&&m.text!=="Thinking..."&&m.text!=="Response stopped.").slice(-30);
-  box.innerHTML=entries.map(m=>`<div class="liveLine ${m.role==="user"?"user":"ai"}"><b>${m.role==="user"?"You":"Ọjọ́ọ̀la"}:</b><br>${liveEscape(m.text)}</div>`).join("");
-  box.scrollTop=box.scrollHeight;
+
+
+function renderLiveTranscript() {
+  const box = $("liveTranscript");
+  const c = courses[currentCourseIndex];
+
+  if (!box || !c) return;
+
+  const entries = (c.chat || [])
+    .filter(m =>
+      m &&
+      m.text &&
+      m.text !== "Thinking..." &&
+      m.text !== "Response stopped."
+    )
+    .slice(-30);
+
+  box.innerHTML = entries.map(m => `
+    <div class="liveLine ${m.role === "user" ? "user" : "ai"}">
+      <b>${m.role === "user" ? "You" : "Ọjọ́ọ̀la"}:</b><br>
+      ${liveEscape(m.text)}
+    </div>
+  `).join("");
+
+  box.scrollTop = box.scrollHeight;
 }
-function saveLiveLine(role,text){
-  text=String(text||"").trim();
-  if(!text||currentCourseIndex===null)return;
-  const c=courses[currentCourseIndex]; if(!c)return;
-  c.chat=c.chat||[];
-  const last=c.chat[c.chat.length-1];
-  if(last&&last.role===role&&last.livePartial){
-    last.text=(last.text+" "+text).trim();
-    last.livePartial=false;
-  }else{
-    c.chat.push({id:uid(),role,text,time:Date.now(),source:"live"});
+
+
+function saveLiveLine(role, text) {
+  text = String(text || "").trim();
+
+  if (!text || currentCourseIndex === null) return;
+
+  const c = courses[currentCourseIndex];
+  if (!c) return;
+
+  c.chat = c.chat || [];
+
+  const last = c.chat[c.chat.length - 1];
+
+  if (last && last.role === role && last.livePartial) {
+    last.text = (last.text + " " + text).trim();
+    last.livePartial = false;
+  } else {
+    c.chat.push({
+      id: uid(),
+      role,
+      text,
+      time: Date.now(),
+      source: "live"
+    });
   }
+
   saveCourses();
   renderLiveTranscript();
 }
-function liveStopPlayback(){
-  courseLive.playing.forEach(n=>{try{n.stop()}catch(e){}});
-  courseLive.playing=[];
-  if(courseLive.audioContext)courseLive.nextPlayTime=courseLive.audioContext.currentTime;
-}
-function liveBase64ToBytes(b64){
-  const raw=atob(b64),out=new Uint8Array(raw.length);
-  for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
-  return out;
-}
-function liveBytesToBase64(bytes){
-  let binary="";
-  const step=0x8000;
-  for(let i=0;i<bytes.length;i+=step)binary+=String.fromCharCode(...bytes.subarray(i,i+step));
-  return btoa(binary);
-}
-function liveResampleTo16k(input,fromRate){
-  if(fromRate===16000)return input;
-  const ratio=fromRate/16000, length=Math.floor(input.length/ratio), output=new Float32Array(length);
-  for(let i=0;i<length;i++){
-    const start=Math.floor(i*ratio),end=Math.min(Math.floor((i+1)*ratio),input.length);
-    let sum=0,count=0;
-    for(let j=start;j<end;j++){sum+=input[j];count++;}
-    output[i]=count?sum/count:0;
+
+
+function liveStopPlayback() {
+  courseLive.playing.forEach(node => {
+    try {
+      node.stop();
+    } catch (e) {}
+  });
+
+  courseLive.playing = [];
+
+  if (courseLive.audioContext) {
+    courseLive.nextPlayTime =
+      courseLive.audioContext.currentTime;
   }
+}
+
+
+function liveBase64ToBytes(b64) {
+  const raw = atob(b64);
+  const output = new Uint8Array(raw.length);
+
+  for (let i = 0; i < raw.length; i++) {
+    output[i] = raw.charCodeAt(i);
+  }
+
   return output;
 }
-function liveFloatToPCM16(floatData){
-  const buffer=new ArrayBuffer(floatData.length*2),view=new DataView(buffer);
-  for(let i=0;i<floatData.length;i++){
-    const s=Math.max(-1,Math.min(1,floatData[i]));
-    view.setInt16(i*2,s<0?s*0x8000:s*0x7fff,true);
+
+
+function liveBytesToBase64(bytes) {
+  let binary = "";
+  const step = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(i, i + step)
+    );
   }
+
+  return btoa(binary);
+}
+
+
+function liveResampleTo16k(input, fromRate) {
+  if (fromRate === 16000) return input;
+
+  const ratio = fromRate / 16000;
+  const length = Math.floor(input.length / ratio);
+  const output = new Float32Array(length);
+
+  for (let i = 0; i < length; i++) {
+    const start = Math.floor(i * ratio);
+    const end = Math.min(
+      Math.floor((i + 1) * ratio),
+      input.length
+    );
+
+    let sum = 0;
+    let count = 0;
+
+    for (let j = start; j < end; j++) {
+      sum += input[j];
+      count++;
+    }
+
+    output[i] = count ? sum / count : 0;
+  }
+
+  return output;
+}
+
+
+function liveFloatToPCM16(floatData) {
+  const buffer = new ArrayBuffer(floatData.length * 2);
+  const view = new DataView(buffer);
+
+  for (let i = 0; i < floatData.length; i++) {
+    const sample = Math.max(-1, Math.min(1, floatData[i]));
+
+    view.setInt16(
+      i * 2,
+      sample < 0 ? sample * 0x8000 : sample * 0x7fff,
+      true
+    );
+  }
+
   return new Uint8Array(buffer);
 }
-async function livePlayAudio(b64){
-  if(!courseLive.audioContext)return;
-  const bytes=liveBase64ToBytes(b64), samples=new Int16Array(bytes.buffer,bytes.byteOffset,Math.floor(bytes.byteLength/2));
-  const buffer=courseLive.audioContext.createBuffer(1,samples.length,24000),channel=buffer.getChannelData(0);
-  for(let i=0;i<samples.length;i++)channel[i]=samples[i]/32768;
-  const source=courseLive.audioContext.createBufferSource();
-  source.buffer=buffer;source.connect(courseLive.audioContext.destination);
-  const start=Math.max(courseLive.audioContext.currentTime,courseLive.nextPlayTime);
-  source.start(start);courseLive.nextPlayTime=start+buffer.duration;
+
+
+async function livePlayAudio(b64) {
+  if (!courseLive.audioContext) return;
+
+  const bytes = liveBase64ToBytes(b64);
+
+  const samples = new Int16Array(
+    bytes.buffer,
+    bytes.byteOffset,
+    Math.floor(bytes.byteLength / 2)
+  );
+
+  const buffer = courseLive.audioContext.createBuffer(
+    1,
+    samples.length,
+    24000
+  );
+
+  const channel = buffer.getChannelData(0);
+
+  for (let i = 0; i < samples.length; i++) {
+    channel[i] = samples[i] / 32768;
+  }
+
+  const source = courseLive.audioContext.createBufferSource();
+
+  source.buffer = buffer;
+  source.connect(courseLive.audioContext.destination);
+
+  const start = Math.max(
+    courseLive.audioContext.currentTime,
+    courseLive.nextPlayTime
+  );
+
+  source.start(start);
+
+  courseLive.nextPlayTime = start + buffer.duration;
   courseLive.playing.push(source);
-  source.onended=()=>{courseLive.playing=courseLive.playing.filter(x=>x!==source)};
+
+  source.onended = () => {
+    courseLive.playing =
+      courseLive.playing.filter(node => node !== source);
+  };
 }
-function liveSend(obj){
-  if(courseLive.ws&&courseLive.ws.readyState===WebSocket.OPEN&&courseLive.setup)courseLive.ws.send(JSON.stringify(obj));
+
+
+function liveSend(obj) {
+  if (
+    courseLive.ws &&
+    courseLive.ws.readyState === WebSocket.OPEN &&
+    courseLive.setup
+  ) {
+    courseLive.ws.send(JSON.stringify(obj));
+  }
 }
-async function startCourseLive(){
-  if(courseLive.starting||courseLive.ws)return;
-  if(currentCourseIndex===null)return;
-  courseLive.starting=true;
-  $("liveStartBtn").disabled=true;
+
+
+async function startCourseLive() {
+  if (courseLive.starting || courseLive.ws) return;
+  if (currentCourseIndex === null) return;
+
+  courseLive.starting = true;
+  $("liveStartBtn").disabled = true;
+
   liveSetStatus("Requesting microphone permission…");
-  try{
-    if(!window.isSecureContext)throw new Error("Live voice requires HTTPS. Open this app through its secure https:// address.");
-    courseLive.stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-    courseLive.audioContext=new (window.AudioContext||window.webkitAudioContext)();
+
+  try {
+    if (!window.isSecureContext) {
+      throw new Error(
+        "Live voice requires HTTPS. Open this app through its secure https:// address."
+      );
+    }
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+      throw new Error(
+        "Your browser does not support microphone access."
+      );
+    }
+
+    courseLive.stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+    courseLive.audioContext =
+      new (window.AudioContext || window.webkitAudioContext)();
+
     await courseLive.audioContext.resume();
-    const tokenResponse=await fetch(LIVE_TOKEN_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({})});
-    if(!tokenResponse.ok)throw new Error("Could not obtain a Live API session token. Check the Cloudflare Worker setup.");
-    const tokenData=await tokenResponse.json();
-    if(!tokenData.token)throw new Error(tokenData.error||"The token service did not return a token.");
-    const c=courses[currentCourseIndex];
-    const history=(c.chat||[]).filter(m=>m.text&&m.text!=="Thinking..."&&m.text!=="Response stopped.").slice(-12)
-      .map(m=>(m.role==="user"?"Student: ":"Ọjọ́ọ̀la: ")+m.text).join("\n");
-    const instructions=`You are Ọjọ́ọ̀la, a patient AI study partner. You are in a live voice conversation for the course ${c.name} (${c.code}). Course description: ${c.description||"Not provided"}. Use the conversation history below to maintain continuity with the student's typed and spoken course conversation. Answer clearly, naturally and at an appropriate student level. Prioritize any course material content explicitly supplied in the conversation. Do not claim to have read attached PDFs or images unless their contents are actually present in the context. Keep spoken answers reasonably concise and invite clarification when needed.\n\nRecent shared course conversation:\n${history||"No previous messages."}`;
-    const ws=new WebSocket("wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token="+encodeURIComponent(tokenData.token));
-    courseLive.ws=ws;courseLive.setup=false;courseLive.inputText="";courseLive.outputText="";
-    ws.onopen=()=>{
-      ws.send(JSON.stringify({setup:{
-        model:LIVE_MODEL,
-        generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:"Aoede"}}}},
-        systemInstruction:{parts:[{text:instructions}]},
-        inputAudioTranscription:{},
-        outputAudioTranscription:{},
-        realtimeInputConfig:{activityHandling:"START_OF_ACTIVITY_INTERRUPTS"}
-      }}));
-      liveSetStatus("Connecting to Ọjọ́ọ̀la…");
+
+
+    /* REQUEST GEMINI SESSION TOKEN */
+
+    liveSetStatus("Connecting securely to Gemini…");
+
+    const tokenResponse = await fetch(
+      LIVE_TOKEN_ENDPOINT,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+      }
+    );
+
+    let tokenData;
+
+    try {
+      tokenData = await tokenResponse.json();
+    } catch (e) {
+      throw new Error(
+        "The Cloudflare Worker returned an invalid response. Check its deployment."
+      );
+    }
+
+    if (!tokenResponse.ok) {
+      console.error(
+        "Gemini token request failed:",
+        tokenResponse.status,
+        tokenData
+      );
+
+      throw new Error(
+        tokenData.error ||
+        `Token request failed. HTTP ${tokenResponse.status}`
+      );
+    }
+
+    if (!tokenData.token) {
+      throw new Error(
+        tokenData.error ||
+        "Cloudflare did not return a Gemini session token."
+      );
+    }
+
+
+    /* PREPARE COURSE CONTEXT */
+
+    const c = courses[currentCourseIndex];
+
+    if (!c) {
+      throw new Error("The selected course could not be found.");
+    }
+
+    const history = (c.chat || [])
+      .filter(m =>
+        m &&
+        m.text &&
+        m.text !== "Thinking..." &&
+        m.text !== "Response stopped."
+      )
+      .slice(-12)
+      .map(m =>
+        (m.role === "user" ? "Student: " : "Ọjọ́ọ̀la: ") +
+        m.text
+      )
+      .join("\n");
+
+
+    /* AI INSTRUCTIONS */
+
+    const instructions = `
+You are Ọjọ́ọ̀la, a patient AI study partner.
+
+You are having a live voice conversation with a student about the course:
+
+Course name: ${c.name}
+Course code: ${c.code}
+Course description: ${c.description || "Not provided"}
+
+Use the conversation history below to maintain continuity with the student's typed and spoken course conversations.
+
+Answer clearly, naturally and at an appropriate student level.
+
+Prioritize course material explicitly supplied in the conversation.
+
+Do not claim to have read attached PDFs or images unless their contents are actually available in the conversation context.
+
+Explain difficult concepts in simple language.
+
+Keep spoken answers reasonably concise.
+
+Allow the student to interrupt you naturally and ask follow-up questions.
+
+RECENT COURSE CONVERSATION:
+
+${history || "No previous messages."}
+`;
+
+
+    /* CONNECT TO GEMINI LIVE API */
+
+    liveSetStatus("Opening live voice connection…");
+
+    const ws = new WebSocket(
+      "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=" +
+      encodeURIComponent(tokenData.token)
+    );
+
+    courseLive.ws = ws;
+    courseLive.setup = false;
+    courseLive.inputText = "";
+    courseLive.outputText = "";
+
+
+    /* CONNECTION OPENED */
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        setup: {
+          model: LIVE_MODEL,
+
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: "Aoede"
+                }
+              }
+            }
+          },
+
+          systemInstruction: {
+            parts: [
+              {
+                text: instructions
+              }
+            ]
+          },
+
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
+
+          realtimeInputConfig: {
+            activityHandling: "START_OF_ACTIVITY_INTERRUPTS"
+          }
+        }
+      }));
+
+      liveSetStatus("Waiting for Gemini to connect…");
     };
-    ws.onmessage=async event=>{
-      let data;try{data=JSON.parse(event.data)}catch(e){return}
-      if(data.setupComplete){
-        courseLive.setup=true;
-        liveSetStatus("Listening… Speak naturally.");
-        $("liveOrb").classList.add("active");
-        const ctx=courseLive.audioContext;
-        const source=ctx.createMediaStreamSource(courseLive.stream);
-        const processor=ctx.createScriptProcessor(4096,1,1);
-        courseLive.micSource=source;courseLive.processor=processor;
-        processor.onaudioprocess=e=>{
-          if(!courseLive.setup||!courseLive.ws||courseLive.ws.readyState!==WebSocket.OPEN)return;
-          const mono=e.inputBuffer.getChannelData(0);
-          const pcm=liveFloatToPCM16(liveResampleTo16k(mono,ctx.sampleRate));
-          liveSend({realtimeInput:{audio:{data:liveBytesToBase64(pcm),mimeType:"audio/pcm;rate=16000"}}});
-        };
-        source.connect(processor);processor.connect(ctx.destination);
-        $("liveStopBtn").disabled=false;
+
+
+    /* RECEIVE GEMINI RESPONSES */
+
+    ws.onmessage = async event => {
+      try {
+        const rawData =
+          event.data instanceof Blob
+            ? await event.data.text()
+            : event.data;
+
+        const data = JSON.parse(rawData);
+
+
+        /* SESSION READY */
+
+        if (data.setupComplete) {
+          courseLive.setup = true;
+
+          liveSetStatus("Listening… Speak naturally.");
+
+          $("liveOrb").classList.add("active");
+
+          const ctx = courseLive.audioContext;
+
+          const source =
+            ctx.createMediaStreamSource(courseLive.stream);
+
+          const processor =
+            ctx.createScriptProcessor(4096, 1, 1);
+
+          const silentGain = ctx.createGain();
+          silentGain.gain.value = 0;
+
+          courseLive.micSource = source;
+          courseLive.processor = processor;
+          courseLive.silentGain = silentGain;
+
+
+          /* PROCESS MICROPHONE AUDIO */
+
+          processor.onaudioprocess = e => {
+            if (
+              !courseLive.setup ||
+              !courseLive.ws ||
+              courseLive.ws.readyState !== WebSocket.OPEN
+            ) {
+              return;
+            }
+
+            const mono = e.inputBuffer.getChannelData(0);
+
+            const resampled =
+              liveResampleTo16k(mono, ctx.sampleRate);
+
+            const pcm = liveFloatToPCM16(resampled);
+
+            liveSend({
+              realtimeInput: {
+                audio: {
+                  data: liveBytesToBase64(pcm),
+                  mimeType: "audio/pcm;rate=16000"
+                }
+              }
+            });
+          };
+
+          source.connect(processor);
+          processor.connect(silentGain);
+          silentGain.connect(ctx.destination);
+
+          $("liveStopBtn").disabled = false;
+        }
+
+
+        /* SERVER CONTENT */
+
+        const sc = data.serverContent || {};
+
+
+        /* HANDLE INTERRUPTIONS */
+
+        if (sc.interrupted) {
+          liveStopPlayback();
+          courseLive.outputText = "";
+        }
+
+
+        /* STUDENT SPEECH TRANSCRIPTION */
+
+        if (
+          sc.inputTranscription &&
+          sc.inputTranscription.text
+        ) {
+          const t = sc.inputTranscription.text.trim();
+
+          if (t) {
+            courseLive.inputText =
+              (courseLive.inputText + " " + t).trim();
+          }
+        }
+
+
+        /* AI SPEECH TRANSCRIPTION */
+
+        if (
+          sc.outputTranscription &&
+          sc.outputTranscription.text
+        ) {
+          courseLive.outputText =
+            (
+              courseLive.outputText +
+              " " +
+              sc.outputTranscription.text
+            ).trim();
+        }
+
+
+        /* RECEIVE AUDIO AND TEXT */
+
+        const parts =
+          sc.modelTurn && sc.modelTurn.parts
+            ? sc.modelTurn.parts
+            : [];
+
+        for (const part of parts) {
+          const inline = part.inlineData || part.inline_data;
+
+          if (
+            inline &&
+            inline.data &&
+            String(
+              inline.mimeType || inline.mime_type || ""
+            ).startsWith("audio/")
+          ) {
+            await livePlayAudio(inline.data);
+          }
+
+          if (part.text) {
+            courseLive.outputText =
+              (
+                courseLive.outputText +
+                " " +
+                part.text
+              ).trim();
+          }
+        }
+
+
+        /* SAVE COMPLETED CONVERSATION */
+
+        if (sc.turnComplete) {
+          if (courseLive.inputText) {
+            saveLiveLine("user", courseLive.inputText);
+          }
+
+          if (courseLive.outputText) {
+            saveLiveLine("ai", courseLive.outputText);
+          }
+
+          courseLive.inputText = "";
+          courseLive.outputText = "";
+
+          liveSetStatus(
+            "Listening… Speak whenever you're ready."
+          );
+        }
+
+
+        /* SESSION EXPIRATION WARNING */
+
+        if (data.goAway || sc.goAway) {
+          liveSetStatus(
+            "This voice session is about to end. Please restart it."
+          );
+        }
+
+        if (data.error) {
+          throw new Error(
+            data.error.message || "Gemini returned an error."
+          );
+        }
+
+      } catch (err) {
+        console.error(
+          "Live message processing error:",
+          err
+        );
+
+        liveSetStatus(
+          "There was a problem processing the live response."
+        );
       }
-      const sc=data.serverContent||{};
-      if(sc.interrupted){liveStopPlayback();courseLive.outputText="";}
-      if(sc.inputTranscription&&sc.inputTranscription.text){
-        const t=sc.inputTranscription.text.trim();
-        if(t){courseLive.inputText=(courseLive.inputText+" "+t).trim();}
-      }
-      if(sc.outputTranscription&&sc.outputTranscription.text){
-        courseLive.outputText=(courseLive.outputText+" "+sc.outputTranscription.text).trim();
-      }
-      const parts=sc.modelTurn&&sc.modelTurn.parts||[];
-      for(const part of parts){
-        const inline=part.inlineData||part.inline_data;
-        if(inline&&inline.data&&String(inline.mimeType||inline.mime_type||"").startsWith("audio/"))await livePlayAudio(inline.data);
-        if(part.text)courseLive.outputText=(courseLive.outputText+" "+part.text).trim();
-      }
-      if(sc.turnComplete){
-        if(courseLive.inputText)saveLiveLine("user",courseLive.inputText);
-        if(courseLive.outputText)saveLiveLine("ai",courseLive.outputText);
-        courseLive.inputText="";courseLive.outputText="";
-        liveSetStatus("Listening… Speak whenever you're ready.");
-      }
-      if(sc.goAway)liveSetStatus("The live session is about to end. Please restart it.");
     };
-    ws.onerror=()=>liveSetStatus("Connection error. Check your network and Worker configuration.");
-    ws.onclose=()=>{if(courseLive.ws===ws){courseLive.ws=null;courseLive.setup=false;liveSetStatus("Session ended. You can start another conversation.");$("liveOrb").classList.remove("active");$("liveStartBtn").disabled=false;$("liveStopBtn").disabled=true;}};
-  }catch(err){
+
+
+    /* CONNECTION ERROR */
+
+    ws.onerror = event => {
+      console.error("Gemini WebSocket error:", event);
+
+      liveSetStatus(
+        "Connection error. Check your network, token and Gemini configuration."
+      );
+    };
+
+
+    /* CONNECTION CLOSED */
+
+    ws.onclose = event => {
+      console.log(
+        "Gemini Live connection closed:",
+        event.code,
+        event.reason
+      );
+
+      if (courseLive.ws === ws) {
+        courseLive.ws = null;
+        courseLive.setup = false;
+
+        stopCourseLive(false);
+
+        liveSetStatus(
+          event.reason
+            ? "Session ended: " + event.reason
+            : "Session ended. You can start another conversation."
+        );
+      }
+    };
+
+  } catch (err) {
+    console.error("Unable to start Gemini Live:", err);
+
     stopCourseLive(false);
-    liveSetStatus(err.message||"Unable to start Live Conversation.");
-    alert(err.message||"Unable to start Live Conversation.");
-  }finally{courseLive.starting=false;$("liveStartBtn").disabled=!!courseLive.ws;}
+
+    liveSetStatus(
+      err.message || "Unable to start Live Conversation."
+    );
+
+    alert(
+      err.message || "Unable to start Live Conversation."
+    );
+
+  } finally {
+    courseLive.starting = false;
+
+    $("liveStartBtn").disabled = !!courseLive.ws;
+  }
 }
-function stopCourseLive(updateStatus=true){
-  courseLive.setup=false;
-  try{if(courseLive.processor){courseLive.processor.disconnect();courseLive.processor.onaudioprocess=null}}catch(e){}
-  try{if(courseLive.micSource)courseLive.micSource.disconnect()}catch(e){}
-  try{if(courseLive.stream)courseLive.stream.getTracks().forEach(t=>t.stop())}catch(e){}
-  try{if(courseLive.ws){const ws=courseLive.ws;courseLive.ws=null;ws.close()}}catch(e){}
+
+
+/* STOP LIVE CONVERSATION */
+
+function stopCourseLive(updateStatus = true) {
+  courseLive.setup = false;
+
+
+  /* STOP AUDIO PROCESSOR */
+
+  try {
+    if (courseLive.processor) {
+      courseLive.processor.disconnect();
+      courseLive.processor.onaudioprocess = null;
+    }
+  } catch (e) {}
+
+
+  /* DISCONNECT MICROPHONE */
+
+  try {
+    if (courseLive.micSource) {
+      courseLive.micSource.disconnect();
+    }
+  } catch (e) {}
+
+
+  /* DISCONNECT SILENT AUDIO NODE */
+
+  try {
+    if (courseLive.silentGain) {
+      courseLive.silentGain.disconnect();
+    }
+  } catch (e) {}
+
+
+  /* RELEASE MICROPHONE */
+
+  try {
+    if (courseLive.stream) {
+      courseLive.stream
+        .getTracks()
+        .forEach(track => track.stop());
+    }
+  } catch (e) {}
+
+
+  /* CLOSE WEBSOCKET */
+
+  try {
+    if (courseLive.ws) {
+      const ws = courseLive.ws;
+      courseLive.ws = null;
+      ws.close();
+    }
+  } catch (e) {}
+
+
+  /* STOP PLAYBACK */
+
   liveStopPlayback();
-  try{if(courseLive.audioContext){courseLive.audioContext.close();courseLive.audioContext=null}}catch(e){}
-  courseLive.stream=null;courseLive.processor=null;courseLive.micSource=null;
+
+
+  /* CLOSE AUDIO CONTEXT */
+
+  try {
+    if (courseLive.audioContext) {
+      courseLive.audioContext.close();
+      courseLive.audioContext = null;
+    }
+  } catch (e) {}
+
+
+  /* RESET VARIABLES */
+
+  courseLive.stream = null;
+  courseLive.processor = null;
+  courseLive.micSource = null;
+  courseLive.silentGain = null;
+
+  courseLive.inputText = "";
+  courseLive.outputText = "";
+
   $("liveOrb").classList.remove("active");
-  $("liveStartBtn").disabled=false;$("liveStopBtn").disabled=true;
-  if(updateStatus)liveSetStatus("Conversation ended.");
+
+  $("liveStartBtn").disabled = false;
+  $("liveStopBtn").disabled = true;
+
+  if (updateStatus) {
+    liveSetStatus("Conversation ended.");
+  }
 }
 
 </script>
