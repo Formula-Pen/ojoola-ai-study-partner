@@ -13,412 +13,1568 @@
 
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#f4f7fb;color:#172033}
-body.dark{background:#0f172a;color:#e5e7eb}
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#172033
+}
+body.dark{
+  background:#0b1220;
+  color:#e8edf7
+}
 button,input,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
-.wrap{max-width:900px;margin:auto;padding:18px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;box-shadow:0 5px 20px rgba(0,0,0,.05)}
-.dark .card{background:#172033;border-color:#263247}
+.wrap{
+  width:100%;
+  max-width:980px;
+  margin:auto;
+  padding:20px
+}
+.card{
+  background:#fff;
+  border:1px solid #e3e8f1;
+  border-radius:22px;
+  padding:20px;
+  box-shadow:0 8px 30px rgba(15,23,42,.05)
+}
+.dark .card{
+  background:#121c2e;
+  border-color:#26344d;
+  box-shadow:none
+}
 .flex{display:flex;align-items:center;gap:10px}
 .between{justify-content:space-between}
 .column{flex-direction:column}
 .center{text-align:center}
-.muted{color:#64748b;font-size:13px}
+.muted{
+  color:#64748b;
+  font-size:13px
+}
 .dark .muted{color:#94a3b8}
-.primary{background:#2563eb;color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:700}
-.secondary{background:#e8eefc;color:#2563eb;border:0;border-radius:12px;padding:11px 15px;font-weight:700}
-.dark .secondary{background:#263b68;color:#bfdbfe}
-.danger{background:#fee2e2;color:#b91c1c;border:0;border-radius:12px;padding:11px 15px;font-weight:700}
-.iconBtn{width:42px;height:42px;border:0;border-radius:12px;background:#eef3fa;color:#1e3a8a;font-size:19px}
-.dark .iconBtn{background:#243047;color:#dbeafe}
-input,textarea{width:100%;border:1px solid #dbe3ef;border-radius:12px;padding:12px;background:#fff;color:#172033;outline:none}
-input:focus,textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.dark input,.dark textarea{background:#101827;color:#e5e7eb;border-color:#334155}
+
+.primary{
+  background:#2563eb;
+  color:#fff;
+  border:0;
+  border-radius:13px;
+  padding:12px 17px;
+  font-weight:800;
+  box-shadow:0 7px 18px rgba(37,99,235,.18)
+}
+.primary:active{transform:translateY(1px)}
+
+.secondary{
+  background:#eaf0ff;
+  color:#2563eb;
+  border:0;
+  border-radius:12px;
+  padding:11px 15px;
+  font-weight:800
+}
+.dark .secondary{
+  background:#1d3158;
+  color:#bfdbfe
+}
+
+.danger{
+  background:#fee2e2;
+  color:#b91c1c;
+  border:0;
+  border-radius:12px;
+  padding:11px 15px;
+  font-weight:700
+}
+.dark .danger{
+  background:#451c27;
+  color:#fecdd3
+}
+
+.iconBtn{
+  width:44px;
+  height:44px;
+  border:1px solid #e1e7f0;
+  border-radius:14px;
+  background:#f4f7fb;
+  color:#1e3a8a;
+  font-size:19px
+}
+.dark .iconBtn{
+  background:#1b2940;
+  border-color:#2b3b56;
+  color:#dbeafe
+}
+
+input,textarea{
+  width:100%;
+  border:1px solid #dce3ee;
+  border-radius:13px;
+  padding:12px 13px;
+  background:#fff;
+  color:#172033;
+  outline:none
+}
+input:focus,textarea:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.1)
+}
+.dark input,.dark textarea{
+  background:#0e1727;
+  color:#e5e7eb;
+  border-color:#334155
+}
 textarea{resize:vertical}
-h1,h2,h3,p{margin-top:0}
+
 #app{min-height:100vh}
-#topHeader{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb}
-.dark #topHeader{background:rgba(15,23,42,.94);border-color:#263247}
-.headerInner{max-width:900px;margin:auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.brand{font-size:19px;font-weight:800;color:#2563eb}
-.badge{font-size:11px;background:#e8eefc;color:#2563eb;padding:6px 9px;border-radius:999px;font-weight:700}
-.dark .badge{background:#263b68;color:#bfdbfe}
-main{padding-bottom:90px}
-.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid #e5e7eb}
-.dark .nav{background:#111827;border-color:#263247}
-.navInner{max-width:900px;margin:auto;display:flex;justify-content:space-around;padding:8px}
-.nav button{background:none;border:0;padding:8px 15px;color:#64748b;font-size:12px}
-.nav button.active{color:#2563eb;font-weight:800}
-.welcome{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-.welcomeBox{max-width:480px;text-align:center}
-.logo{width:82px;height:82px;margin:0 auto 18px;border-radius:24px;background:linear-gradient(135deg,#2563eb,#60a5fa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;box-shadow:0 12px 30px rgba(37,99,235,.25)}
-.heroTitle{font-size:30px;font-weight:900;margin-bottom:8px}
-.heroText{color:#64748b;line-height:1.6}
+
+#topHeader{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid #e5e9f1
+}
+.dark #topHeader{
+  background:rgba(11,18,32,.94);
+  border-color:#26344d
+}
+
+.headerInner{
+  width:100%;
+  max-width:980px;
+  margin:auto;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px
+}
+
+.brand{
+  font-size:22px;
+  font-weight:900;
+  color:#2563eb;
+  letter-spacing:-.4px
+}
+
+.badge{
+  font-size:11px;
+  background:#eaf0ff;
+  color:#2563eb;
+  padding:7px 11px;
+  border-radius:999px;
+  font-weight:800
+}
+.dark .badge{
+  background:#1d3158;
+  color:#bfdbfe
+}
+
+main{padding-bottom:92px}
+
+.nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  z-index:30;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(15px);
+  border-top:1px solid #e2e7ef
+}
+.dark .nav{
+  background:rgba(11,18,32,.97);
+  border-color:#26344d
+}
+
+.navInner{
+  max-width:600px;
+  margin:auto;
+  display:flex;
+  justify-content:space-around;
+  padding:7px 10px
+}
+
+.nav button{
+  background:none;
+  border:0;
+  min-width:80px;
+  padding:7px 12px;
+  color:#64748b;
+  font-size:12px;
+  line-height:1.5
+}
+.nav button.active{
+  color:#2563eb;
+  font-weight:900
+}
+
+/* WELCOME */
+
+.welcome{
+  min-height:100vh;
+  min-height:100svh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 22px;
+  background:
+    radial-gradient(circle at top right,rgba(37,99,235,.16),transparent 38%),
+    linear-gradient(145deg,#f7f9ff,#eef4ff 55%,#f8fafc)
+}
+body.dark .welcome{
+  background:
+    radial-gradient(circle at top right,rgba(37,99,235,.22),transparent 40%),
+    linear-gradient(145deg,#0b1220,#101b31)
+}
+
+.welcomeBox{
+  width:100%;
+  max-width:430px;
+  text-align:center
+}
+
+.logo{
+  width:88px;
+  height:88px;
+  margin:0 auto 20px;
+  border-radius:27px;
+  background:linear-gradient(135deg,#2563eb,#60a5fa);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:34px;
+  font-weight:900;
+  box-shadow:0 18px 45px rgba(37,99,235,.28)
+}
+
+.heroTitle{
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:-1px;
+  margin-bottom:8px
+}
+
+.heroText{
+  color:#64748b;
+  line-height:1.6;
+  font-size:15px;
+  margin-bottom:26px
+}
 .dark .heroText{color:#94a3b8}
-.courseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.courseBox{border:1px solid #dbe3ef;background:#fff;border-radius:16px;padding:15px;min-height:110px;text-align:left;transition:.2s}
-.courseBox:hover{transform:translateY(-2px);border-color:#2563eb}
-.dark .courseBox{background:#172033;border-color:#334155}
-.courseCode{font-size:11px;color:#2563eb;font-weight:800;margin-bottom:8px}
-.courseName{font-weight:800;line-height:1.3}
-.courseRef{font-size:11px;color:#64748b;margin-top:8px}
-.chatArea{height:calc(100vh - 230px);min-height:300px;overflow-y:auto;padding:15px;scroll-behavior:auto}
-.message{display:flex;margin:9px 0}
-.message.user{justify-content:flex-end}
-.bubble{max-width:85%;padding:11px 13px;border-radius:16px;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere}
-.message.ai .bubble{background:#eef3f9;border-bottom-left-radius:5px}
-.message.user .bubble{background:#2563eb;color:#fff;border-bottom-right-radius:5px}
-.dark .message.ai .bubble{background:#263247}
+
+.welcomeFeatures{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
+  margin:0 0 25px
+}
+
+.welcomeFeature{
+  background:rgba(255,255,255,.7);
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:15px;
+  padding:12px 7px
+}
+.dark .welcomeFeature{
+  background:rgba(18,28,46,.75);
+  border-color:#26344d
+}
+.welcomeFeatureIcon{
+  font-size:19px;
+  margin-bottom:5px
+}
+.welcomeFeatureText{
+  font-size:10px;
+  color:#64748b;
+  font-weight:700
+}
+.dark .welcomeFeatureText{color:#94a3b8}
+
+.welcomeBox .primary{
+  width:100%;
+  max-width:250px;
+  padding:14px 20px;
+  font-size:15px
+}
+
+/* HOME */
+
+.homeHero{
+  margin-top:4px;
+  padding:25px 22px;
+  border-radius:24px;
+  color:#fff;
+  background:
+    linear-gradient(135deg,#1d4ed8 0%,#2563eb 52%,#3b82f6 100%);
+  box-shadow:0 14px 35px rgba(37,99,235,.2)
+}
+
+.homeHeroEyebrow{
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  opacity:.85;
+  margin-bottom:9px
+}
+
+.homeHero h1{
+  margin:0 0 8px;
+  font-size:28px;
+  line-height:1.15;
+  letter-spacing:-.5px
+}
+
+.homeHero p{
+  margin:0;
+  max-width:600px;
+  color:rgba(255,255,255,.86);
+  line-height:1.55;
+  font-size:14px
+}
+
+.quickActions{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin:15px 0 20px
+}
+
+.quickAction{
+  border:1px solid #e1e7f0;
+  background:#fff;
+  border-radius:18px;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-align:left;
+  color:#172033;
+  box-shadow:0 5px 20px rgba(15,23,42,.04)
+}
+.dark .quickAction{
+  background:#121c2e;
+  border-color:#26344d;
+  color:#e5e7eb
+}
+.quickActionIcon{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border-radius:13px;
+  background:#eaf0ff;
+  color:#2563eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px
+}
+.dark .quickActionIcon{
+  background:#1d3158;
+  color:#bfdbfe
+}
+.quickActionTitle{
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:3px
+}
+.quickActionText{
+  color:#64748b;
+  font-size:11px
+}
+.dark .quickActionText{color:#94a3b8}
+
+.sectionHeading{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:10px;
+  margin:4px 2px 12px
+}
+.sectionHeading h2{
+  margin:0;
+  font-size:20px
+}
+.sectionHeading p{
+  margin:4px 0 0;
+  color:#64748b;
+  font-size:12px
+}
+.dark .sectionHeading p{color:#94a3b8}
+
+.courseGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px
+}
+
+.courseBox{
+  border:1px solid #e0e6ef;
+  background:#fff;
+  border-radius:19px;
+  padding:17px;
+  min-height:126px;
+  text-align:left;
+  transition:.18s ease;
+  color:#172033;
+  box-shadow:0 5px 18px rgba(15,23,42,.035)
+}
+.courseBox:active{
+  transform:scale(.985)
+}
+.courseBox:hover{
+  border-color:#9dbcf8;
+  box-shadow:0 8px 24px rgba(37,99,235,.08)
+}
+.dark .courseBox{
+  background:#121c2e;
+  border-color:#26344d;
+  color:#e5e7eb;
+  box-shadow:none
+}
+
+.courseCode{
+  font-size:11px;
+  color:#2563eb;
+  font-weight:900;
+  margin-bottom:9px
+}
+.courseName{
+  font-size:15px;
+  font-weight:900;
+  line-height:1.3
+}
+.courseRef{
+  font-size:10px;
+  color:#64748b;
+  margin-top:11px
+}
+.dark .courseRef{color:#94a3b8}
+
+.generalCard{
+  margin-top:18px;
+  padding:18px;
+  border-radius:20px;
+  background:#fff;
+  border:1px solid #e0e6ef;
+  box-shadow:0 6px 22px rgba(15,23,42,.04);
+  cursor:pointer
+}
+.dark .generalCard{
+  background:#121c2e;
+  border-color:#26344d;
+  box-shadow:none
+}
+.generalIcon{
+  width:48px;
+  height:48px;
+  flex:0 0 48px;
+  border-radius:15px;
+  background:#eaf0ff;
+  color:#2563eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:23px
+}
+.dark .generalIcon{
+  background:#1d3158;
+  color:#bfdbfe
+}
+
+/* CHAT */
+
+.pageHeader{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-bottom:13px
+}
+.pageHeader h2{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.2px
+}
+
+.chatShell{
+  width:100%;
+  background:#fff;
+  border:1px solid #e1e7ef;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 7px 25px rgba(15,23,42,.04)
+}
+.dark .chatShell{
+  background:#0f1727;
+  border-color:#26344d;
+  box-shadow:none
+}
+
+.searchArea{
+  padding:13px 14px 8px;
+  border-bottom:1px solid #e8edf4
+}
+.dark .searchArea{
+  border-color:#26344d
+}
+
+.searchBar{
+  display:flex;
+  gap:8px
+}
+.searchBar input{flex:1}
+.searchCount{
+  font-size:10px;
+  color:#64748b;
+  padding:7px 2px 2px
+}
+.dark .searchCount{color:#94a3b8}
+
+.chatArea{
+  height:calc(100vh - 285px);
+  min-height:330px;
+  overflow-y:auto;
+  padding:18px 16px 24px;
+  scroll-behavior:auto;
+  background:#fff
+}
+.dark .chatArea{
+  background:#0f1727
+}
+
+/* USER = compact bubble, AI = full width */
+
+.message{
+  display:flex;
+  width:100%;
+  margin:11px 0
+}
+.message.user{
+  justify-content:flex-end
+}
+.message.ai{
+  justify-content:flex-start
+}
+
+.message.user .bubble{
+  width:auto;
+  max-width:min(78%,620px);
+  padding:11px 14px;
+  background:#2563eb;
+  color:#fff;
+  border-radius:18px 18px 5px 18px
+}
+
+.message.ai .bubble{
+  width:100%;
+  max-width:100%;
+  padding:3px 3px 14px;
+  background:transparent;
+  color:#172033;
+  border-radius:0
+}
+.dark .message.ai .bubble{
+  background:transparent;
+  color:#e5e7eb
+}
+
+.messageText{
+  line-height:1.68;
+  font-size:15px;
+  overflow-wrap:anywhere
+}
+.message.ai .messageText{
+  width:100%
+}
+.message.user .messageText{
+  line-height:1.55
+}
 .messageText p:last-child{margin-bottom:0}
 .messageText strong{font-weight:800}
 .messageText em{font-style:italic}
-.messageActions{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
-.messageActions button{border:0;background:transparent;color:#64748b;font-size:11px;padding:4px 5px}
+.messageText pre{
+  margin:10px 0;
+  max-width:100%;
+  overflow:auto
+}
+
+.messageActions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-top:10px
+}
+.messageActions button{
+  border:0;
+  background:transparent;
+  color:#64748b;
+  font-size:10px;
+  padding:4px 6px
+}
 .messageActions button:hover{color:#2563eb}
 .dark .messageActions button{color:#94a3b8}
-.chatInputWrap{position:sticky;bottom:0;background:rgba(244,247,251,.96);padding:10px 0}
-.dark .chatInputWrap{background:rgba(15,23,42,.96)}
-.inputRow{display:flex;gap:8px;align-items:flex-end}
-.inputRow textarea{min-height:48px;max-height:150px;resize:vertical}
-.sendBtn{width:50px;height:48px;flex:0 0 50px;border:0;border-radius:14px;background:#2563eb;color:#fff;font-size:18px}
+
+.chatInputWrap{
+  position:sticky;
+  bottom:0;
+  background:rgba(255,255,255,.97);
+  border-top:1px solid #e5e9f1;
+  padding:11px 13px 13px
+}
+.dark .chatInputWrap{
+  background:rgba(15,23,39,.98);
+  border-color:#26344d
+}
+
+.inputRow{
+  display:flex;
+  gap:8px;
+  align-items:flex-end
+}
+.inputRow textarea{
+  min-height:48px;
+  max-height:150px;
+  resize:vertical;
+  border-radius:16px
+}
+
+.sendBtn{
+  width:50px;
+  height:48px;
+  flex:0 0 50px;
+  border:0;
+  border-radius:15px;
+  background:#2563eb;
+  color:#fff;
+  font-size:18px
+}
 .stopBtn{background:#dc2626}
-.searchBar{display:flex;gap:8px;margin-bottom:10px}
-.searchBar input{flex:1}
-.searchCount{font-size:11px;color:#64748b;padding:10px 2px}
-.highlight{background:#fde68a;color:#111827;border-radius:3px}
-.downBtn{position:fixed;right:20px;bottom:95px;width:42px;height:42px;border:0;border-radius:50%;background:#2563eb;color:#fff;box-shadow:0 5px 15px rgba(0,0,0,.2);z-index:15}
-.status{font-size:12px;color:#64748b;padding:6px 10px;white-space:pre-wrap}
+
+.status{
+  font-size:11px;
+  color:#64748b;
+  padding:8px 15px;
+  white-space:pre-wrap
+}
 .dark .status{color:#94a3b8}
-.typing{display:inline-flex;gap:4px}
-.typing span{width:6px;height:6px;background:#64748b;border-radius:50%;animation:bounce 1s infinite}
+
+.typing{
+  display:inline-flex;
+  gap:4px
+}
+.typing span{
+  width:6px;
+  height:6px;
+  background:#64748b;
+  border-radius:50%;
+  animation:bounce 1s infinite
+}
 .typing span:nth-child(2){animation-delay:.15s}
 .typing span:nth-child(3){animation-delay:.3s}
-@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:flex-end}
-.modalBox{background:#fff;width:100%;max-height:90vh;border-radius:22px 22px 0 0;padding:20px;overflow-y:auto}
-.dark .modalBox{background:#172033}
-.fileList{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.fileItem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #dbe3ef;border-radius:10px;min-width:0}
+@keyframes bounce{
+  0%,80%,100%{transform:translateY(0)}
+  40%{transform:translateY(-5px)}
+}
+
+.downBtn{
+  position:fixed;
+  right:18px;
+  bottom:94px;
+  width:43px;
+  height:43px;
+  border:0;
+  border-radius:50%;
+  background:#2563eb;
+  color:#fff;
+  box-shadow:0 7px 20px rgba(0,0,0,.2);
+  z-index:15
+}
+
+/* COURSE INFO */
+
+.infoSection{margin-top:19px}
+.infoSection h3{
+  font-size:14px;
+  margin-bottom:9px
+}
+
+.installBox{
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+  border-radius:15px;
+  padding:14px
+}
+.dark .installBox{
+  background:#172d4d;
+  border-color:#31598d
+}
+
+.fileList{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:10px
+}
+.fileItem{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:11px;
+  border:1px solid #dbe3ef;
+  border-radius:12px;
+  min-width:0
+}
 .dark .fileItem{border-color:#334155}
-.pageHeader{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.pageHeader h2{margin:0;font-size:20px}
-.infoSection{margin-top:15px}
-.infoSection h3{font-size:14px;margin-bottom:8px}
-.installBox{background:#eff6ff;border:1px solid #bfdbfe;border-radius:15px;padding:13px}
-.dark .installBox{background:#172d4d;border-color:#31598d}
-.playback{margin-top:8px;padding:9px;border:1px solid #dbe3ef;border-radius:12px;background:rgba(255,255,255,.7)}
-.dark .playback{border-color:#334155;background:#111827}
-.playbackTop{display:flex;align-items:center;gap:7px}
-.playback button{border:0;background:transparent;color:#2563eb;font-size:16px}
-.playback input[type=range]{flex:1;min-width:50px}
-.time{font-size:10px;color:#64748b;min-width:68px;text-align:center}
-.courseThumb{width:48px;height:48px;object-fit:cover;border-radius:8px}
-.errorPanel{position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;background:#fff1f2;color:#881337;border:1px solid #fb7185;border-radius:14px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);max-height:45vh;overflow:auto}
-.errorPanel pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace;margin:9px 0}
-.errorPanel button{border:0;border-radius:8px;padding:8px 10px;background:#9f1239;color:#fff}
-.errorPanel .errorClose{background:#ffe4e6;color:#881337;font-size:18px;padding:4px 10px}
-.dark .errorPanel{background:#3b1020;color:#ffe4e6;border-color:#fb7185}
+
+.courseThumb{
+  width:48px;
+  height:48px;
+  object-fit:cover;
+  border-radius:9px
+}
+
+/* PLAYBACK */
+
+.playback{
+  margin-top:8px;
+  padding:9px;
+  border:1px solid #dbe3ef;
+  border-radius:12px;
+  background:rgba(255,255,255,.7)
+}
+.dark .playback{
+  border-color:#334155;
+  background:#111827
+}
+.playbackTop{
+  display:flex;
+  align-items:center;
+  gap:7px
+}
+.playback button{
+  border:0;
+  background:transparent;
+  color:#2563eb;
+  font-size:16px
+}
+.playback input[type=range]{
+  flex:1;
+  min-width:50px
+}
+.time{
+  font-size:10px;
+  color:#64748b;
+  min-width:68px;
+  text-align:center
+}
+
+/* MODALS */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.52);
+  z-index:50;
+  display:flex;
+  align-items:flex-end
+}
+.modalBox{
+  background:#fff;
+  width:100%;
+  max-width:720px;
+  max-height:92vh;
+  margin:auto;
+  border-radius:24px 24px 0 0;
+  padding:20px;
+  overflow-y:auto
+}
+.dark .modalBox{background:#121c2e}
+
+.errorPanel{
+  position:fixed;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  z-index:9999;
+  background:#fff1f2;
+  color:#881337;
+  border:1px solid #fb7185;
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,.25);
+  max-height:45vh;
+  overflow:auto
+}
+.errorPanel pre{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  font:12px/1.4 monospace;
+  margin:9px 0
+}
+.errorPanel button{
+  border:0;
+  border-radius:8px;
+  padding:8px 10px;
+  background:#9f1239;
+  color:#fff
+}
+.errorPanel .errorClose{
+  background:#ffe4e6;
+  color:#881337;
+  font-size:18px;
+  padding:4px 10px
+}
+.dark .errorPanel{
+  background:#3b1020;
+  color:#ffe4e6;
+  border-color:#fb7185
+}
+
+.highlight{
+  background:#fde68a;
+  color:#111827;
+  border-radius:3px
+}
+
 @media(max-width:600px){
-  .courseGrid{grid-template-columns:repeat(2,1fr)}
-  .bubble{max-width:92%}
-  .wrap{padding:14px}
-  .heroTitle{font-size:26px}
+  .wrap{padding:15px}
+  .headerInner{padding:13px 15px}
+  .heroTitle{font-size:30px}
+  .homeHero h1{font-size:25px}
+  .courseGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .courseBox{min-height:120px;padding:15px}
+  .message.user .bubble{max-width:82%}
+  .messageText{font-size:15px}
+  .chatArea{
+    height:calc(100vh - 280px);
+    min-height:300px;
+    padding:16px 14px 22px
+  }
+  .quickActions{gap:9px}
+  .quickAction{padding:13px 10px}
+}
+
+@media(max-width:380px){
+  .courseGrid{gap:9px}
+  .courseBox{padding:13px}
+  .courseName{font-size:14px}
+  .welcomeFeatures{gap:6px}
 }
 </style>
 </head>
 
 <body>
 
+<!-- WELCOME SCREEN -->
+
 <div id="welcome" class="welcome">
   <div class="welcomeBox">
+
     <div class="logo">O</div>
+
     <div class="heroTitle">Ọjọ́ọ̀la</div>
-    <div class="heroText">Your AI Study Partner</div>
-    <br>
-    <button class="primary" onclick="enterApp()">Get Started</button>
+
+    <div class="heroText">
+      Your AI Study Partner
+    </div>
+
+    <div class="welcomeFeatures">
+      <div class="welcomeFeature">
+        <div class="welcomeFeatureIcon">📚</div>
+        <div class="welcomeFeatureText">Study by course</div>
+      </div>
+
+      <div class="welcomeFeature">
+        <div class="welcomeFeatureIcon">🤖</div>
+        <div class="welcomeFeatureText">AI assistance</div>
+      </div>
+
+      <div class="welcomeFeature">
+        <div class="welcomeFeatureIcon">💬</div>
+        <div class="welcomeFeatureText">Keep conversations</div>
+      </div>
+    </div>
+
+    <button class="primary" onclick="enterApp()">
+      Get Started
+    </button>
+
   </div>
 </div>
+
+
+<!-- APP -->
 
 <div id="app" class="hidden">
 
 <header id="topHeader">
   <div class="headerInner">
+
     <div class="brand">Ọjọ́ọ̀la</div>
+
     <div class="flex">
-      <span id="modelBadge" class="badge">AI READY</span>
-      <button class="iconBtn" onclick="openSettings()">⚙</button>
+      <span id="modelBadge" class="badge">
+        AI READY
+      </span>
+
+      <button
+        class="iconBtn"
+        onclick="openSettings()"
+        aria-label="Settings">
+        ⚙
+      </button>
     </div>
+
   </div>
 </header>
 
+
 <main>
 
+<!-- HOME -->
+
 <section id="homeView" class="wrap">
-  <div class="card">
-    <h2>Welcome back</h2>
-    <p class="muted">Choose a course or start a general conversation with Ọjọ́ọ̀la.</p>
-  </div>
 
-  <br>
+  <div class="homeHero">
 
-  <div class="card">
-    <div class="flex between">
-      <div>
-        <h3 style="margin-bottom:4px">My Courses</h3>
-        <div class="muted">15 course spaces</div>
-      </div>
-      <button class="secondary" onclick="openCourseManager()">Edit</button>
+    <div class="homeHeroEyebrow">
+      Your study space
     </div>
 
-    <br>
-    <div id="courseGrid" class="courseGrid"></div>
+    <h1>Welcome back 👋</h1>
+
+    <p>
+      Choose a course, continue a conversation,
+      or ask Ọjọ́ọ̀la anything.
+    </p>
+
   </div>
 
-  <br>
 
-  <div class="card" onclick="openGeneral()" style="cursor:pointer">
+  <div class="quickActions">
+
+    <button
+      class="quickAction"
+      onclick="openGeneral()">
+
+      <div class="quickActionIcon">
+        💬
+      </div>
+
+      <div>
+        <div class="quickActionTitle">
+          General Chat
+        </div>
+
+        <div class="quickActionText">
+          Ask anything outside a course
+        </div>
+      </div>
+
+    </button>
+
+
+    <button
+      class="quickAction"
+      onclick="openCourseManager()">
+
+      <div class="quickActionIcon">
+        ✎
+      </div>
+
+      <div>
+        <div class="quickActionTitle">
+          Manage Courses
+        </div>
+
+        <div class="quickActionText">
+          Edit your 15 course spaces
+        </div>
+      </div>
+
+    </button>
+
+  </div>
+
+
+  <div class="sectionHeading">
+
+    <div>
+      <h2>My Courses</h2>
+
+      <p>
+        Select a course to continue studying
+      </p>
+    </div>
+
+    <span class="muted">
+      15 spaces
+    </span>
+
+  </div>
+
+
+  <div id="courseGrid" class="courseGrid"></div>
+
+
+  <div
+    class="generalCard"
+    onclick="openGeneral()">
+
     <div class="flex">
-      <div style="font-size:28px">💬</div>
-      <div>
-        <h3 style="margin-bottom:4px">General Chat</h3>
-        <div class="muted">Ask anything outside a specific course.</div>
+
+      <div class="generalIcon">
+        💬
       </div>
+
+      <div>
+        <div style="font-weight:900;font-size:15px;margin-bottom:4px">
+          General Chat
+        </div>
+
+        <div class="muted">
+          Continue your general AI conversation.
+        </div>
+      </div>
+
     </div>
+
   </div>
+
 </section>
+
+
+<!-- GENERAL CHAT -->
 
 <section id="generalView" class="wrap hidden">
+
   <div class="pageHeader">
-    <button class="iconBtn" onclick="goHome()">←</button>
+
+    <button
+      class="iconBtn"
+      onclick="goHome()">
+      ←
+    </button>
+
     <div>
       <h2>General Chat</h2>
-      <div class="muted">Your general AI conversation</div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="searchBar">
-      <input id="generalSearch" placeholder="Search this conversation..." oninput="runGeneralSearch()">
-      <button class="secondary" onclick="clearGeneralSearch()">✕</button>
-    </div>
-
-    <div id="generalSearchCount" class="searchCount"></div>
-    <div id="generalMsgs" class="chatArea"></div>
-    <div id="generalStatus" class="status hidden"></div>
-
-    <div class="chatInputWrap">
-      <div class="inputRow">
-        <textarea id="generalInput" placeholder="Ask Ọjọ́ọ̀la anything..." rows="1"></textarea>
-        <button id="generalSendBtn" class="sendBtn" onclick="sendGeneral()">➤</button>
+      <div class="muted">
+        Your general AI conversation
       </div>
     </div>
+
   </div>
-</section>
 
-<section id="courseInfoView" class="wrap hidden">
-  <div class="pageHeader">
-    <button class="iconBtn" onclick="goHome()">←</button>
 
-    <div style="flex:1">
-      <h2 id="courseInfoTitle">Course</h2>
-      <div id="courseInfoCode" class="muted"></div>
+  <div class="chatShell">
+
+    <div class="searchArea">
+
+      <div class="searchBar">
+
+        <input
+          id="generalSearch"
+          placeholder="Search this conversation..."
+          oninput="runGeneralSearch">
+
+        <button
+          class="secondary"
+          onclick="clearGeneralSearch()">
+          ✕
+        </button>
+
+      </div>
+
+      <div
+        id="generalSearchCount"
+        class="searchCount">
+      </div>
+
     </div>
 
-    <button class="iconBtn" onclick="openCourseEditor()">✎</button>
+
+    <div
+      id="generalMsgs"
+      class="chatArea">
+    </div>
+
+
+    <div
+      id="generalStatus"
+      class="status hidden">
+    </div>
+
+
+    <div class="chatInputWrap">
+
+      <div class="inputRow">
+
+        <textarea
+          id="generalInput"
+          placeholder="Ask Ọjọ́ọ̀la anything..."
+          rows="1"></textarea>
+
+        <button
+          id="generalSendBtn"
+          class="sendBtn"
+          onclick="sendGeneral()">
+          ➤
+        </button>
+
+      </div>
+
+    </div>
+
   </div>
 
+</section>
+
+
+<!-- COURSE INFORMATION -->
+
+<section
+  id="courseInfoView"
+  class="wrap hidden">
+
+  <div class="pageHeader">
+
+    <button
+      class="iconBtn"
+      onclick="goHome()">
+      ←
+    </button>
+
+    <div style="flex:1">
+
+      <h2 id="courseInfoTitle">
+        Course
+      </h2>
+
+      <div
+        id="courseInfoCode"
+        class="muted">
+      </div>
+
+    </div>
+
+    <button
+      class="iconBtn"
+      onclick="openCourseEditor()">
+      ✎
+    </button>
+
+  </div>
+
+
   <div class="card">
-    <div id="courseInfoDescription" class="muted"></div>
+
+    <div
+      id="courseInfoDescription"
+      class="muted">
+    </div>
+
 
     <div class="infoSection">
+
       <h3>Course Reference</h3>
 
       <div class="flex between">
-        <div>
-          <div style="font-weight:700">Use course materials as reference</div>
-          <div class="muted">
-            When enabled, attached PDFs and pictures are included with course questions.
+
+        <div style="flex:1">
+
+          <div style="font-weight:800">
+            Use course materials as reference
           </div>
+
+          <div class="muted">
+            Attached PDFs and pictures are included
+            with course questions when enabled.
+          </div>
+
         </div>
 
-        <input id="courseRefToggle" type="checkbox"
+        <input
+          id="courseRefToggle"
+          type="checkbox"
           style="width:20px;height:20px"
-          onchange="toggleCourseReference()">
+          onchange="toggleCourseReference">
+
       </div>
+
     </div>
 
+
     <div class="infoSection">
+
       <h3>PDF Materials</h3>
-      <div id="coursePdfList" class="fileList"></div>
+
+      <div
+        id="coursePdfList"
+        class="fileList">
+      </div>
+
       <br>
 
-      <label class="secondary" style="display:inline-block">
+      <label
+        class="secondary"
+        style="display:inline-block">
+
         + Add PDF
-        <input id="coursePdfInput"
+
+        <input
+          id="coursePdfInput"
           type="file"
           accept="application/pdf"
           multiple
           hidden
           onchange="addCoursePDFs(this.files)">
+
       </label>
+
     </div>
 
+
     <div class="infoSection">
+
       <h3>Pictures</h3>
-      <div id="coursePictureList" class="fileList"></div>
+
+      <div
+        id="coursePictureList"
+        class="fileList">
+      </div>
+
       <br>
 
-      <label class="secondary" style="display:inline-block">
+      <label
+        class="secondary"
+        style="display:inline-block">
+
         + Add Pictures
-        <input id="coursePictureInput"
+
+        <input
+          id="coursePictureInput"
           type="file"
           accept="image/*"
           multiple
           hidden
           onchange="addCoursePictures(this.files)">
+
       </label>
+
     </div>
+
 
     <br>
-    <button class="primary" style="width:100%" onclick="proceedToCourseChat()">
+
+    <button
+      class="primary"
+      style="width:100%"
+      onclick="proceedToCourseChat()">
+
       Proceed to Conversation →
+
     </button>
+
   </div>
+
 </section>
 
-<section id="courseChatView" class="wrap hidden">
+
+<!-- COURSE CHAT -->
+
+<section
+  id="courseChatView"
+  class="wrap hidden">
+
   <div class="pageHeader">
-    <button class="iconBtn" onclick="backToCourseInfo()">←</button>
+
+    <button
+      class="iconBtn"
+      onclick="backToCourseInfo()">
+      ←
+    </button>
 
     <div style="flex:1">
-      <h2 id="courseChatTitle">Course Chat</h2>
-      <div id="courseChatSubtitle" class="muted"></div>
+
+      <h2 id="courseChatTitle">
+        Course Chat
+      </h2>
+
+      <div
+        id="courseChatSubtitle"
+        class="muted">
+      </div>
+
     </div>
 
-    <button class="iconBtn" onclick="clearCourseChat()">🗑</button>
+    <button
+      class="iconBtn"
+      onclick="clearCourseChat()">
+      🗑
+    </button>
+
   </div>
 
-  <div class="card">
-    <div class="searchBar">
-      <input id="courseSearch"
-        placeholder="Search this course conversation..."
-        oninput="runCourseSearch()">
-      <button class="secondary" onclick="clearCourseSearch()">✕</button>
+
+  <div class="chatShell">
+
+    <div class="searchArea">
+
+      <div class="searchBar">
+
+        <input
+          id="courseSearch"
+          placeholder="Search this course conversation..."
+          oninput="runCourseSearch">
+
+        <button
+          class="secondary"
+          onclick="clearCourseSearch()">
+          ✕
+        </button>
+
+      </div>
+
+      <div
+        id="courseSearchCount"
+        class="searchCount">
+      </div>
+
     </div>
 
-    <div id="courseSearchCount" class="searchCount"></div>
-    <div id="courseMsgs" class="chatArea"></div>
-    <div id="courseStatus" class="status hidden"></div>
+
+    <div
+      id="courseMsgs"
+      class="chatArea">
+    </div>
+
+
+    <div
+      id="courseStatus"
+      class="status hidden">
+    </div>
+
 
     <div class="chatInputWrap">
+
       <div class="inputRow">
-        <textarea id="courseInput" placeholder="Ask about this course..." rows="1"></textarea>
-        <button id="courseSendBtn" class="sendBtn" onclick="sendCourseChat()">➤</button>
+
+        <textarea
+          id="courseInput"
+          placeholder="Ask about this course..."
+          rows="1"></textarea>
+
+        <button
+          id="courseSendBtn"
+          class="sendBtn"
+          onclick="sendCourseChat()">
+          ➤
+        </button>
+
       </div>
+
     </div>
+
   </div>
+
 </section>
 
 </main>
 
+
+<!-- BOTTOM NAV -->
+
 <nav id="bottomNav" class="nav">
+
   <div class="navInner">
-    <button id="navHome" class="active" onclick="goHome()">⌂<br>Home</button>
-    <button id="navGeneral" onclick="openGeneral()">💬<br>General</button>
-    <button onclick="openSettings()">⚙<br>Settings</button>
+
+    <button
+      id="navHome"
+      class="active"
+      onclick="goHome()">
+      ⌂<br>Home
+    </button>
+
+    <button
+      id="navGeneral"
+      onclick="openGeneral()">
+      💬<br>General
+    </button>
+
+    <button
+      onclick="openSettings()">
+      ⚙<br>Settings
+    </button>
+
   </div>
+
 </nav>
 
 </div>
 
-<div id="settingsModal"
- class="modal hidden"
- onclick="if(event.target===this)closeSettings()">
+
+<!-- SETTINGS -->
+
+<div
+  id="settingsModal"
+  class="modal hidden"
+  onclick="if(event.target===this)closeSettings()">
 
   <div class="modalBox">
 
     <div class="flex between">
+
       <h2>Settings</h2>
-      <button class="iconBtn" onclick="closeSettings()">✕</button>
+
+      <button
+        class="iconBtn"
+        onclick="closeSettings()">
+        ✕
+      </button>
+
     </div>
 
     <br>
 
+
     <div class="card">
+
       <h3>Gemini API Key</h3>
 
       <p class="muted">
-        Your key is stored locally on this device. For a public app,
-        use a secure backend instead of exposing a shared key in browser code.
+        Your key is stored locally on this device.
+        For a public app, use a secure backend instead
+        of exposing a shared key in browser code.
       </p>
 
-      <input id="apiKeyInput"
+      <input
+        id="apiKeyInput"
         type="password"
         placeholder="Paste Gemini API key"
         autocomplete="off">
 
       <br><br>
 
-      <button class="primary" onclick="saveApiKey()">Save API Key</button>
+      <button
+        class="primary"
+        onclick="saveApiKey()">
+        Save API Key
+      </button>
+
     </div>
 
     <br>
 
+
     <div class="card">
+
       <h3>Appearance</h3>
 
       <div class="flex between">
+
         <span>Dark mode</span>
-        <input id="darkToggle"
+
+        <input
+          id="darkToggle"
           type="checkbox"
           style="width:20px;height:20px"
           onchange="toggleDarkMode()">
+
       </div>
+
     </div>
 
     <br>
 
+
     <div class="card">
+
       <h3>App Installation</h3>
 
       <div class="installBox">
-        <div style="font-weight:700">Install Ọjọ́ọ̀la</div>
 
-        <div class="muted" style="margin:5px 0 10px">
-          Install Ọjọ́ọ̀la on your phone like a normal app.
+        <div style="font-weight:800">
+          Install Ọjọ́ọ̀la
         </div>
 
-        <button id="installBtn"
-          class="primary"
-          onclick="installApp()">Install App</button>
-
-        <div id="installMessage"
+        <div
           class="muted"
-          style="margin-top:8px"></div>
+          style="margin:5px 0 10px">
+
+          Install Ọjọ́ọ̀la on your phone
+          like a normal app.
+
+        </div>
+
+        <button
+          id="installBtn"
+          class="primary"
+          onclick="installApp()">
+
+          Install App
+
+        </button>
+
+        <div
+          id="installMessage"
+          class="muted"
+          style="margin-top:8px">
+        </div>
+
       </div>
+
     </div>
 
     <br>
 
+
     <div class="card">
+
       <h3>Data</h3>
-      <button class="danger" onclick="clearAllData()">Clear Local App Data</button>
+
+      <button
+        class="danger"
+        onclick="clearAllData()">
+
+        Clear Local App Data
+
+      </button>
+
     </div>
 
   </div>
+
 </div>
 
-<div id="courseManagerModal"
- class="modal hidden"
- onclick="if(event.target===this)closeCourseManager()">
+
+<!-- COURSE MANAGER -->
+
+<div
+  id="courseManagerModal"
+  class="modal hidden"
+  onclick="if(event.target===this)closeCourseManager()">
 
   <div class="modalBox">
 
     <div class="flex between">
+
       <h2>Edit Courses</h2>
-      <button class="iconBtn" onclick="closeCourseManager()">✕</button>
+
+      <button
+        class="iconBtn"
+        onclick="closeCourseManager()">
+        ✕
+      </button>
+
     </div>
 
     <p class="muted">
@@ -429,67 +1585,110 @@ main{padding-bottom:90px}
 
     <br>
 
-    <button class="primary"
+    <button
+      class="primary"
       style="width:100%"
-      onclick="saveCourseNames()">Save Courses</button>
+      onclick="saveCourseNames()">
+
+      Save Courses
+
+    </button>
 
   </div>
+
 </div>
 
-<div id="courseEditorModal"
- class="modal hidden"
- onclick="if(event.target===this)closeCourseEditor()">
+
+<!-- COURSE EDITOR -->
+
+<div
+  id="courseEditorModal"
+  class="modal hidden"
+  onclick="if(event.target===this)closeCourseEditor()">
 
   <div class="modalBox">
 
     <div class="flex between">
+
       <h2>Edit Course</h2>
-      <button class="iconBtn" onclick="closeCourseEditor()">✕</button>
+
+      <button
+        class="iconBtn"
+        onclick="closeCourseEditor()">
+        ✕
+      </button>
+
     </div>
 
     <br>
 
-    <input id="editCourseName" placeholder="Course name">
+    <input
+      id="editCourseName"
+      placeholder="Course name">
+
     <br><br>
 
-    <input id="editCourseCode" placeholder="Course code">
+    <input
+      id="editCourseCode"
+      placeholder="Course code">
+
     <br><br>
 
-    <textarea id="editCourseDescription"
+    <textarea
+      id="editCourseDescription"
       rows="4"
       placeholder="Course description"></textarea>
 
     <br><br>
 
-    <button class="primary" onclick="saveCurrentCourseEdit()">
+    <button
+      class="primary"
+      onclick="saveCurrentCourseEdit()">
+
       Save Changes
+
     </button>
 
   </div>
+
 </div>
 
-<div id="appErrorPanel"
- class="errorPanel hidden"
- role="alert"
- aria-live="assertive">
+
+<!-- ERROR PANEL -->
+
+<div
+  id="appErrorPanel"
+  class="errorPanel hidden"
+  role="alert"
+  aria-live="assertive">
 
   <div class="flex between">
-    <strong>Ọjọ́ọ̀la detected an error</strong>
 
-    <button class="errorClose"
+    <strong>
+      Ọjọ́ọ̀la detected an error
+    </strong>
+
+    <button
+      class="errorClose"
       onclick="hideAppError()"
-      aria-label="Close error">✕</button>
+      aria-label="Close error">
+      ✕
+    </button>
+
   </div>
 
   <pre id="appErrorDetails"></pre>
 
-  <button onclick="copyAppError()">Copy error details</button>
+  <button onclick="copyAppError()">
+    Copy error details
+  </button>
+
 </div>
+
 
 <script>
 "use strict";
 
-/* Error reporting */
 let lastAppError="";
 
 function reportAppError(message,source="",line="",column="",stack=""){
@@ -541,6 +1740,7 @@ window.addEventListener("error",e=>
 
 window.addEventListener("unhandledrejection",e=>{
   const r=e.reason;
+
   reportAppError(
     r?.message||String(r),
     "",
@@ -552,7 +1752,8 @@ window.addEventListener("unhandledrejection",e=>{
 
 const $=id=>document.getElementById(id);
 
-const uid=()=>Date.now()+"_"+Math.random().toString(36).slice(2,9);
+const uid=()=>
+  Date.now()+"_"+Math.random().toString(36).slice(2,9);
 
 function escapeHTML(s){
   return String(s??"")
@@ -577,8 +1778,14 @@ function saveJSON(key,value){
     localStorage.setItem(key,JSON.stringify(value));
     return true;
   }catch(e){
-    alert("This device may be out of storage space. Remove some large PDFs or pictures and try again.");
-    reportAppError("Could not save local data: "+e.message);
+    alert(
+      "This device may be out of storage space. Remove some large PDFs or pictures and try again."
+    );
+
+    reportAppError(
+      "Could not save local data: "+e.message
+    );
+
     return false;
   }
 }
@@ -588,26 +1795,36 @@ function trimHistory(h,max=20){
 }
 
 function saveGeneral(){
-  saveJSON("ojoola_general_chat",generalChat);
+  saveJSON(
+    "ojoola_general_chat",
+    generalChat
+  );
 }
 
 function saveCourses(){
-  saveJSON("ojoola_courses",courses);
+  saveJSON(
+    "ojoola_courses",
+    courses
+  );
 }
 
+/*
+  IMPORTANT:
+  The scroll is synchronous so the chat does not visibly
+  render at the top and then jump to the bottom.
+*/
 function scrollToBottom(id){
   const box=$(id);
+
   if(!box)return;
 
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      box.scrollTop=box.scrollHeight;
-    });
-  });
+  box.scrollTop=box.scrollHeight;
 }
 
 function isNearBottom(box){
-  return box.scrollHeight-box.scrollTop-box.clientHeight<150;
+  return box.scrollHeight-
+         box.scrollTop-
+         box.clientHeight<150;
 }
 
 function setPage(page,opts={}){
@@ -622,17 +1839,27 @@ function setPage(page,opts={}){
     $(id).classList.add("hidden")
   );
 
-  $(map[page]||map.home).classList.remove("hidden");
+  $(map[page]||map.home)
+    .classList.remove("hidden");
 
   $("bottomNav").style.display=
-    (page==="courseInfo"||page==="courseChat")
+    page==="courseInfo"||
+    page==="courseChat"
       ?"none"
       :"block";
 
-  $("navHome").classList.toggle("active",page==="home");
-  $("navGeneral").classList.toggle("active",page==="general");
+  $("navHome").classList.toggle(
+    "active",
+    page==="home"
+  );
+
+  $("navGeneral").classList.toggle(
+    "active",
+    page==="general"
+  );
 
   if(!opts.noHistory){
+
     const state={
       page,
       course:currentCourseIndex
@@ -650,34 +1877,59 @@ function setPage(page,opts={}){
     history.pushState(
       state,
       "",
-      location.pathname+location.search+hash
+      location.pathname+
+      location.search+
+      hash
     );
   }
 }
 
 function goHome(){
   stopAI(false);
+
   setPage("home");
+
   renderCourses();
+
+  window.scrollTo({
+    top:0,
+    behavior:"auto"
+  });
 }
 
 function openGeneral(){
   setPage("general");
+
   renderGeneralChat();
+
   scrollToBottom("generalMsgs");
+
+  refreshDownButtons();
 }
 
 function openCourse(i){
   currentCourseIndex=i;
+
   setPage("courseInfo");
+
   renderCourseInfo();
+
+  window.scrollTo({
+    top:0,
+    behavior:"auto"
+  });
 }
 
 function proceedToCourseChat(){
   if(currentCourseIndex===null)return;
+
   setPage("courseChat");
+
   renderCourseChat();
+
   scrollToBottom("courseMsgs");
+
+  refreshDownButtons();
 }
 
 function backToCourseInfo(){
@@ -687,25 +1939,34 @@ function backToCourseInfo(){
   }
 
   history.replaceState(
-    {page:"courseInfo",course:currentCourseIndex},
+    {
+      page:"courseInfo",
+      course:currentCourseIndex
+    },
     "",
     location.pathname+
     location.search+
     "#course-"+currentCourseIndex
   );
 
-  setPage("courseInfo",{noHistory:true});
+  setPage(
+    "courseInfo",
+    {noHistory:true}
+  );
+
   renderCourseInfo();
 }
 
 window.addEventListener("popstate",e=>{
-  const s=e.state||{page:"home"};
+  const s=e.state||{
+    page:"home"
+  };
 
   stopAI(false);
 
   if(
-    s.course!==undefined &&
-    s.course!==null &&
+    s.course!==undefined&&
+    s.course!==null&&
     courses[s.course]
   ){
     currentCourseIndex=s.course;
@@ -720,9 +1981,14 @@ window.addEventListener("popstate",e=>{
     ?s.page
     :"home";
 
-  setPage(page,{noHistory:true});
+  setPage(
+    page,
+    {noHistory:true}
+  );
 
-  if(page==="home")renderCourses();
+  if(page==="home"){
+    renderCourses();
+  }
 
   if(page==="general"){
     renderGeneralChat();
@@ -737,57 +2003,85 @@ window.addEventListener("popstate",e=>{
     renderCourseChat();
     scrollToBottom("courseMsgs");
   }
+
+  refreshDownButtons();
 });
+
+
+/* SERVICE WORKER */
 
 let deferredInstallPrompt=null;
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",async()=>{
-    try{
-      const reg=
-        await navigator.serviceWorker.register("./service-worker.js");
 
-      await reg.update();
+  window.addEventListener(
+    "load",
+    async()=>{
+      try{
 
-      console.log(
-        "Ọjọ́ọ̀la service worker registered; update checked."
-      );
+        const reg=
+          await navigator.serviceWorker.register(
+            "./service-worker.js"
+          );
 
-      reg.addEventListener(
-        "updatefound",
-        ()=>console.log("Ọjọ́ọ̀la service worker update found.")
-      );
+        await reg.update();
 
-    }catch(e){
-      console.warn(
-        "Service worker registration/update failed:",
-        e
-      );
+        console.log(
+          "Ọjọ́ọ̀la service worker registered; update checked."
+        );
 
-      reportAppError(
-        "Service worker registration failed: "+e.message
-      );
+        reg.addEventListener(
+          "updatefound",
+          ()=>console.log(
+            "Ọjọ́ọ̀la service worker update found."
+          )
+        );
+
+      }catch(e){
+
+        console.warn(
+          "Service worker registration/update failed:",
+          e
+        );
+
+        reportAppError(
+          "Service worker registration failed: "+
+          e.message
+        );
+      }
     }
-  });
+  );
 }
 
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();
-  deferredInstallPrompt=e;
-  $("installMessage").textContent=
-    "Ọjọ́ọ̀la is ready to be installed.";
-});
+window.addEventListener(
+  "beforeinstallprompt",
+  e=>{
+    e.preventDefault();
 
-window.addEventListener("appinstalled",()=>{
-  deferredInstallPrompt=null;
-  $("installMessage").textContent=
-    "Ọjọ́ọ̀la has been installed.";
-});
+    deferredInstallPrompt=e;
+
+    $("installMessage").textContent=
+      "Ọjọ́ọ̀la is ready to be installed.";
+  }
+);
+
+window.addEventListener(
+  "appinstalled",
+  ()=>{
+    deferredInstallPrompt=null;
+
+    $("installMessage").textContent=
+      "Ọjọ́ọ̀la has been installed.";
+  }
+);
 
 async function installApp(){
+
   if(!deferredInstallPrompt){
+
     $("installMessage").textContent=
       "If no install prompt appears, open your browser menu and choose Add to Home screen or Install app.";
+
     return;
   }
 
@@ -800,35 +2094,67 @@ async function installApp(){
   deferredInstallPrompt=null;
 }
 
-function enterApp(){
-  $("welcome").classList.add("hidden");
-  $("app").classList.remove("hidden");
 
-  localStorage.setItem("ojoola_entered","1");
+/* APP ENTRY */
+
+function enterApp(){
+
+  $("welcome")
+    .classList
+    .add("hidden");
+
+  $("app")
+    .classList
+    .remove("hidden");
+
+  localStorage.setItem(
+    "ojoola_entered",
+    "1"
+  );
 
   renderCourses();
   renderGeneralChat();
 
-  setPage("home",{noHistory:true});
+  setPage(
+    "home",
+    {noHistory:true}
+  );
 
   history.replaceState(
     {page:"home"},
     "",
-    location.pathname+location.search
+    location.pathname+
+    location.search
   );
 }
 
-function loadDarkMode(){
-  const d=localStorage.getItem("ojoola_dark")==="1";
 
-  document.body.classList.toggle("dark",d);
+/* DARK MODE */
+
+function loadDarkMode(){
+
+  const d=
+    localStorage.getItem(
+      "ojoola_dark"
+    )==="1";
+
+  document.body.classList.toggle(
+    "dark",
+    d
+  );
+
   $("darkToggle").checked=d;
 }
 
 function toggleDarkMode(){
-  const d=$("darkToggle").checked;
 
-  document.body.classList.toggle("dark",d);
+  const d=
+    $("darkToggle").checked;
+
+  document.body.classList.toggle(
+    "dark",
+    d
+  );
 
   localStorage.setItem(
     "ojoola_dark",
@@ -836,24 +2162,43 @@ function toggleDarkMode(){
   );
 }
 
+
+/* SETTINGS */
+
 function openSettings(){
-  $("settingsModal").classList.remove("hidden");
+
+  $("settingsModal")
+    .classList
+    .remove("hidden");
 
   $("apiKeyInput").value=
-    localStorage.getItem("ojoola_gemini_key")||"";
+    localStorage.getItem(
+      "ojoola_gemini_key"
+    )||"";
 }
 
 function closeSettings(){
-  $("settingsModal").classList.add("hidden");
+  $("settingsModal")
+    .classList
+    .add("hidden");
 }
 
 function saveApiKey(){
-  const k=$("apiKeyInput").value.trim();
+
+  const k=
+    $("apiKeyInput")
+      .value
+      .trim();
 
   if(k){
-    localStorage.setItem("ojoola_gemini_key",k);
+    localStorage.setItem(
+      "ojoola_gemini_key",
+      k
+    );
   }else{
-    localStorage.removeItem("ojoola_gemini_key");
+    localStorage.removeItem(
+      "ojoola_gemini_key"
+    );
   }
 
   alert(
@@ -866,39 +2211,47 @@ function saveApiKey(){
 }
 
 function clearAllData(){
+
   if(!confirm(
     "Clear all Ọjọ́ọ̀la local data on this device? This also removes your saved API key, courses and conversations."
   ))return;
 
   localStorage.clear();
+
   location.reload();
 }
 
-/* Legacy-data recovery.
-   Older versions used several LocalStorage key names.
-   This migration never deletes the original records. */
+
+/* LEGACY RECOVERY */
 
 function looksLikeMessageArray(v){
+
   return Array.isArray(v)&&
     v.some(
-      x=>x&&
-      typeof x==="object"&&
-      ("text"in x)&&
-      ("role"in x)
+      x=>
+        x&&
+        typeof x==="object"&&
+        ("text"in x)&&
+        ("role"in x)
     );
 }
 
 function normalizeMessages(v){
+
   return Array.isArray(v)
     ?v
       .filter(
-        x=>x&&
-        typeof x==="object"&&
-        typeof x.text!=="undefined"
+        x=>
+          x&&
+          typeof x==="object"&&
+          typeof x.text!=="undefined"
       )
       .map(x=>({
         id:x.id||uid(),
-        role:x.role==="user"?"user":"ai",
+        role:
+          x.role==="user"
+            ?"user"
+            :"ai",
         text:String(x.text??""),
         time:x.time||Date.now()
       }))
@@ -906,16 +2259,22 @@ function normalizeMessages(v){
 }
 
 function recoverLegacyData(){
+
   try{
+
     const currentCourses=
       safeJSON(
-        localStorage.getItem("ojoola_courses"),
+        localStorage.getItem(
+          "ojoola_courses"
+        ),
         null
       );
 
     const currentGeneral=
       safeJSON(
-        localStorage.getItem("ojoola_general_chat"),
+        localStorage.getItem(
+          "ojoola_general_chat"
+        ),
         null
       );
 
@@ -929,18 +2288,28 @@ function recoverLegacyData(){
         ?currentCourses
         :[];
 
-    for(let i=0;i<localStorage.length;i++){
-      const key=localStorage.key(i);
-      const raw=localStorage.getItem(key);
+    for(
+      let i=0;
+      i<localStorage.length;
+      i++
+    ){
+
+      const key=
+        localStorage.key(i);
+
+      const raw=
+        localStorage.getItem(key);
 
       if(!raw)continue;
 
-      const value=safeJSON(raw,null);
+      const value=
+        safeJSON(raw,null);
 
       if(value===null)continue;
 
+
       if(
-        !recoveredGeneral.length &&
+        !recoveredGeneral.length&&
         (
           key.toLowerCase().includes("general")||
           key.toLowerCase().includes("chat")
@@ -951,31 +2320,37 @@ function recoverLegacyData(){
           normalizeMessages(value);
       }
 
+
       if(
-        !recoveredCourses.length &&
+        !recoveredCourses.length&&
         Array.isArray(value)
       ){
+
         const courseLike=
           value.filter(
-            c=>c&&
-            typeof c==="object"&&
-            (
-              Array.isArray(c.chat)||
-              typeof c.name==="string"||
-              typeof c.code==="string"
-            )
+            c=>
+              c&&
+              typeof c==="object"&&
+              (
+                Array.isArray(c.chat)||
+                typeof c.name==="string"||
+                typeof c.code==="string"
+              )
           );
 
         if(courseLike.length>=3){
-          recoveredCourses=courseLike;
+          recoveredCourses=
+            courseLike;
         }
       }
 
+
       if(
-        !recoveredGeneral.length &&
+        !recoveredGeneral.length&&
         value&&
         typeof value==="object"
       ){
+
         for(
           const k of [
             "generalChat",
@@ -983,36 +2358,54 @@ function recoverLegacyData(){
             "messages"
           ]
         ){
-          if(looksLikeMessageArray(value[k])){
+
+          if(
+            looksLikeMessageArray(
+              value[k]
+            )
+          ){
+
             recoveredGeneral=
-              normalizeMessages(value[k]);
+              normalizeMessages(
+                value[k]
+              );
+
             break;
           }
         }
       }
     }
 
+
     if(
       !Array.isArray(currentGeneral)&&
       recoveredGeneral.length
     ){
+
       localStorage.setItem(
         "ojoola_general_chat",
-        JSON.stringify(recoveredGeneral)
+        JSON.stringify(
+          recoveredGeneral
+        )
       );
     }
+
 
     if(
       !Array.isArray(currentCourses)&&
       recoveredCourses.length
     ){
+
       localStorage.setItem(
         "ojoola_courses",
-        JSON.stringify(recoveredCourses)
+        JSON.stringify(
+          recoveredCourses
+        )
       );
     }
 
   }catch(e){
+
     console.warn(
       "Legacy data recovery could not complete:",
       e
@@ -1021,6 +2414,9 @@ function recoverLegacyData(){
 }
 
 recoverLegacyData();
+
+
+/* COURSES */
 
 const defaultCourses=
   Array.from(
@@ -1033,11 +2429,14 @@ const defaultCourses=
 
 let courses=
   safeJSON(
-    localStorage.getItem("ojoola_courses"),
+    localStorage.getItem(
+      "ojoola_courses"
+    ),
     null
   );
 
 if(!Array.isArray(courses)){
+
   courses=
     defaultCourses.map(
       (c,i)=>({
@@ -1056,32 +2455,61 @@ courses=
   courses.map(
     (c,i)=>({
       id:c.id??i,
-      code:c.code||"CSC "+(301+i),
-      name:c.name||"Course "+(i+1),
-      description:c.description||"",
+      code:c.code||
+        "CSC "+(301+i),
+      name:c.name||
+        "Course "+(i+1),
+      description:
+        c.description||"",
       ref:c.ref!==false,
-      chat:Array.isArray(c.chat)?c.chat:[],
-      pdfs:Array.isArray(c.pdfs)?c.pdfs:[],
-      pictures:Array.isArray(c.pictures)?c.pictures:[]
+      chat:
+        Array.isArray(c.chat)
+          ?c.chat
+          :[],
+      pdfs:
+        Array.isArray(c.pdfs)
+          ?c.pdfs
+          :[],
+      pictures:
+        Array.isArray(c.pictures)
+          ?c.pictures
+          :[]
     })
   );
 
 let currentCourseIndex=null;
 
+
 function renderCourses(){
-  const grid=$("courseGrid");
+
+  const grid=
+    $("courseGrid");
 
   grid.innerHTML="";
 
   courses.forEach((c,i)=>{
-    const b=document.createElement("button");
+
+    const b=
+      document.createElement(
+        "button"
+      );
 
     b.className="courseBox";
 
     b.innerHTML=
-      `<div class="courseCode">${escapeHTML(c.code)}</div>
-       <div class="courseName">${escapeHTML(c.name)}</div>
-       <div class="courseRef">${c.ref?"Reference enabled":"Reference disabled"}</div>`;
+      `<div class="courseCode">
+        ${escapeHTML(c.code)}
+       </div>
+
+       <div class="courseName">
+        ${escapeHTML(c.name)}
+       </div>
+
+       <div class="courseRef">
+        ${c.ref
+          ?"Reference enabled"
+          :"Reference disabled"}
+       </div>`;
 
     b.onclick=()=>openCourse(i);
 
@@ -1089,47 +2517,85 @@ function renderCourses(){
   });
 }
 
+
 function openCourseManager(){
-  const list=$("courseEditorList");
+
+  const list=
+    $("courseEditorList");
 
   list.innerHTML="";
 
   courses.forEach((c,i)=>{
-    const d=document.createElement("div");
+
+    const d=
+      document.createElement(
+        "div"
+      );
 
     d.className="card";
-    d.style.marginBottom="10px";
+
+    d.style.marginBottom=
+      "10px";
 
     d.innerHTML=
-      `<div class="muted">Course ${i+1}</div>
+      `<div class="muted">
+        Course ${i+1}
+       </div>
+
        <br>
-       <input id="managerName${i}" placeholder="Course name">
+
+       <input
+        id="managerName${i}"
+        placeholder="Course name">
+
        <br><br>
-       <input id="managerCode${i}" placeholder="Course code">`;
+
+       <input
+        id="managerCode${i}"
+        placeholder="Course code">`;
 
     list.appendChild(d);
 
-    $("managerName"+i).value=c.name;
-    $("managerCode"+i).value=c.code;
+    $("managerName"+i).value=
+      c.name;
+
+    $("managerCode"+i).value=
+      c.code;
   });
 
-  $("courseManagerModal").classList.remove("hidden");
+  $("courseManagerModal")
+    .classList
+    .remove("hidden");
 }
 
 function closeCourseManager(){
-  $("courseManagerModal").classList.add("hidden");
+
+  $("courseManagerModal")
+    .classList
+    .add("hidden");
 }
 
 function saveCourseNames(){
+
   courses.forEach((c,i)=>{
-    const n=$("managerName"+i).value.trim();
-    const code=$("managerCode"+i).value.trim();
+
+    const n=
+      $("managerName"+i)
+        .value
+        .trim();
+
+    const code=
+      $("managerCode"+i)
+        .value
+        .trim();
 
     if(n)c.name=n;
+
     if(code)c.code=code;
   });
 
   saveCourses();
+
   renderCourses();
 
   if(currentCourseIndex!==null){
@@ -1140,61 +2606,101 @@ function saveCourseNames(){
   closeCourseManager();
 }
 
+
+/* COURSE INFO */
+
 function renderCourseInfo(){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(!c)return;
 
-  $("courseInfoTitle").textContent=c.name;
-  $("courseInfoCode").textContent=c.code;
+  $("courseInfoTitle")
+    .textContent=c.name;
 
-  $("courseInfoDescription").textContent=
-    c.description||
-    "This is your dedicated study space for this course.";
+  $("courseInfoCode")
+    .textContent=c.code;
 
-  $("courseRefToggle").checked=c.ref;
+  $("courseInfoDescription")
+    .textContent=
+      c.description||
+      "This is your dedicated study space for this course.";
+
+  $("courseRefToggle")
+    .checked=c.ref;
 
   renderCourseFiles();
 }
 
 function toggleCourseReference(){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(c){
-    c.ref=$("courseRefToggle").checked;
+
+    c.ref=
+      $("courseRefToggle")
+        .checked;
+
     saveCourses();
   }
 }
 
 function openCourseEditor(){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(!c)return;
 
-  $("editCourseName").value=c.name;
-  $("editCourseCode").value=c.code;
-  $("editCourseDescription").value=c.description||"";
+  $("editCourseName").value=
+    c.name;
 
-  $("courseEditorModal").classList.remove("hidden");
+  $("editCourseCode").value=
+    c.code;
+
+  $("editCourseDescription").value=
+    c.description||"";
+
+  $("courseEditorModal")
+    .classList
+    .remove("hidden");
 }
 
 function closeCourseEditor(){
-  $("courseEditorModal").classList.add("hidden");
+
+  $("courseEditorModal")
+    .classList
+    .add("hidden");
 }
 
 function saveCurrentCourseEdit(){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(!c)return;
 
-  const n=$("editCourseName").value.trim();
-  const code=$("editCourseCode").value.trim();
+  const n=
+    $("editCourseName")
+      .value
+      .trim();
+
+  const code=
+    $("editCourseCode")
+      .value
+      .trim();
 
   if(n)c.name=n;
+
   if(code)c.code=code;
 
   c.description=
-    $("editCourseDescription").value.trim();
+    $("editCourseDescription")
+      .value
+      .trim();
 
   saveCourses();
 
@@ -1205,41 +2711,65 @@ function saveCurrentCourseEdit(){
   closeCourseEditor();
 }
 
+
+/* FILES */
+
 function addCoursePDFs(files){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(!c)return;
 
   [...files].forEach(file=>{
+
     if(file.type!=="application/pdf"){
-      alert(file.name+" is not a PDF file.");
+
+      alert(
+        file.name+
+        " is not a PDF file."
+      );
+
       return;
     }
 
     if(file.size>15*1024*1024){
+
       alert(
         file.name+
         " is larger than 15 MB. Please choose a smaller PDF."
       );
+
       return;
     }
 
-    const reader=new FileReader();
+    const reader=
+      new FileReader();
 
     reader.onload=()=>{
+
       c.pdfs.push({
         id:uid(),
         name:file.name,
         size:file.size,
         mimeType:"application/pdf",
-        data:String(reader.result).split(",")[1]||""
+        data:
+          String(
+            reader.result
+          ).split(",")[1]||""
       });
 
-      if(saveCourses())renderCourseFiles();
+      if(saveCourses()){
+        renderCourseFiles();
+      }
     };
 
     reader.onerror=()=>{
-      alert("Could not read "+file.name+".");
+      alert(
+        "Could not read "+
+        file.name+
+        "."
+      );
     };
 
     reader.readAsDataURL(file);
@@ -1249,40 +2779,61 @@ function addCoursePDFs(files){
 }
 
 function addCoursePictures(files){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(!c)return;
 
   [...files].forEach(file=>{
+
     if(!file.type.startsWith("image/")){
-      alert(file.name+" is not an image.");
+
+      alert(
+        file.name+
+        " is not an image."
+      );
+
       return;
     }
 
     if(file.size>8*1024*1024){
+
       alert(
         file.name+
         " is larger than 8 MB. Please choose a smaller image."
       );
+
       return;
     }
 
-    const reader=new FileReader();
+    const reader=
+      new FileReader();
 
     reader.onload=()=>{
+
       c.pictures.push({
         id:uid(),
         name:file.name,
         size:file.size,
         mimeType:file.type,
-        data:String(reader.result).split(",")[1]||""
+        data:
+          String(
+            reader.result
+          ).split(",")[1]||""
       });
 
-      if(saveCourses())renderCourseFiles();
+      if(saveCourses()){
+        renderCourseFiles();
+      }
     };
 
     reader.onerror=()=>{
-      alert("Could not read "+file.name+".");
+      alert(
+        "Could not read "+
+        file.name+
+        "."
+      );
     };
 
     reader.readAsDataURL(file);
@@ -1292,109 +2843,186 @@ function addCoursePictures(files){
 }
 
 function renderCourseFiles(){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(!c)return;
 
-  const p=$("coursePdfList");
-  const im=$("coursePictureList");
+  const p=
+    $("coursePdfList");
+
+  const im=
+    $("coursePictureList");
 
   p.innerHTML="";
   im.innerHTML="";
 
+
   if(!c.pdfs.length){
+
     p.innerHTML=
       '<div class="muted">No PDF materials added yet.</div>';
   }
 
+
   c.pdfs.forEach((f,i)=>{
-    const d=document.createElement("div");
+
+    const d=
+      document.createElement(
+        "div"
+      );
+
     d.className="fileItem";
 
-    const info=document.createElement("div");
+    const info=
+      document.createElement(
+        "div"
+      );
+
     info.style.minWidth="0";
 
     info.innerHTML=
       `<div style="font-weight:700;overflow-wrap:anywhere">
         📄 ${escapeHTML(f.name)}
        </div>
-       <div class="muted">${formatBytes(f.size||0)}</div>`;
 
-    const b=document.createElement("button");
+       <div class="muted">
+        ${formatBytes(f.size||0)}
+       </div>`;
+
+    const b=
+      document.createElement(
+        "button"
+      );
 
     b.className="danger";
     b.textContent="Delete";
-    b.onclick=()=>deleteCoursePDF(i);
+
+    b.onclick=
+      ()=>deleteCoursePDF(i);
 
     d.append(info,b);
+
     p.appendChild(d);
   });
 
+
   if(!c.pictures.length){
+
     im.innerHTML=
       '<div class="muted">No pictures added yet.</div>';
   }
 
+
   c.pictures.forEach((f,i)=>{
-    const d=document.createElement("div");
+
+    const d=
+      document.createElement(
+        "div"
+      );
 
     d.className="fileItem";
 
-    const left=document.createElement("div");
+    const left=
+      document.createElement(
+        "div"
+      );
+
     left.className="flex";
 
-    const img=document.createElement("img");
-    img.className="courseThumb";
+    const img=
+      document.createElement(
+        "img"
+      );
+
+    img.className=
+      "courseThumb";
+
     img.alt=f.name;
 
     img.src=
       `data:${f.mimeType||"image/jpeg"};base64,${f.data}`;
 
-    const label=document.createElement("div");
+    const label=
+      document.createElement(
+        "div"
+      );
 
     label.innerHTML=
       `<div style="font-weight:700;overflow-wrap:anywhere">
         ${escapeHTML(f.name)}
        </div>
-       <div class="muted">${formatBytes(f.size||0)}</div>`;
+
+       <div class="muted">
+        ${formatBytes(f.size||0)}
+       </div>`;
 
     left.append(img,label);
 
-    const b=document.createElement("button");
+    const b=
+      document.createElement(
+        "button"
+      );
 
     b.className="danger";
     b.textContent="Delete";
-    b.onclick=()=>deleteCoursePicture(i);
+
+    b.onclick=
+      ()=>deleteCoursePicture(i);
 
     d.append(left,b);
+
     im.appendChild(d);
   });
 }
 
 function deleteCoursePDF(i){
-  const c=courses[currentCourseIndex];
 
-  if(c&&confirm("Delete this PDF?")){
+  const c=
+    courses[currentCourseIndex];
+
+  if(
+    c&&
+    confirm("Delete this PDF?")
+  ){
+
     c.pdfs.splice(i,1);
+
     saveCourses();
+
     renderCourseFiles();
   }
 }
 
 function deleteCoursePicture(i){
-  const c=courses[currentCourseIndex];
 
-  if(c&&confirm("Delete this picture?")){
+  const c=
+    courses[currentCourseIndex];
+
+  if(
+    c&&
+    confirm("Delete this picture?")
+  ){
+
     c.pictures.splice(i,1);
+
     saveCourses();
+
     renderCourseFiles();
   }
 }
 
 function formatBytes(n){
+
   if(!n)return"";
 
-  const u=["B","KB","MB","GB"];
+  const u=[
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
 
   let i=0;
   let v=n;
@@ -1403,16 +3031,26 @@ function formatBytes(n){
     v>=1024&&
     i<u.length-1
   ){
+
     v/=1024;
     i++;
   }
 
-  return v.toFixed(i?1:0)+" "+u[i];
+  return v.toFixed(
+    i?1:0
+  )+
+  " "+
+  u[i];
 }
+
+
+/* CHAT DATA */
 
 let generalChat=
   safeJSON(
-    localStorage.getItem("ojoola_general_chat"),
+    localStorage.getItem(
+      "ojoola_general_chat"
+    ),
     []
   )||[];
 
@@ -1421,50 +3059,78 @@ let activeRun=null;
 let stoppedByUser=false;
 let requestToken=0;
 
+
+/* CHAT RENDERING */
+
 function renderGeneralChat(){
-  const box=$("generalMsgs");
-  const near=isNearBottom(box);
+
+  const box=
+    $("generalMsgs");
 
   box.innerHTML="";
 
   generalChat.forEach((m,i)=>
     box.appendChild(
-      createMessageElement(m,i,"general")
+      createMessageElement(
+        m,
+        i,
+        "general"
+      )
     )
   );
 
-  if(near)scrollToBottom("generalMsgs");
+  scrollToBottom(
+    "generalMsgs"
+  );
 }
 
 function renderCourseChat(){
-  const c=courses[currentCourseIndex];
+
+  const c=
+    courses[currentCourseIndex];
 
   if(!c)return;
 
-  $("courseChatTitle").textContent=c.name;
-  $("courseChatSubtitle").textContent=c.code;
+  $("courseChatTitle")
+    .textContent=c.name;
 
-  const box=$("courseMsgs");
-  const near=isNearBottom(box);
+  $("courseChatSubtitle")
+    .textContent=c.code;
+
+  const box=
+    $("courseMsgs");
 
   box.innerHTML="";
 
   c.chat.forEach((m,i)=>
     box.appendChild(
-      createMessageElement(m,i,"course")
+      createMessageElement(
+        m,
+        i,
+        "course"
+      )
     )
   );
 
-  if(near)scrollToBottom("courseMsgs");
+  scrollToBottom(
+    "courseMsgs"
+  );
 }
 
+
+/* MARKDOWN */
+
 function renderMarkdown(text){
-  let s=escapeHTML(text||"");
+
+  let s=
+    escapeHTML(
+      text||""
+    );
 
   s=s.replace(
     /```([\s\S]*?)```/g,
     (_,code)=>
-      "<pre style='white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(100,116,139,.12);padding:9px;border-radius:8px'><code>"+
+      "<pre style='white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(100,116,139,.12);padding:10px;border-radius:9px'><code>"+
       code.trim()+
       "</code></pre>"
   );
@@ -1499,26 +3165,52 @@ function renderMarkdown(text){
     "• $1"
   );
 
-  s=s.replace(/\n/g,"<br>");
+  s=s.replace(
+    /\n/g,
+    "<br>"
+  );
 
   return s;
 }
 
-function createMessageElement(msg,index,type){
-  const w=document.createElement("div");
+
+function createMessageElement(
+  msg,
+  index,
+  type
+){
+
+  const w=
+    document.createElement(
+      "div"
+    );
 
   w.className=
     "message "+
-    (msg.role==="user"?"user":"ai");
+    (
+      msg.role==="user"
+        ?"user"
+        :"ai"
+    );
 
-  const b=document.createElement("div");
+  const b=
+    document.createElement(
+      "div"
+    );
+
   b.className="bubble";
 
-  const t=document.createElement("div");
+  const t=
+    document.createElement(
+      "div"
+    );
+
   t.className="messageText";
 
   t.innerHTML=
-    renderMarkdown(msg.text||"");
+    renderMarkdown(
+      msg.text||""
+    );
 
   b.appendChild(t);
 
@@ -1534,37 +3226,86 @@ function createMessageElement(msg,index,type){
   return w;
 }
 
-function addMessageActions(container,msg){
-  const a=document.createElement("div");
-  a.className="messageActions";
 
-  const c=document.createElement("button");
+function addMessageActions(
+  container,
+  msg
+){
+
+  const a=
+    document.createElement(
+      "div"
+    );
+
+  a.className=
+    "messageActions";
+
+  const c=
+    document.createElement(
+      "button"
+    );
+
   c.textContent="📋 Copy";
-  c.onclick=()=>copyText(msg.text||"",c);
 
-  const s=document.createElement("button");
+  c.onclick=
+    ()=>copyText(
+      msg.text||"",
+      c
+    );
+
+
+  const s=
+    document.createElement(
+      "button"
+    );
+
   s.textContent="↗ Share";
-  s.onclick=()=>shareText(msg.text||"");
 
-  const r=document.createElement("button");
+  s.onclick=
+    ()=>shareText(
+      msg.text||""
+    );
+
+
+  const r=
+    document.createElement(
+      "button"
+    );
+
   r.textContent="🔊 Read";
-  r.onclick=()=>toggleReadAloud(
-    msg.text||"",
-    container
-  );
+
+  r.onclick=
+    ()=>toggleReadAloud(
+      msg.text||"",
+      container
+    );
 
   a.append(c,s,r);
+
   container.appendChild(a);
 }
 
-async function copyText(text,button){
+
+/* COPY / SHARE */
+
+async function copyText(
+  text,
+  button
+){
+
   try{
-    await navigator.clipboard.writeText(text);
+
+    await navigator.clipboard.writeText(
+      text
+    );
 
     if(button){
-      const old=button.textContent;
 
-      button.textContent="✓ Copied";
+      const old=
+        button.textContent;
+
+      button.textContent=
+        "✓ Copied";
 
       setTimeout(
         ()=>button.textContent=old,
@@ -1573,7 +3314,11 @@ async function copyText(text,button){
     }
 
   }catch(_){
-    const t=document.createElement("textarea");
+
+    const t=
+      document.createElement(
+        "textarea"
+      );
 
     t.value=text;
 
@@ -1581,26 +3326,36 @@ async function copyText(text,button){
 
     t.select();
 
-    document.execCommand("copy");
+    document.execCommand(
+      "copy"
+    );
 
     t.remove();
   }
 }
 
 async function shareText(text){
+
   if(navigator.share){
+
     try{
+
       await navigator.share({
         title:"Ọjọ́ọ̀la",
         text
       });
+
     }catch(_){}
+
   }else{
+
     await copyText(text);
   }
 }
 
-/* Speech synthesis controls */
+
+/* READ ALOUD */
+
 let speechPlayer={
   text:"",
   position:0,
@@ -1613,6 +3368,7 @@ let speechPlayer={
 };
 
 function estimateDuration(t){
+
   const words=
     t.trim()
       .split(/\s+/)
@@ -1621,43 +3377,101 @@ function estimateDuration(t){
 
   return Math.max(
     1,
-    Math.round(words/145*60)
+    Math.round(
+      words/145*60
+    )
   );
 }
 
 function formatTime(s){
-  s=Math.max(0,Math.floor(s));
+
+  s=Math.max(
+    0,
+    Math.floor(s)
+  );
 
   return Math.floor(s/60)+
     ":"+
-    String(s%60).padStart(2,"0");
+    String(
+      s%60
+    ).padStart(2,"0");
 }
 
 function createPlaybackUI(container){
-  container.querySelector(".playback")?.remove();
 
-  const p=document.createElement("div");
+  container
+    .querySelector(
+      ".playback"
+    )
+    ?.remove();
+
+  const p=
+    document.createElement(
+      "div"
+    );
 
   p.className="playback";
 
   p.innerHTML=
     `<div class="playbackTop">
-      <button title="Rewind 10 seconds" onclick="rewindSpeech()">↶10</button>
-      <button id="speechPlayBtn" title="Play/Pause" onclick="toggleSpeechPlay()">▶</button>
-      <button title="Forward 10 seconds" onclick="forwardSpeech()">10↷</button>
-      <input id="speechSeek" type="range" min="0" max="100" value="0" oninput="seekSpeech(this.value)">
-      <span id="speechTime" class="time">0:00 / 0:00</span>
-      <button title="Stop" onclick="stopSpeech()">■</button>
+
+      <button
+        title="Rewind 10 seconds"
+        onclick="rewindSpeech()">
+        ↶10
+      </button>
+
+      <button
+        id="speechPlayBtn"
+        title="Play/Pause"
+        onclick="toggleSpeechPlay()">
+        ▶
+      </button>
+
+      <button
+        title="Forward 10 seconds"
+        onclick="forwardSpeech()">
+        10↷
+      </button>
+
+      <input
+        id="speechSeek"
+        type="range"
+        min="0"
+        max="100"
+        value="0"
+        oninput="seekSpeech(this.value)">
+
+      <span
+        id="speechTime"
+        class="time">
+        0:00 / 0:00
+      </span>
+
+      <button
+        title="Stop"
+        onclick="stopSpeech()">
+        ■
+      </button>
+
     </div>`;
 
   container.appendChild(p);
 }
 
-function toggleReadAloud(text,container){
-  if(!("speechSynthesis" in window)){
+function toggleReadAloud(
+  text,
+  container
+){
+
+  if(
+    !("speechSynthesis" in window)
+  ){
+
     alert(
       "Read aloud is not supported by this browser."
     );
+
     return;
   }
 
@@ -1665,7 +3479,9 @@ function toggleReadAloud(text,container){
     speechPlayer.text===text&&
     speechPlayer.container===container
   ){
+
     toggleSpeechPlay();
+
     return;
   }
 
@@ -1679,7 +3495,8 @@ function toggleReadAloud(text,container){
     paused:false,
     timer:null,
     container,
-    token:speechPlayer.token+1
+    token:
+      speechPlayer.token+1
   };
 
   createPlaybackUI(container);
@@ -1688,39 +3505,52 @@ function toggleReadAloud(text,container){
 }
 
 function startSpeechFromPosition(){
+
   if(!speechPlayer.text)return;
 
-  const token=speechPlayer.token;
+  const token=
+    speechPlayer.token;
 
   speechSynthesis.cancel();
 
   const ratio=
     speechPlayer.total
-      ?speechPlayer.position/speechPlayer.total
+      ?speechPlayer.position/
+        speechPlayer.total
       :0;
 
-  let at=Math.max(
-    0,
-    Math.min(
-      speechPlayer.text.length-1,
-      Math.floor(
-        ratio*speechPlayer.text.length
+  let at=
+    Math.max(
+      0,
+      Math.min(
+        speechPlayer.text.length-1,
+        Math.floor(
+          ratio*
+          speechPlayer.text.length
+        )
       )
-    )
-  );
+    );
 
   if(at>0){
-    const space=
-      speechPlayer.text.indexOf(" ",at);
 
-    if(space>0)at=space+1;
+    const space=
+      speechPlayer.text.indexOf(
+        " ",
+        at
+      );
+
+    if(space>0){
+      at=space+1;
+    }
   }
 
   const remaining=
     speechPlayer.text.slice(at);
 
   if(!remaining.trim()){
+
     finishSpeech();
+
     return;
   }
 
@@ -1733,17 +3563,26 @@ function startSpeechFromPosition(){
   u.rate=.95;
 
   u.onend=()=>{
-    if(token===speechPlayer.token){
+
+    if(
+      token===
+      speechPlayer.token
+    ){
+
       finishSpeech();
     }
   };
 
   u.onerror=e=>{
+
     if(
-      token===speechPlayer.token&&
+      token===
+      speechPlayer.token&&
       e.error!=="canceled"
     ){
+
       speechPlayer.speaking=false;
+
       updateSpeechUI();
     }
   };
@@ -1751,14 +3590,19 @@ function startSpeechFromPosition(){
   speechSynthesis.speak(u);
 
   startSpeechTimer();
+
   updateSpeechUI();
 }
 
 function startSpeechTimer(){
-  clearInterval(speechPlayer.timer);
+
+  clearInterval(
+    speechPlayer.timer
+  );
 
   speechPlayer.timer=
     setInterval(()=>{
+
       if(
         !speechPlayer.speaking||
         speechPlayer.paused
@@ -1776,28 +3620,39 @@ function startSpeechTimer(){
 }
 
 function updateSpeechUI(){
-  const c=speechPlayer.container;
+
+  const c=
+    speechPlayer.container;
 
   if(!c)return;
 
   const seek=
-    c.querySelector("#speechSeek");
+    c.querySelector(
+      "#speechSeek"
+    );
 
   const time=
-    c.querySelector("#speechTime");
+    c.querySelector(
+      "#speechTime"
+    );
 
   const play=
-    c.querySelector("#speechPlayBtn");
+    c.querySelector(
+      "#speechPlayBtn"
+    );
 
   if(seek){
+
     seek.value=
       speechPlayer.total
         ?speechPlayer.position/
-          speechPlayer.total*100
+          speechPlayer.total*
+          100
         :0;
   }
 
   if(time){
+
     time.textContent=
       formatTime(
         speechPlayer.position
@@ -1809,6 +3664,7 @@ function updateSpeechUI(){
   }
 
   if(play){
+
     play.textContent=
       speechPlayer.speaking&&
       !speechPlayer.paused
@@ -1818,18 +3674,26 @@ function updateSpeechUI(){
 }
 
 function toggleSpeechPlay(){
+
   if(!speechPlayer.text)return;
 
   if(speechPlayer.speaking){
+
     if(speechPlayer.paused){
+
       speechSynthesis.resume();
+
       speechPlayer.paused=false;
+
     }else{
+
       speechSynthesis.pause();
+
       speechPlayer.paused=true;
     }
 
     updateSpeechUI();
+
     return;
   }
 
@@ -1841,10 +3705,14 @@ function toggleSpeechPlay(){
 }
 
 function stopSpeech(){
+
   const token=
     (speechPlayer.token||0)+1;
 
-  if("speechSynthesis" in window){
+  if(
+    "speechSynthesis" in window
+  ){
+
     speechSynthesis.cancel();
   }
 
@@ -1853,7 +3721,9 @@ function stopSpeech(){
   );
 
   speechPlayer.container
-    ?.querySelector(".playback")
+    ?.querySelector(
+      ".playback"
+    )
     ?.remove();
 
   speechPlayer={
@@ -1869,13 +3739,16 @@ function stopSpeech(){
 }
 
 function finishSpeech(){
+
   clearInterval(
     speechPlayer.timer
   );
 
   speechPlayer.timer=null;
+
   speechPlayer.position=
     speechPlayer.total;
+
   speechPlayer.speaking=false;
   speechPlayer.paused=false;
 
@@ -1883,6 +3756,7 @@ function finishSpeech(){
 }
 
 function seekSpeech(v){
+
   if(!speechPlayer.text)return;
 
   speechPlayer.position=
@@ -1890,6 +3764,7 @@ function seekSpeech(v){
     speechPlayer.total;
 
   if(speechPlayer.speaking){
+
     speechPlayer.token++;
 
     speechSynthesis.cancel();
@@ -1897,12 +3772,15 @@ function seekSpeech(v){
     speechPlayer.paused=false;
 
     startSpeechFromPosition();
+
   }else{
+
     updateSpeechUI();
   }
 }
 
 function rewindSpeech(){
+
   if(!speechPlayer.text)return;
 
   speechPlayer.position=
@@ -1912,16 +3790,23 @@ function rewindSpeech(){
     );
 
   if(speechPlayer.speaking){
+
     speechPlayer.token++;
+
     speechSynthesis.cancel();
+
     speechPlayer.paused=false;
+
     startSpeechFromPosition();
+
   }else{
+
     updateSpeechUI();
   }
 }
 
 function forwardSpeech(){
+
   if(!speechPlayer.text)return;
 
   speechPlayer.position=
@@ -1934,19 +3819,30 @@ function forwardSpeech(){
     speechPlayer.position>=
     speechPlayer.total
   ){
+
     finishSpeech();
+
     return;
   }
 
   if(speechPlayer.speaking){
+
     speechPlayer.token++;
+
     speechSynthesis.cancel();
+
     speechPlayer.paused=false;
+
     startSpeechFromPosition();
+
   }else{
+
     updateSpeechUI();
   }
 }
+
+
+/* SEARCH */
 
 let generalSearchMatches=[];
 let generalSearchIndex=-1;
@@ -1955,13 +3851,19 @@ let courseSearchMatches=[];
 let courseSearchIndex=-1;
 
 function escapeRegex(s){
+
   return s.replace(
     /[.*+?^${}()|[\]\\]/g,
     "\\$&"
   );
 }
 
-function applySearch(type,q,matches){
+function applySearch(
+  type,
+  q,
+  matches
+){
+
   const isGeneral=
     type==="general";
 
@@ -1976,6 +3878,7 @@ function applySearch(type,q,matches){
       :"courseMsgs");
 
   matches.forEach(i=>{
+
     const el=
       box.querySelectorAll(
         ".messageText"
@@ -2005,6 +3908,7 @@ function applySearch(type,q,matches){
 }
 
 function runGeneralSearch(){
+
   const q=
     $("generalSearch")
       .value
@@ -2015,19 +3919,23 @@ function runGeneralSearch(){
   generalSearchIndex=-1;
 
   if(!q){
+
     $("generalSearchCount")
       .textContent="";
 
     renderGeneralChat();
+
     return;
   }
 
   generalChat.forEach((m,i)=>{
+
     if(
       String(m.text||"")
         .toLowerCase()
         .includes(q)
     ){
+
       generalSearchMatches.push(i);
     }
   });
@@ -2048,8 +3956,11 @@ function runGeneralSearch(){
 }
 
 function clearGeneralSearch(){
+
   $("generalSearch").value="";
-  $("generalSearchCount").textContent="";
+  $("generalSearchCount")
+    .textContent="";
+
   generalSearchMatches=[];
   generalSearchIndex=-1;
 
@@ -2057,6 +3968,7 @@ function clearGeneralSearch(){
 }
 
 function runCourseSearch(){
+
   const q=
     $("courseSearch")
       .value
@@ -2070,21 +3982,25 @@ function runCourseSearch(){
   courseSearchIndex=-1;
 
   if(!q){
+
     $("courseSearchCount")
       .textContent="";
 
     renderCourseChat();
+
     return;
   }
 
   if(!c)return;
 
   c.chat.forEach((m,i)=>{
+
     if(
       String(m.text||"")
         .toLowerCase()
         .includes(q)
     ){
+
       courseSearchMatches.push(i);
     }
   });
@@ -2105,15 +4021,22 @@ function runCourseSearch(){
 }
 
 function clearCourseSearch(){
+
   $("courseSearch").value="";
-  $("courseSearchCount").textContent="";
+  $("courseSearchCount")
+    .textContent="";
+
   courseSearchMatches=[];
   courseSearchIndex=-1;
 
   renderCourseChat();
 }
 
-function moveSearch(type,direction){
+function moveSearch(
+  type,
+  direction
+){
+
   const general=
     type==="general";
 
@@ -2130,12 +4053,19 @@ function moveSearch(type,direction){
       :courseSearchIndex;
 
   idx=
-    (idx+direction+matches.length)%
+    (
+      idx+
+      direction+
+      matches.length
+    )%
     matches.length;
 
   if(general){
+
     generalSearchIndex=idx;
+
   }else{
+
     courseSearchIndex=idx;
   }
 
@@ -2143,8 +4073,9 @@ function moveSearch(type,direction){
     $(general
       ?"generalMsgs"
       :"courseMsgs")
-      .querySelectorAll(".message")
-      [matches[idx]];
+      .querySelectorAll(
+        ".message"
+      )[matches[idx]];
 
   target?.scrollIntoView({
     behavior:"smooth",
@@ -2156,7 +4087,9 @@ $("generalSearch")
 .addEventListener(
   "keydown",
   e=>{
+
     if(e.key==="Enter"){
+
       e.preventDefault();
 
       moveSearch(
@@ -2175,7 +4108,9 @@ $("courseSearch")
 .addEventListener(
   "keydown",
   e=>{
+
     if(e.key==="Enter"){
+
       e.preventDefault();
 
       moveSearch(
@@ -2190,7 +4125,14 @@ $("courseSearch")
   }
 );
 
-function setGenerating(button,on){
+
+/* AI GENERATION */
+
+function setGenerating(
+  button,
+  on
+){
+
   if(!button)return;
 
   button.classList.toggle(
@@ -2206,16 +4148,24 @@ function setGenerating(button,on){
   button.onclick=
     on
       ?stopAI
-      :(button.id==="generalSendBtn"
-        ?sendGeneral
-        :sendCourseChat);
+      :(
+        button.id===
+        "generalSendBtn"
+          ?sendGeneral
+          :sendCourseChat
+      );
 }
 
-function stopAI(showStatus=true){
+function stopAI(
+  showStatus=true
+){
+
   stoppedByUser=true;
+
   requestToken++;
 
   if(activeController){
+
     try{
       activeController.abort();
     }catch(_){}
@@ -2227,13 +4177,20 @@ function stopAI(showStatus=true){
     activeRun&&
     !activeRun.ai.text
   ){
+
     activeRun.ai.text=
       "Response stopped.";
 
-    if(activeRun.type==="general"){
+    if(
+      activeRun.type===
+      "general"
+    ){
+
       saveGeneral();
       renderGeneralChat();
+
     }else{
+
       saveCourses();
       renderCourseChat();
     }
@@ -2241,7 +4198,10 @@ function stopAI(showStatus=true){
 
   activeRun=null;
 
-  if("speechSynthesis" in window){
+  if(
+    "speechSynthesis" in window
+  ){
+
     speechSynthesis.cancel();
   }
 
@@ -2249,7 +4209,9 @@ function stopAI(showStatus=true){
     "generalStatus",
     "courseStatus"
   ].forEach(id=>
-    $(id).classList.add("hidden")
+    $(id).classList.add(
+      "hidden"
+    )
   );
 
   setGenerating(
@@ -2263,6 +4225,7 @@ function stopAI(showStatus=true){
   );
 
   if(showStatus){
+
     const id=
       $("courseChatView")
         .classList
@@ -2273,13 +4236,12 @@ function stopAI(showStatus=true){
     $(id).textContent=
       "Generation stopped.";
 
-    $(id).classList.remove("hidden");
+    $(id)
+      .classList
+      .remove("hidden");
   }
 }
 
-/* Gemini REST generation.
-   Full-response generation is deliberately used here first because it is more reliable on weak mobile networks.
-   The API key is sent in a request header and never placed in the URL. */
 
 const GEMINI_MODELS=[
   "gemini-3.8-flash",
@@ -2288,13 +4250,18 @@ const GEMINI_MODELS=[
 ];
 
 function getApiKey(){
+
   return localStorage.getItem(
     "ojoola_gemini_key"
   )||"";
 }
 
 function makeHistory(history){
-  return trimHistory(history,20)
+
+  return trimHistory(
+    history,
+    20
+  )
     .filter(
       m=>
         m.text&&
@@ -2313,9 +4280,11 @@ function makeHistory(history){
 }
 
 function makeCourseContext(c){
+
   if(!c)return"";
 
   if(!c.ref){
+
     return `Course: ${c.name}
 Course code: ${c.code}
 Course reference materials are disabled.`;
@@ -2327,12 +4296,17 @@ The student has attached ${c.pdfs.length} PDF file(s) and ${c.pictures.length} p
 }
 
 function fileParts(c){
+
   if(!c||!c.ref)return[];
 
   const parts=[];
 
-  for(const f of c.pdfs){
+  for(
+    const f of c.pdfs
+  ){
+
     if(f.data){
+
       parts.push({
         inline_data:{
           mime_type:
@@ -2344,8 +4318,12 @@ function fileParts(c){
     }
   }
 
-  for(const f of c.pictures){
+  for(
+    const f of c.pictures
+  ){
+
     if(f.data){
+
       parts.push({
         inline_data:{
           mime_type:
@@ -2361,16 +4339,27 @@ function fileParts(c){
 }
 
 function isRetryableGeminiError(e){
+
   return !!e&&(
-    [429,500,502,503,504]
-      .includes(Number(e.status))||
+    [
+      429,
+      500,
+      502,
+      503,
+      504
+    ].includes(
+      Number(e.status)
+    )||
     /Gemini API (429|500|502|503|504):/i
       .test(e.message||"")
   );
 }
 
 function sleep(ms){
-  return new Promise(r=>setTimeout(r,ms));
+
+  return new Promise(
+    r=>setTimeout(r,ms)
+  );
 }
 
 async function callGemini(
@@ -2381,9 +4370,12 @@ async function callGemini(
   onStatus,
   signal
 ){
-  const key=getApiKey();
+
+  const key=
+    getApiKey();
 
   if(!key){
+
     throw new Error(
       "No Gemini API key saved. Open Settings and add your API key."
     );
@@ -2407,7 +4399,9 @@ async function callGemini(
     i<GEMINI_MODELS.length;
     i++
   ){
+
     if(signal.aborted){
+
       throw new DOMException(
         "Stopped",
         "AbortError"
@@ -2424,6 +4418,7 @@ async function callGemini(
     );
 
     try{
+
       const result=
         await generateOneModel(
           model,
@@ -2434,7 +4429,11 @@ async function callGemini(
         );
 
       if(result.trim()){
-        onChunk?.(result);
+
+        onChunk?.(
+          result
+        );
+
         return result;
       }
 
@@ -2443,25 +4442,31 @@ async function callGemini(
       );
 
     }catch(e){
+
       lastError=e;
 
       if(
         e.name==="AbortError"||
         signal.aborted
       ){
+
         throw e;
       }
 
       if(
         !isRetryableGeminiError(e)&&
-        i===GEMINI_MODELS.length-1
+        i===
+        GEMINI_MODELS.length-1
       ){
+
         break;
       }
 
       if(
-        i<GEMINI_MODELS.length-1
+        i<
+        GEMINI_MODELS.length-1
       ){
+
         onStatus?.(
           `That model was unavailable. Trying backup ${i+1} of ${GEMINI_MODELS.length-1}…`
         );
@@ -2486,6 +4491,7 @@ async function generateOneModel(
   onStatus,
   signal
 ){
+
   const controller=
     new AbortController();
 
@@ -2499,8 +4505,11 @@ async function generateOneModel(
     ()=>controller.abort("user");
 
   if(signal.aborted){
+
     controller.abort("user");
+
   }else{
+
     signal.addEventListener(
       "abort",
       abortForward,
@@ -2509,6 +4518,7 @@ async function generateOneModel(
   }
 
   try{
+
     onStatus?.(
       "Sending your question…"
     );
@@ -2545,9 +4555,11 @@ async function generateOneModel(
       );
 
     if(!response.ok){
+
       let detail="";
 
       try{
+
         const j=
           await response.json();
 
@@ -2556,8 +4568,10 @@ async function generateOneModel(
           JSON.stringify(j);
 
       }catch(_){
+
         detail=
-          "HTTP "+response.status;
+          "HTTP "+
+          response.status;
       }
 
       const err=
@@ -2579,27 +4593,35 @@ async function generateOneModel(
       await response.json();
 
     const parts=
-      j.candidates?.[0]?.content?.parts||
+      j.candidates?.[0]
+        ?.content
+        ?.parts||
       [];
 
     const text=
       parts
-        .map(p=>p.text||"")
+        .map(
+          p=>p.text||""
+        )
         .join("");
 
     if(
-      j.candidates?.[0]?.finishReason===
+      j.candidates?.[0]
+        ?.finishReason===
       "SAFETY"
     ){
+
       throw new Error(
         "Gemini stopped this answer because its safety filters were triggered. Try rephrasing the question."
       );
     }
 
     if(!text.trim()){
+
       const block=
         j.promptFeedback?.blockReason||
-        j.candidates?.[0]?.finishReason;
+        j.candidates?.[0]
+          ?.finishReason;
 
       throw new Error(
         block
@@ -2612,9 +4634,12 @@ async function generateOneModel(
 
   }catch(e){
 
-    if(e.name==="AbortError"){
+    if(
+      e.name==="AbortError"
+    ){
 
       if(signal.aborted){
+
         throw new DOMException(
           "Stopped",
           "AbortError"
@@ -2635,7 +4660,9 @@ async function generateOneModel(
 
   }finally{
 
-    clearTimeout(timeout);
+    clearTimeout(
+      timeout
+    );
 
     signal.removeEventListener(
       "abort",
@@ -2644,7 +4671,12 @@ async function generateOneModel(
   }
 }
 
-async function runChat(type,prompt){
+
+async function runChat(
+  type,
+  prompt
+){
+
   const isGeneral=
     type==="general";
 
@@ -2726,7 +4758,9 @@ async function runChat(type,prompt){
     renderCourseChat();
   }
 
-  scrollToBottom(boxId);
+  scrollToBottom(
+    boxId
+  );
 
   setGenerating(
     button,
@@ -2739,6 +4773,7 @@ async function runChat(type,prompt){
 
   $(statusId).textContent=
     "Preparing your question…";
+
 
   const context=
     isGeneral
@@ -2777,18 +4812,25 @@ ${prompt}`;
       attachmentSize>
       18*1024*1024
     ){
+
       throw new Error(
         "The selected course materials are too large to send together. Remove some files or use smaller PDFs and pictures, then try again."
       );
     }
 
     await callGemini(
+
       finalPrompt,
+
       chat.slice(0,-2),
+
       attachments,
 
       full=>{
-        if(token!==requestToken)return;
+
+        if(
+          token!==requestToken
+        )return;
 
         ai.text=full;
 
@@ -2798,7 +4840,9 @@ ${prompt}`;
           saveCourses();
         }
 
-        const box=$(boxId);
+        const box=
+          $(boxId);
+
         const near=
           isNearBottom(box);
 
@@ -2809,23 +4853,32 @@ ${prompt}`;
         }
 
         if(near){
-          scrollToBottom(boxId);
+          scrollToBottom(
+            boxId
+          );
         }
       },
 
       s=>{
-        if(token===requestToken){
-          $(statusId).textContent=s;
+
+        if(
+          token===requestToken
+        ){
+
+          $(statusId)
+            .textContent=s;
         }
       },
 
       controller.signal
     );
 
+
     if(
       token===requestToken&&
       !ai.text
     ){
+
       ai.text=
         "I couldn't produce a response. Please try again.";
 
@@ -2838,11 +4891,16 @@ ${prompt}`;
 
   }catch(e){
 
-    if(token===requestToken){
+    if(
+      token===requestToken
+    ){
 
-      if(e.name==="AbortError"){
+      if(
+        e.name==="AbortError"
+      ){
 
         if(!stoppedByUser){
+
           ai.text=
             "Generation timed out. The request took too long. Please try again.";
 
@@ -2857,7 +4915,10 @@ ${prompt}`;
 
         ai.text=
           "I couldn't complete that response.\n\n"+
-          (e.message||"Unknown error");
+          (
+            e.message||
+            "Unknown error"
+          );
 
         if(isGeneral){
           saveGeneral();
@@ -2866,7 +4927,8 @@ ${prompt}`;
         }
 
         reportAppError(
-          e.message||String(e),
+          e.message||
+          String(e),
           "Gemini API"
         );
       }
@@ -2874,7 +4936,9 @@ ${prompt}`;
 
   }finally{
 
-    if(token===requestToken){
+    if(
+      token===requestToken
+    ){
 
       activeController=null;
       activeRun=null;
@@ -2894,13 +4958,20 @@ ${prompt}`;
         renderCourseChat();
       }
 
-      scrollToBottom(boxId);
+      scrollToBottom(
+        boxId
+      );
+
+      refreshDownButtons();
     }
   }
 }
 
+
 async function sendGeneral(){
-  const input=$("generalInput");
+
+  const input=
+    $("generalInput");
 
   const prompt=
     input.value.trim();
@@ -2908,6 +4979,7 @@ async function sendGeneral(){
   if(!prompt)return;
 
   if(!getApiKey()){
+
     openSettings();
 
     alert(
@@ -2918,6 +4990,7 @@ async function sendGeneral(){
   }
 
   if(activeController){
+
     alert(
       "An answer is already being generated. Stop it before sending another question."
     );
@@ -2933,8 +5006,12 @@ async function sendGeneral(){
   );
 }
 
+
 async function sendCourseChat(){
-  if(currentCourseIndex===null)return;
+
+  if(
+    currentCourseIndex===null
+  )return;
 
   const prompt=
     $("courseInput")
@@ -2944,6 +5021,7 @@ async function sendCourseChat(){
   if(!prompt)return;
 
   if(!getApiKey()){
+
     openSettings();
 
     alert(
@@ -2954,6 +5032,7 @@ async function sendCourseChat(){
   }
 
   if(activeController){
+
     alert(
       "An answer is already being generated. Stop it before sending another question."
     );
@@ -2961,7 +5040,8 @@ async function sendCourseChat(){
     return;
   }
 
-  $("courseInput").value="";
+  $("courseInput")
+    .value="";
 
   await runChat(
     "course",
@@ -2969,29 +5049,40 @@ async function sendCourseChat(){
   );
 }
 
+
 function clearCourseChat(){
-  if(currentCourseIndex===null)return;
+
+  if(
+    currentCourseIndex===null
+  )return;
 
   if(!confirm(
     "Clear the entire conversation for this course?"
   ))return;
 
-  courses[currentCourseIndex].chat=[];
+  courses[currentCourseIndex]
+    .chat=[];
 
   saveCourses();
 
   renderCourseChat();
 }
 
+
+/* INPUT */
+
 $("generalInput")
 .addEventListener(
   "keydown",
   e=>{
+
     if(
       e.key==="Enter"&&
       !e.shiftKey
     ){
+
       e.preventDefault();
+
       sendGeneral();
     }
   }
@@ -3001,18 +5092,26 @@ $("courseInput")
 .addEventListener(
   "keydown",
   e=>{
+
     if(
       e.key==="Enter"&&
       !e.shiftKey
     ){
+
       e.preventDefault();
+
       sendCourseChat();
     }
   }
 );
 
+
+/* DOWN BUTTONS */
+
 const generalDownBtn=
-  document.createElement("button");
+  document.createElement(
+    "button"
+  );
 
 generalDownBtn.className=
   "downBtn hidden";
@@ -3025,14 +5124,21 @@ generalDownBtn.setAttribute(
 );
 
 generalDownBtn.onclick=
-  ()=>scrollToBottom("generalMsgs");
+  ()=>{
+    scrollToBottom(
+      "generalMsgs"
+    );
+  };
 
 document.body.appendChild(
   generalDownBtn
 );
 
+
 const courseDownBtn=
-  document.createElement("button");
+  document.createElement(
+    "button"
+  );
 
 courseDownBtn.className=
   "downBtn hidden";
@@ -3045,11 +5151,16 @@ courseDownBtn.setAttribute(
 );
 
 courseDownBtn.onclick=
-  ()=>scrollToBottom("courseMsgs");
+  ()=>{
+    scrollToBottom(
+      "courseMsgs"
+    );
+  };
 
 document.body.appendChild(
   courseDownBtn
 );
+
 
 $("generalMsgs")
 .addEventListener(
@@ -3067,6 +5178,7 @@ $("generalMsgs")
   }
 );
 
+
 $("courseMsgs")
 .addEventListener(
   "scroll",
@@ -3083,7 +5195,9 @@ $("courseMsgs")
   }
 );
 
+
 function refreshDownButtons(){
+
   generalDownBtn.classList.toggle(
     "hidden",
     $("generalView")
@@ -3110,6 +5224,9 @@ window.addEventListener(
   refreshDownButtons
 );
 
+
+/* STARTUP */
+
 loadDarkMode();
 
 if(
@@ -3117,6 +5234,7 @@ if(
     "ojoola_entered"
   )==="1"
 ){
+
   $("welcome")
     .classList
     .add("hidden");
