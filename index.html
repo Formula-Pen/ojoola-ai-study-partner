@@ -3615,11 +3615,7 @@ function startSpeechFromPosition(){
   updateSpeechUI();
 }
 
-function startSpeechTimer(){
-
-  clearInterval(
-    speechPlayer.timer
-  );
+function startSpeechTimer(){clearInterval(speechPlayer.timer);speechPlayer.timer=setInterval(()=>{if(!speechPlayer.speaking||speechPlayer.paused||!speechSynthesis.speaking)return;speechPlayer.position=Math.min(speechPlayer.total,speechPlayer.position+.25);updateSpeechUI()},250)
 
   speechPlayer.timer=
     setInterval(()=>{
@@ -3694,9 +3690,7 @@ function updateSpeechUI(){
   }
 }
 
-function toggleSpeechPlay(){
-
-  if(!speechPlayer.text)return;
+function toggleSpeechPlay(){if(!speechPlayer.text)return;if(speechPlayer.speaking&&!speechPlayer.paused){speechPlayer.paused=true;speechPlayer.speaking=false;clearInterval(speechPlayer.timer);speechPlayer.token++;speechSynthesis.cancel();updateSpeechUI();return}if(speechPlayer.paused){speechPlayer.paused=false;speechPlayer.speaking=false;speechPlayer.token++;startSpeechFromPosition();return}speechPlayer.speaking=true;speechPlayer.paused=false;speechPlayer.token++;startSpeechFromPosition();
 
   if(speechPlayer.speaking){
 
