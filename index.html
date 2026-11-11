@@ -2,2064 +2,341 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#102a56">
-<meta name="description" content="Ọjọ́ọ̀la — Your AI Study Partner">
-<link rel="manifest" href="./manifest.json">
-<title>Ọjọ́ọ̀la</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ojoola AI - Your AI Study Partner</title>
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
-:root{
-  --navy:#102a56;
-  --blue:#2563eb;
-  --bg:#f4f6fb;
-  --surface:#fff;
-  --text:#172033;
-  --muted:#748094;
-  --border:#e4e8f0;
-  --ai:#f0f2f7;
-  --danger:#dc3545;
-}
-*{box-sizing:border-box}
-html,body{
-  margin:0;width:100%;height:100%;
-  font-family:Arial,Helvetica,sans-serif;
-  background:var(--bg);color:var(--text);
-}
-body.dark{
-  --bg:#101725;
-  --surface:#192436;
-  --text:#edf2fa;
-  --muted:#a5b1c4;
-  --border:#2b3a50;
-  --ai:#202d41;
-}
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
-button:disabled{opacity:.5;cursor:not-allowed}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+:root{--bg:#F0F7FF;--card:#ffffff;--text:#0F172A;--muted:#64748B;--border:#DBEAFE;--input:#F1F5F9;--grad:linear-gradient(135deg,#2563EB,#06B6D4);--grad2:linear-gradient(90deg,#2563EB,#06B6D4)}
+body.dark{--bg:#0F172A;--card:#1E293B;--text:#F1F5F9;--muted:#94A3B8;--border:#334155;--input:#0F172A}
+body{background:var(--bg);color:var(--text);transition:.3s}
+button{cursor:pointer;border:none;font-family:inherit}
 .hidden{display:none!important}
-button:focus-visible,input:focus-visible,
-textarea:focus-visible{
-  outline:2px solid var(--blue);
-  outline-offset:2px;
-}
-.app{min-height:100dvh}
-.topbar{
-  height:58px;background:var(--surface);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 15px;position:sticky;top:0;z-index:5;
-}
-.brand{
-  font-weight:800;font-size:21px;color:var(--navy);
-}
-.dark .brand{color:#9bbdff}
-.iconbtn{
-  border:0;background:transparent;color:var(--text);
-  padding:9px;border-radius:10px;font-size:19px;
-}
-.iconbtn:active{background:var(--border)}
-.main{
-  max-width:900px;margin:auto;padding:16px;
-  padding-bottom:90px;
-}
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:15px;padding:15px;margin-bottom:13px;
-}
-h1,h2,h3{margin-top:0}
-.muted{color:var(--muted);font-size:13px;line-height:1.5}
-.primary{
-  border:0;border-radius:11px;padding:12px 16px;
-  color:white;background:var(--blue);font-weight:700;
-}
-.secondary{
-  border:1px solid var(--border);border-radius:10px;
-  padding:10px 13px;background:var(--surface);color:var(--text);
-}
-.danger{color:var(--danger)}
-input,textarea,select{
-  width:100%;padding:12px;border:1px solid var(--border);
-  border-radius:10px;background:var(--surface);
-  color:var(--text);outline:none;
-}
-textarea{resize:none}
-input:focus,textarea:focus{border-color:var(--blue)}
-.row{display:flex;gap:9px;align-items:center}
-.row>*{min-width:0}
-.grid{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
-.courseTile{
-  padding:15px;border:1px solid var(--border);
-  background:var(--surface);border-radius:13px;
-  text-align:left;color:var(--text);min-height:90px;
-}
-.courseTile strong{display:block;margin-bottom:7px}
-.nav{
-  position:fixed;bottom:0;left:0;right:0;height:64px;
-  display:flex;justify-content:space-around;align-items:center;
-  background:var(--surface);border-top:1px solid var(--border);
-  z-index:6;padding-bottom:env(safe-area-inset-bottom);
-}
-.nav button{
-  border:0;background:none;color:var(--muted);
-  padding:8px;font-size:12px;
-}
-.nav button.active{color:var(--blue);font-weight:bold}
-
-/* COURSE PAGE */
-.courseHeading{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:10px;
-}
-.fileRow{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:8px;padding:12px 0;border-bottom:1px solid var(--border);
-}
-.fileRow:last-child{border-bottom:0}
-.fileName{min-width:0;overflow-wrap:anywhere;font-size:13px}
-.fileControls{display:flex;align-items:center;gap:7px;flex-shrink:0}
-.fileControls button{padding:7px 9px}
-
-/* CHAT */
-.chatScreen{
-  position:fixed;inset:0;z-index:20;
-  height:100dvh;width:100%;
-  display:flex;flex-direction:column;
-  background:var(--bg);
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom);
-}
-.chatHeader{
-  flex:0 0 53px;background:var(--surface);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:6px;padding:0 7px;
-}
-.chatTitle{
-  flex:1;min-width:0;font-weight:700;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.searchBar{
-  flex:0 0 auto;padding:7px 9px;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;gap:6px;align-items:center;
-}
-.searchBar input{padding:8px}
-.chatArea{
-  flex:1;min-height:0;overflow-y:auto;
-  overscroll-behavior:contain;
-  padding:12px 10px 18px;
-  scroll-behavior:smooth;
-}
-.message{display:flex;width:100%;margin:0 0 15px}
-.message.user{justify-content:flex-end}
-.message.ai{justify-content:flex-start;display:block}
-.bubble{
-  border-radius:16px;padding:12px 14px;
-  overflow-wrap:anywhere;line-height:1.7;
-  user-select:text;-webkit-user-select:text;
-}
-.message.user .bubble{
-  max-width:86%;
-  background:#102a56;color:#fff;
-  border-bottom-right-radius:4px;
-}
-.message.ai .bubble{
-  width:100%;max-width:none;
-  background:var(--ai);color:var(--text);
-  border-radius:12px;padding:15px 12px;
-}
-.messageText{
-  user-select:text;-webkit-user-select:text;
-  overflow-wrap:anywhere;
-}
-.messageText p{margin:0 0 11px}
-.messageText p:last-child{margin-bottom:0}
-.messageText h1,.messageText h2,.messageText h3{
-  margin:17px 0 9px;line-height:1.35;
-}
-.messageText ul,.messageText ol{padding-left:23px}
-.messageText li{margin-bottom:6px}
-.messageText pre{
-  white-space:pre-wrap;overflow-wrap:anywhere;
-  padding:12px;border-radius:9px;
-  background:#111827;color:#e5e7eb;overflow-x:auto;
-}
-.messageText code{
-  background:rgba(120,130,150,.18);
-  padding:2px 4px;border-radius:4px;
-}
-.messageText pre code{background:none;padding:0}
-.messageActions{
-  display:flex;gap:16px;flex-wrap:wrap;
-  margin-top:12px;font-size:12px;color:var(--muted);
-}
-.messageActions button{
-  background:none;border:0;color:inherit;padding:3px 0;
-}
-.messageActions button:active{color:var(--blue)}
-.chatComposer{
-  flex:0 0 auto;background:var(--surface);
-  border-top:1px solid var(--border);
-  padding:8px 10px calc(9px + env(safe-area-inset-bottom));
-}
-.composerTools{display:flex;gap:8px;margin-bottom:7px}
-.composerRow{display:flex;gap:8px;align-items:flex-end}
-.composerRow textarea{
-  min-height:45px;max-height:130px;
-  flex:1;line-height:1.45;
-}
-.sendBtn{
-  width:46px;height:45px;border:0;border-radius:12px;
-  background:var(--blue);color:white;font-size:19px;
-}
-.downButton{
-  position:absolute;right:15px;bottom:116px;z-index:3;
-  width:42px;height:42px;border-radius:50%;
-  background:var(--surface);border:1px solid var(--border);
-  box-shadow:0 3px 12px #0002;font-size:21px;color:var(--text);
-}
-.typing{color:var(--muted);font-size:13px;padding:8px}
-.attachmentChip{
-  display:inline-flex;gap:7px;align-items:center;
-  padding:7px 9px;border:1px solid var(--border);
-  border-radius:8px;margin:4px;font-size:12px;
-}
-
-/* MODALS */
-.modal{
-  position:fixed;inset:0;z-index:40;background:#0008;
-  display:flex;align-items:center;justify-content:center;padding:15px;
-}
-.modalBox{
-  background:var(--surface);color:var(--text);
-  width:100%;max-width:520px;max-height:88dvh;
-  overflow:auto;border-radius:16px;padding:18px;
-}
-.modalHead{
-  display:flex;justify-content:space-between;
-  align-items:center;margin-bottom:15px;
-}
-.modalHead h3{margin:0}
-.modalBox label{display:block;margin:12px 0 6px}
-.modalBox hr{border:0;border-top:1px solid var(--border)}
-.settingButton{width:100%;margin:5px 0;text-align:left}
-.progressLine{
-  height:5px;background:var(--border);
-  border-radius:5px;overflow:hidden;margin:8px 0;
-}
-.progressLine span{
-  display:block;height:100%;width:0;background:var(--blue);
-}
-
-/* DIAGNOSTICS */
-.errorPanel{
-  position:fixed;z-index:100;bottom:10px;left:10px;right:10px;
-  background:#7f1d1d;color:white;border-radius:12px;
-  padding:13px;box-shadow:0 5px 20px #0005;
-  max-height:45dvh;overflow:auto;font-size:12px;
-}
-.errorPanel pre{white-space:pre-wrap;overflow-wrap:anywhere}
-.statusText{font-size:12px;color:var(--muted)}
-@media(min-width:700px){
-  .main{padding-top:25px}
-  .chatArea{padding-left:25px;padding-right:25px}
-  .chatComposer{padding-left:25px;padding-right:25px}
-}
+#welcome{min-height:100vh;background:linear-gradient(180deg,#FFFFFF 0%,#EFF6FF 35%,#DBEAFE 55%,#2563EB 82%,#06B6D4 100%);color:#0F172A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;position:relative;overflow:hidden}
+.acad{position:absolute;font-size:30px;animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;z-index:1}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-14px) rotate(4deg)}}
+.acad.jump{animation:jump .6s ease}
+@keyframes jump{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(-38px) rotate(20deg) scale(1.2)}100%{transform:translateY(0) rotate(360deg)}}
+.logoCircle{width:96px;height:96px;background:linear-gradient(135deg,#2563EB,#06B6D4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;box-shadow:0 14px 28px rgba(37,99,235,.35);z-index:2;animation:float 3.5s ease-in-out infinite}
+#welcome h1{font-size:28px;margin:18px 0 6px;z-index:2;line-height:1.2;color:#0F172A;white-space:nowrap}
+#welcome .subtitle{color:#475569;font-size:14px;z-index:2;white-space:nowrap;line-height:1.4;max-width:100%}
+.wBtn{width:100%;max-width:360px;background:linear-gradient(90deg,#2563EB,#06B6D4);color:white;font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:22px;z-index:2;box-shadow:0 10px 25px rgba(37,99,235,.3)}
+.wBtn2{width:100%;max-width:360px;background:white;color:#1D4ED8;border:2px solid #2563EB;font-weight:800;font-size:17px;padding:15px;border-radius:16px;margin-top:12px;z-index:2}
+.wHint{margin-top:16px;font-size:12px;color:#64748B;z-index:2}
+header{background:var(--grad);color:white;padding:18px 16px 22px;border-radius:0 0 24px 24px;position:sticky;top:0;z-index:10}
+.topRow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.topRow h1{font-size:24px;display:flex;align-items:center;gap:8px}
+.topRow p{font-size:13px;opacity:.92;margin-top:4px}
+.setBtn{background:white;color:#1D4ED8;padding:9px 14px;border-radius:999px;font-weight:700;display:flex;align-items:center;gap:6px;font-size:14px}
+.wrap{padding:16px;max-width:900px;margin:0 auto;padding-bottom:90px}
+.card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:14px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(37,99,235,.06)}
+.card h3{font-size:17px;display:flex;align-items:center;gap:8px}
+.card p{color:var(--muted);font-size:14px;line-height:1.5;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:700px){.grid{grid-template-columns:1fr 1fr 1fr}}
+.course{cursor:pointer;padding:16px 14px;display:flex;flex-direction:column;gap:6px;min-height:92px;justify-content:center;position:relative;overflow:hidden}
+.course:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad2)}
+.course .num{font-size:12px;font-weight:800;color:#2563EB;letter-spacing:.5px;text-transform:uppercase}
+.course .title{font-size:17px;font-weight:800;line-height:1.2}
+.course .sub{font-size:13px;color:var(--muted)}
+.course:active{transform:scale(.98)}
+.switchRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);border-radius:14px;padding:12px;margin-top:12px}
+.switch{width:52px;height:30px;background:#CBD5E1;border-radius:999px;position:relative;transition:.2s;flex-shrink:0}
+.switch:after{content:"";position:absolute;width:24px;height:24px;background:white;border-radius:50%;top:3px;left:3px;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.switch.on{background:#2563EB}
+.switch.on:after{left:25px}
+input,textarea{width:100%;background:var(--input);border:1px solid var(--border);color:var(--text);padding:13px;border-radius:12px;font-size:15px;outline:none;margin-top:8px}
+textarea{min-height:80px;resize:vertical}
+.primary{background:var(--grad2);color:white;padding:14px;border-radius:12px;font-weight:800;width:100%;font-size:15px}
+.ghost{background:var(--input);color:var(--text);padding:12px;border-radius:12px;font-weight:700;width:100%;margin-top:8px}
+.smallBtn{background:#16A34A;color:white;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.editBtn{background:#2563EB;color:white;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;flex-shrink:0}
+.lockBox{background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lockBox b{font-size:15px;color:var(--text)}
+.lockBox span{font-size:12px;color:var(--muted)}
+.toast{background:#DCFCE7;color:#166534;padding:10px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;margin-top:10px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 6px calc(10px + env(safe-area-inset-bottom));z-index:20}
+.nav button{background:none;color:var(--muted);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600}
+.nav button.active{color:#2563EB}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:12px 0}
+.modalBox{background:var(--card);width:100%;max-width:620px;max-height:none;overflow:visible;border-radius:24px;padding:20px;margin:auto 0}
+.seg{display:flex;background:var(--input);border-radius:12px;padding:4px;gap:4px;margin-top:10px}
+.seg button{flex:1;padding:10px;border-radius:9px;background:transparent;color:var(--muted);font-weight:700}
+.seg button.active{background:#2563EB;color:white}
+.chatList{display:flex;flex-direction:column;gap:10px;width:100%;overflow:visible;max-height:none}
+.msg{padding:12px 14px;border-radius:18px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-width:88%;overflow:visible}
+.msg.me{background:var(--grad2);color:white;margin-left:auto;margin-right:0;border-bottom-right-radius:4px;align-self:flex-end;text-align:left}
+.msg.ai{background:var(--input);color:var(--text);margin-right:auto;margin-left:0;border-bottom-left-radius:4px;align-self:flex-start;text-align:left}
+@media(min-width:700px){.msg.ai{max-width:82%}.msg.me{max-width:75%}}
+.fileRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px;gap:8px}
+.thumb{width:64px;height:64px;object-fit:cover;border-radius:10px}
+.flex{display:flex;gap:8px;align-items:center}
+.chatInputWrap{position:sticky;bottom:0;background:var(--card);padding:10px 0 4px;margin-top:12px}
 </style>
 </head>
-
 <body>
-<div id="app">
 
-<header class="topbar" id="topbar">
-  <div class="brand">Ọjọ́ọ̀la</div>
-  <button class="iconbtn" onclick="openSettings()">⚙</button>
+<div id="welcome">
+  <span class="acad" style="top:10%;left:10%;animation-delay:0s" onclick="bounce(this)">📚</span>
+  <span class="acad" style="top:14%;right:12%;animation-delay:.6s" onclick="bounce(this)">✏️</span>
+  <span class="acad" style="top:38%;left:4%;animation-delay:1.2s" onclick="bounce(this)">📝</span>
+  <span class="acad" style="top:34%;right:5%;animation-delay:1.8s" onclick="bounce(this)">🔬</span>
+  <span class="acad" style="top:68%;left:8%;animation-delay:.3s" onclick="bounce(this)">🧮</span>
+  <span class="acad" style="top:72%;right:9%;animation-delay:1s" onclick="bounce(this)">📐</span>
+  <span class="acad" style="top:82%;left:42%;animation-delay:1.5s" onclick="bounce(this)">💡</span>
+  <span class="acad" style="top:8%;left:46%;animation-delay:2s" onclick="bounce(this)">🎓</span>
+  <div class="logoCircle">🎓</div>
+  <h1>Welcome to Ojoola AI</h1>
+  <div class="subtitle">Your AI Study Partner - Learn Smarter, Not Harder.</div>
+  <button class="wBtn" onclick="goHome()">🏠 Proceed to Home Page</button>
+  <button class="wBtn2" onclick="goStudy()">📚 Proceed to Study</button>
+  <div class="wHint">Tap any book, pen or lightbulb - it will jump ✨</div>
+</div>
+
+<div id="app" class="hidden">
+<header>
+  <div class="topRow">
+    <div><h1>🎓 Ojoola AI</h1><p>Your AI Study Partner</p></div>
+    <button class="setBtn" onclick="openSettings()"><i data-lucide="settings" style="width:16px;height:16px"></i> Settings</button>
+  </div>
 </header>
-
-<main class="main" id="homePage">
-  <section class="card">
-    <h2>Welcome to Ọjọ́ọ̀la</h2>
-    <p class="muted">
-      Your AI Study Partner. Study your course materials,
-      ask questions and organise your learning.
-    </p>
-    <button class="primary" onclick="openGeneral()">Start General Chat</button>
-  </section>
-
-  <section class="card">
-    <div class="row" style="justify-content:space-between">
-      <h3 style="margin:0">My Courses</h3>
-      <button class="secondary" onclick="openCourseManager()">Manage</button>
-    </div>
-    <p class="muted">Select a course to open its workspace.</p>
-    <div class="grid" id="courseGrid"></div>
-  </section>
-  <p class="statusText" id="storageStatus"></p>
-</main>
-
-<main class="main hidden" id="coursePage">
-  <button class="secondary" onclick="goHome()">← Back</button>
-
-  <section class="card" style="margin-top:12px">
-    <div class="courseHeading">
-      <div>
-        <h2 id="coursePageTitle"></h2>
-        <p class="muted" id="courseDescription"></p>
-      </div>
-    </div>
-    <textarea id="courseDescriptionInput" rows="2"
-      placeholder="Course description or learning objectives"></textarea>
-    <button class="secondary" style="margin-top:7px"
-      onclick="saveCourseDescription()">Save description</button>
-
-    <div class="row" style="margin-top:13px;flex-wrap:wrap">
-      <button class="primary" onclick="openCourseChat()">Open Course Chat</button>
-      <button class="secondary" onclick="toggleReference()">
-        Reference: <span id="referenceState"></span>
-      </button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h3>Course materials</h3>
-    <input type="file" id="courseFilesInput" accept=".pdf,image/*" multiple>
-    <p class="muted">
-      PDFs and images are stored in IndexedDB, separately from your
-      conversations. Select which materials Ọjọ́ọ̀la should use.
-    </p>
-    <div id="courseFilesList"></div>
-  </section>
-</main>
-
-<section class="chatScreen hidden" id="chatScreen">
-  <header class="chatHeader">
-    <button class="iconbtn" onclick="backFromChat()">←</button>
-    <div class="chatTitle" id="chatTitle">General Chat</div>
-    <button class="iconbtn" onclick="openSettings()">⚙</button>
-  </header>
-
-  <div class="searchBar">
-    <input id="chatSearch" placeholder="Search conversation..."
-      oninput="searchMessages()">
-    <button class="secondary" onclick="moveSearch(-1)">↑</button>
-    <button class="secondary" onclick="moveSearch(1)">↓</button>
+<div class="wrap" id="homeView">
+  <div class="card">
+    <h3><i data-lucide="sparkles" style="color:#2563EB"></i> How Referencing Works</h3>
+    <p>Turn <b style="color:var(--text)">Referencing ON</b> inside a course to let AI use it. Turn it OFF to exclude it. Default is ON for all courses.</p>
+    <button class="primary" style="margin-top:12px" onclick="turnAllOn()">Turn All Referencing ON ✅</button>
+    <div id="allOnToast" class="toast hidden">All Referencing ON ✅</div>
   </div>
-
-  <div class="chatArea" id="chatArea" onscroll="updateDownButton()">
-    <div id="messages"></div>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="primary" style="flex:1" onclick="showView('home')">📚 My Courses</button>
+    <button class="ghost" style="flex:1;margin:0" onclick="goGeneral()">💬 General Chat</button>
   </div>
-
-  <button class="downButton hidden" id="downButton"
-    onclick="scrollToBottom()">↓</button>
-
-  <footer class="chatComposer">
-    <div id="attachmentPreview"></div>
-
-    <div class="composerTools">
-      <button class="secondary"
-        onclick="document.getElementById('chatFileInput').click()">＋ Attach</button>
-      <button class="secondary hidden" id="chatReferenceButton"
-        onclick="toggleCourseReferenceFromChat()">Course reference</button>
-      <input id="chatFileInput" type="file" accept=".pdf,image/*" multiple hidden>
-    </div>
-
-    <div class="composerRow">
-      <textarea id="chatInput" rows="1"
-        placeholder="Message Ọjọ́ọ̀la..."
-        oninput="resizeInput(this)"
-        onkeydown="handleEnter(event)"></textarea>
-      <button class="sendBtn" id="sendButton" onclick="sendMessage()">➤</button>
-      <button class="secondary hidden" id="stopButton"
-        onclick="stopGeneration()">Stop</button>
-    </div>
-  </footer>
-</section>
-
-<nav class="nav" id="bottomNav">
-  <button onclick="goHome()">⌂<br>Home</button>
-  <button onclick="openGeneral()">✎<br>General</button>
-  <button onclick="openCourseManager()">▤<br>Courses</button>
-  <button onclick="openSettings()">⚙<br>Settings</button>
-</nav>
+  <div class="grid" id="courseGrid"></div>
 </div>
-
-<div class="modal hidden" id="modal" onclick="modalBackdrop(event)">
-  <div class="modalBox" id="modalBox"></div>
-</div>
-
-<div class="errorPanel hidden" id="errorPanel">
-  <strong>Ọjọ́ọ̀la detected an error</strong>
-  <pre id="errorDetails"></pre>
-  <div class="row">
-    <button class="secondary" onclick="copyError()">Copy error</button>
-    <button class="secondary" onclick="hideError()">Dismiss</button>
+<div class="wrap hidden" id="generalView">
+  <div class="card"><h3>💬 General Chat</h3><p>Ask anything. This chat uses courses with Referencing ON.</p><p id="modelBadge" style="font-size:12px;font-weight:700;color:#2563EB;margin-top:6px">Model: Auto-Pick - will find best flash model for your key</p></div>
+  <div class="card"><div id="generalMsgs" class="chatList"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
+    <div class="chatInputWrap"><textarea id="generalInput" placeholder="Ask me anything..."></textarea>
+    <button class="primary" id="generalSendBtn" onclick="sendGeneral()">Send Message 🚀</button></div>
   </div>
 </div>
+<div class="nav">
+  <button class="active" id="navHome" onclick="showView('home')"><i data-lucide="home"></i>Home</button>
+  <button id="navGeneral" onclick="showView('general')"><i data-lucide="message-circle"></i>General Chat</button>
+  <button onclick="openSettings()"><i data-lucide="settings"></i>Settings</button>
+</div>
+</div>
+
+<div id="courseModal" class="modal hidden"><div class="modalBox">
+  <div class="flex" style="justify-content:space-between"><h2 id="modalTitle">Course 1</h2><button class="ghost" style="width:auto;margin:0;padding:8px 12px" onclick="closeCourse()">Close ✕</button></div>
+  <p style="color:var(--muted);font-size:14px;margin-top:6px">Fields are locked. Tap Edit to change, then Save to lock again.</p>
+  <div id="courseToast" class="toast hidden">Saved 🔒</div>
+  <label style="font-weight:700;margin-top:14px;display:block">Course Name 🔒</label>
+  <div id="nameView" class="lockBox"><div><b id="nameText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
+  <div id="nameEdit" class="hidden"><input id="courseName" placeholder="e.g. Anatomy 101"></div>
+  <label style="font-weight:700;margin-top:12px;display:block">Course Code 🔒</label>
+  <div id="codeView" class="lockBox"><div><b id="codeText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
+  <div id="codeEdit" class="hidden"><input id="courseCode" placeholder="e.g. ANA 101"></div>
+  <div id="saveCourseRow" class="hidden"><button class="primary" style="margin-top:10px" onclick="saveCourseName()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelCourseEdit()">Cancel</button></div>
+  <div class="switchRow"><div><b>Referencing</b><div style="font-size:12px;color:var(--muted)" id="refLabel">AI will use this course</div></div><div class="switch on" id="refSwitch" onclick="toggleRef()"></div></div>
+  <h3 style="margin-top:18px">📄 PDFs - Max 4</h3>
+  <div id="pdfList"></div>
+  <h3 style="margin-top:16px">🖼️ Pictures - Many Allowed</h3>
+  <button class="smallBtn" onclick="document.getElementById('picInput').click()">+ Add Pictures</button>
+  <input type="file" id="picInput" accept="image/*" multiple class="hidden" onchange="addPics(event)">
+  <div id="picList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+  <h3 style="margin-top:18px">💬 Chat For This Course Only</h3>
+  <div id="courseMsgs" class="chatList" style="margin-top:8px"></div>
+  <div class="chatInputWrap"><textarea id="courseInput" placeholder="Ask about this course..."></textarea>
+  <button class="primary" onclick="sendCourseChat()">Send Message 🚀</button>
+  <button class="ghost" onclick="clearCourseChat()">Clear Chat</button></div>
+</div></div>
+
+<div id="settingsModal" class="modal hidden"><div class="modalBox">
+  <h2>Settings</h2>
+  <div class="card" style="margin-top:14px">
+    <h3>🎨 Appearance</h3>
+    <div class="seg"><button id="thSystem" onclick="setTheme('system')">System</button><button id="thLight" onclick="setTheme('light')">Light</button><button id="thDark" onclick="setTheme('dark')">Dark</button></div>
+    <p>System follows your phone. Light is bright. Dark is navy.</p>
+  </div>
+  <div class="card">
+    <h3>🔑 Gemini API Key 🔒</h3>
+    <p>Locked by default. Tap Edit to change, then Save to lock again. Saved only in YOUR browser.</p>
+    <div id="keyView" class="lockBox"><div><b id="keyText">••••••••</b><br><span id="keyStatus">❌ No key yet</span></div><button class="editBtn" onclick="editKey()">✏️ Edit</button></div>
+    <div id="keyEdit" class="hidden"><input id="apiKeyInput" type="password" placeholder="AIza..."><button class="primary" style="margin-top:10px" onclick="saveKey()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelKeyEdit()">Cancel</button></div>
+    <div id="keyToast" class="toast hidden">Saved 🔒</div>
+    <button class="primary" style="margin-top:12px;background:#0F172A" onclick="testConnection()">🔍 Test Connection - Is My Key Working?</button>
+    <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
+    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - app finds the best flash model for your key every time. No hardcoded model.</p>
+  </div>
+  <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
+  <button class="ghost" onclick="closeSettings()">Close</button>
+</div></div>
 
 <script>
-"use strict";
-
-/* =====================================================
-   ỌJỌ́Ọ̀LA DATABASE
-   IndexedDB stores courses, chats and uploaded files.
-   LocalStorage is only used for small preferences/API key.
-===================================================== */
-
-const DB_NAME = "ojooola_database";
-const DB_VERSION = 1;
-
-const STORE_COURSES = "courses";
-const STORE_CHATS = "chats";
-const STORE_FILES = "files";
-const STORE_META = "meta";
-
-let db = null;
-let courses = [];
-let currentCourseId = null;
-let currentMode = "general";
-let currentChat = [];
-let currentFiles = [];
-let controller = null;
-let requestNumber = 0;
-let isGenerating = false;
-let searchMatches = [];
-let searchIndex = -1;
-let installPrompt = null;
-
-const SETTINGS_KEY = "ojooola_settings_v4";
-
-const MODELS = [
-  "gemini-3.8-flash",
-  "gemini-3.7-flash",
-  "gemini-3.6-flash",
-  "gemini-3.5-flash-lite"
-];
-
-let settings = loadSettings();
-
-function loadSettings(){
+let raw = JSON.parse(localStorage.getItem('ojoola_courses')||'null');
+let courses;
+if(raw && raw.length===15){ courses = raw.map(c=>({name:c.name||'',code:c.code||'',pdfs:c.pdfs||[null,null,null,null],pics:c.pics||[],ref:true,chat:c.chat||[]})); } else { courses = Array.from({length:15},()=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]})); }
+let current = 0;
+let theme = localStorage.getItem('ojoola_theme')||'system';
+let apiKey = localStorage.getItem('ojoola_key')||'';
+let cachedModel = null;
+let cachedModelTime = 0;
+function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
+function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
+function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
+function applyTheme(){document.body.classList.remove('dark');let t=theme;if(t==='system') t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(t==='dark') document.body.classList.add('dark');document.getElementById('thSystem').className=theme==='system'?'active':'';document.getElementById('thLight').className=theme==='light'?'active':'';document.getElementById('thDark').className=theme==='dark'?'active':''}
+function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
+function goWelcome(){document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden');window.scrollTo(0,0)}
+function enterApp(view){
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  showView(view); render();
+  try{ history.pushState({page:'app',view:view},'', '#app'); }catch(e){}
+  window.scrollTo(0,0);
+}
+function goHome(){ enterApp('home'); }
+function goStudy(){ enterApp('home'); }
+function goGeneral(){ enterApp('general'); }
+window.addEventListener('popstate', function(e){
+  if(!e.state || e.state.page!=='app'){ goWelcome(); }
+});
+function showView(v){document.getElementById('homeView').classList.toggle('hidden',v!=='home');document.getElementById('generalView').classList.toggle('hidden',v!=='general');document.getElementById('navHome').classList.toggle('active',v==='home');document.getElementById('navGeneral').classList.toggle('active',v==='general')}
+function turnAllOn(){courses.forEach(c=>c.ref=true);save();render();showToast('allOnToast')}
+function render(){let g=document.getElementById('courseGrid');g.innerHTML='';courses.forEach((c,i)=>{let display=c.name?c.name:'Course '+(i+1);let sub=c.name?(c.code?c.code:'Tap to open'):'Tap to open';let d=document.createElement('div');d.className='card course';d.onclick=()=>openCourse(i);d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';g.appendChild(d)});if(window.lucide) lucide.createIcons()}
+function openCourse(i){current=i;let c=courses[i];document.getElementById('modalTitle').textContent=c.name||('Course '+(i+1));lockCourseFields();updateRefUI();renderPdfs();renderPics();renderCourseChat();document.getElementById('courseModal').classList.remove('hidden');document.getElementById('courseModal').scrollTop=0}
+function closeCourse(){document.getElementById('courseModal').classList.add('hidden');render()}
+function lockCourseFields(){let c=courses[current];document.getElementById('nameText').textContent=c.name||'Not set yet';document.getElementById('codeText').textContent=c.code||'Not set yet';document.getElementById('courseName').value=c.name;document.getElementById('courseCode').value=c.code;document.getElementById('nameView').classList.remove('hidden');document.getElementById('codeView').classList.remove('hidden');document.getElementById('nameEdit').classList.add('hidden');document.getElementById('codeEdit').classList.add('hidden');document.getElementById('saveCourseRow').classList.add('hidden')}
+function editCourseFields(){document.getElementById('nameView').classList.add('hidden');document.getElementById('codeView').classList.add('hidden');document.getElementById('nameEdit').classList.remove('hidden');document.getElementById('codeEdit').classList.remove('hidden');document.getElementById('saveCourseRow').classList.remove('hidden');document.getElementById('courseName').focus()}
+function cancelCourseEdit(){lockCourseFields()}
+function saveCourseName(){courses[current].name=document.getElementById('courseName').value.trim();courses[current].code=document.getElementById('courseCode').value.trim();save();document.getElementById('modalTitle').textContent=courses[current].name||('Course '+(current+1));lockCourseFields();showToast('courseToast')}
+function updateRefUI(){let on=courses[current].ref;document.getElementById('refSwitch').className='switch '+(on?'on':'');document.getElementById('refLabel').textContent=on?'AI will use this course':'AI will skip this course'}
+function toggleRef(){courses[current].ref=!courses[current].ref;save();updateRefUI()}
+function renderPdfs(){let el=document.getElementById('pdfList');el.innerHTML='';courses[current].pdfs.forEach((p,idx)=>{let row=document.createElement('div');row.className='fileRow';row.innerHTML='<span><b>PDF '+(idx+1)+':</b> '+(p?p.name:'Empty')+'</span>';let b=document.createElement('button');b.className='smallBtn';b.textContent=p?'Replace':'Upload PDF';b.onclick=()=>{let inp=document.createElement('input');inp.type='file';inp.accept='application/pdf';inp.onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{courses[current].pdfs[idx]={name:f.name,data:r.result};save();renderPdfs()};r.readAsDataURL(f)};inp.click()};row.appendChild(b);el.appendChild(row)})}
+function addPics(e){Array.from(e.target.files).forEach(f=>{let r=new FileReader();r.onload=()=>{courses[current].pics.push({name:f.name,data:r.result});save();renderPics()};r.readAsDataURL(f)});e.target.value=''}
+function renderPics(){let el=document.getElementById('picList');el.innerHTML='';courses[current].pics.forEach((p,idx)=>{let w=document.createElement('div');w.style.position='relative';w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';el.appendChild(w)})}
+function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
+function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
+async function testConnection(){
+  let el=document.getElementById('testResult');
+  if(!apiKey){el.textContent='❌ No key saved yet. Tap Edit and paste your key.';el.style.color='#DC2626';return}
+  el.textContent='Testing... please wait...';el.style.color='#64748B';
   try{
-    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) ||
-      {apiKey:"",dark:false};
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey);
+    let j=await res.json();
+    if(j.error){el.textContent='❌ Key FAILED: '+j.error.message;el.style.color='#DC2626';return}
+    let names=(j.models||[]).map(m=>m.name.replace('models/','')).filter(n=>n.includes('flash')).slice(0,5).join(', ');
+    el.textContent='✅ Key WORKS! Found: '+names;el.style.color='#16A34A';
+  }catch(e){el.textContent='❌ Network error: '+e.message;el.style.color='#DC2626'}
+}
+// *** AUTO-PICK - NO HARDCODED MODEL. Ask Google what flash models work for THIS key, pick best one. ***
+function scoreModel(name){
+  let n=name.toLowerCase();
+  if(n.includes('tts')||n.includes('image')||n.includes('embedding')||n.includes('preview-tts')||n.includes('robotics')||n.includes('veo')||n.includes('imagen')) return -100;
+  if(!n.includes('flash')) return -100;
+  if(n.includes('latest')) return 85;
+  if(n.includes('3.8-flash') && !n.includes('lite')) return 100;
+  if(n.includes('3-flash') && !n.includes('lite')) return 95;
+  if(n.includes('2.5-flash') && !n.includes('lite')) return 40;
+  if(n.includes('2.0-flash')) return 30;
+  if(n.includes('flash') && n.includes('lite')) return 60;
+  if(n.includes('flash')) return 70;
+  return 0;
+}
+async function getBestModel(){
+  if(cachedModel && (Date.now()-cachedModelTime)<60000) return cachedModel;
+  let controller=new AbortController();
+  let timer=setTimeout(()=>controller.abort(),8000);
+  try{
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey,{signal:controller.signal});
+    clearTimeout(timer);
+    let j=await res.json().catch(()=>({}));
+    if(j.error) throw new Error('Google said: '+(j.error.message||'models list failed'));
+    let cands=(j.models||[]).map(m=>{
+      let nm=(m.name||'').replace('models/','');
+      let supports=m.supportedGenerationMethods||[];
+      let canGen=supports.length===0 || supports.includes('generateContent');
+      return {name:nm,score:scoreModel(nm),canGen:canGen};
+    }).filter(x=>x.canGen && x.score>0);
+    cands.sort((a,b)=>b.score-a.score);
+    if(!cands.length) throw new Error('Google returned no flash model for this key. Create a new key in Google AI Studio.');
+    cachedModel=cands[0].name;
+    cachedModelTime=Date.now();
+    let badge=document.getElementById('modelBadge');
+    if(badge) badge.textContent='Model: Auto-Picked - '+cachedModel+' (from your key)';
+    return cachedModel;
   }catch(e){
-    return {apiKey:"",dark:false};
+    clearTimeout(timer);
+    if(cachedModel) return cachedModel;
+    throw e;
   }
 }
-
-function saveSettings(){
-  localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));
-}
-
-function openDatabase(){
-  return new Promise((resolve,reject)=>{
-    const request=indexedDB.open(DB_NAME,DB_VERSION);
-
-    request.onupgradeneeded=event=>{
-      const database=event.target.result;
-
-      if(!database.objectStoreNames.contains(STORE_COURSES)){
-        database.createObjectStore(STORE_COURSES,{keyPath:"id"});
-      }
-
-      if(!database.objectStoreNames.contains(STORE_CHATS)){
-        database.createObjectStore(STORE_CHATS,{keyPath:"id"});
-      }
-
-      if(!database.objectStoreNames.contains(STORE_FILES)){
-        const store=database.createObjectStore(STORE_FILES,{keyPath:"id"});
-        store.createIndex("courseId","courseId",{unique:false});
-      }
-
-      if(!database.objectStoreNames.contains(STORE_META)){
-        database.createObjectStore(STORE_META,{keyPath:"id"});
-      }
-    };
-
-    request.onsuccess=()=>resolve(request.result);
-    request.onerror=()=>reject(request.error);
-  });
-}
-
-function idbRequest(request){
-  return new Promise((resolve,reject)=>{
-    request.onsuccess=()=>resolve(request.result);
-    request.onerror=()=>reject(request.error);
-  });
-}
-
-function transactionDone(transaction){
-  return new Promise((resolve,reject)=>{
-    transaction.oncomplete=()=>resolve();
-    transaction.onerror=()=>reject(transaction.error);
-    transaction.onabort=()=>reject(transaction.error);
-  });
-}
-
-async function dbGet(storeName,key){
-  const tx=db.transaction(storeName,"readonly");
-  return idbRequest(tx.objectStore(storeName).get(key));
-}
-
-async function dbGetAll(storeName){
-  const tx=db.transaction(storeName,"readonly");
-  return idbRequest(tx.objectStore(storeName).getAll());
-}
-
-async function dbPut(storeName,value){
-  const tx=db.transaction(storeName,"readwrite");
-  tx.objectStore(storeName).put(value);
-  await transactionDone(tx);
-}
-
-async function dbDelete(storeName,key){
-  const tx=db.transaction(storeName,"readwrite");
-  tx.objectStore(storeName).delete(key);
-  await transactionDone(tx);
-}
-
-async function dbDeleteCourseFiles(courseId){
-  const tx=db.transaction(STORE_FILES,"readwrite");
-  const store=tx.objectStore(STORE_FILES);
-  const index=store.index("courseId");
-  const request=index.openCursor(IDBKeyRange.only(courseId));
-
-  request.onsuccess=()=>{
-    const cursor=request.result;
-    if(cursor){
-      cursor.delete();
-      cursor.continue();
-    }
-  };
-
-  await transactionDone(tx);
-}
-
-function defaultCourses(){
-  return Array.from({length:15},(_,i)=>({
-    id:"course_"+(i+301),
-    code:"CSC "+(i+301),
-    name:"Course "+(i+1),
-    description:"",
-    referenceEnabled:true
-  }));
-}
-
-/* =====================================================
-   AUTOMATIC MIGRATION FROM THE PREVIOUS LOCALSTORAGE APP
-===================================================== */
-
-function dataUrlToBlob(dataUrl){
-  const parts=dataUrl.split(",");
-  const match=parts[0].match(/data:([^;]+)/);
-  const mime=match?match[1]:"application/octet-stream";
-  const binary=atob(parts[1]||"");
-  const bytes=new Uint8Array(binary.length);
-
-  for(let i=0;i<binary.length;i++){
-    bytes[i]=binary.charCodeAt(i);
-  }
-
-  return new Blob([bytes],{type:mime});
-}
-
-async function migrateOldData(){
-  const marker=await dbGet(STORE_META,"migration_v1");
-  if(marker?.complete)return;
-
-  let oldCourses=[];
-  let oldGeneral=[];
-
+async function tryOneModel(modelName, parts){
+  let controller=new AbortController();
+  let timer=setTimeout(()=>controller.abort(),10000);
   try{
-    oldCourses=JSON.parse(
-      localStorage.getItem("ojooola_study_data_v4")||"[]"
-    );
-  }catch(e){}
-
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+modelName+':generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
+    clearTimeout(timer);
+    let j=await res.json().catch(()=>({}));
+    if(!res.ok || j.error){
+      let msg=(j.error && j.error.message) || ('HTTP '+res.status);
+      if(msg.toLowerCase().includes('api key') || msg.includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
+      throw new Error('Google said: '+res.status+' - '+msg);
+    }
+    if(j.candidates && j.candidates[0] && j.candidates[0].content) return j.candidates[0].content.parts.map(p=>p.text||'').join('');
+    throw new Error('Google returned no answer. Status: '+res.status);
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError') throw new Error('Google did not answer in 10s (timeout). Your network is fine - Google was slow. Try again.');
+    throw e;
+  }
+}
+async function callGeminiFast(prompt, images){
+  if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
+  let parts=[{text:prompt}];
+  (images||[]).slice(0,2).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inlineData:{mimeType:mt,data:b}})});
+  let model=await getBestModel();
   try{
-    oldGeneral=JSON.parse(
-      localStorage.getItem("ojooola_general_chat")||"[]"
-    );
-  }catch(e){}
-
-  /*
-    Do not overwrite records already present in IndexedDB.
-    The old LocalStorage records remain untouched as a backup.
-  */
-
-  if(Array.isArray(oldCourses)){
-    for(const old of oldCourses){
-      if(!old?.id)continue;
-
-      const existing=await dbGet(STORE_COURSES,old.id);
-      if(!existing){
-        await dbPut(STORE_COURSES,{
-          id:old.id,
-          code:old.code||"",
-          name:old.name||"",
-          description:old.description||"",
-          referenceEnabled:old.ref!==false
-        });
-      }
-
-      if(Array.isArray(old.chat)){
-        const chatId="course:"+old.id;
-        const existingChat=await dbGet(STORE_CHATS,chatId);
-        if(!existingChat){
-          await dbPut(STORE_CHATS,{
-            id:chatId,messages:old.chat
-          });
-        }
-      }
-
-      if(Array.isArray(old.files)){
-        for(const file of old.files){
-          if(!file?.data)continue;
-          const fileId="migrated:"+old.id+":"+file.id;
-          const existingFile=await dbGet(STORE_FILES,fileId);
-          if(existingFile)continue;
-
-          try{
-            await dbPut(STORE_FILES,{
-              id:fileId,
-              courseId:old.id,
-              name:file.name||"Migrated file",
-              mimeType:file.mimeType||"application/octet-stream",
-              size:file.size||0,
-              blob:dataUrlToBlob(file.data),
-              included:true,
-              addedAt:Date.now()
-            });
-          }catch(error){
-            console.warn("Could not migrate a file:",file.name,error);
-          }
-        }
-      }
+    return await tryOneModel(model, parts);
+  }catch(e){
+    let msg=String(e.message||'');
+    if(msg.includes('404') || msg.toLowerCase().includes('no longer available') || msg.includes('not found')){
+      cachedModel=null;
+      let model2=await getBestModel();
+      if(model2!==model) return await tryOneModel(model2, parts);
+      // If same model returned, force refresh by clearing cache and trying list again once
+      cachedModel=null; cachedModelTime=0;
+      let m3=await getBestModel();
+      if(m3!==model) return await tryOneModel(m3, parts);
     }
+    throw e;
   }
-
-  if(Array.isArray(oldGeneral) && oldGeneral.length){
-    const existing=await dbGet(STORE_CHATS,"general");
-    if(!existing){
-      await dbPut(STORE_CHATS,{
-        id:"general",messages:oldGeneral
-      });
-    }
-  }
-
-  const alreadyHaveCourses=await dbGetAll(STORE_COURSES);
-
-  if(!alreadyHaveCourses.length){
-    for(const course of defaultCourses()){
-      await dbPut(STORE_COURSES,course);
-    }
-  }
-
-  await dbPut(STORE_META,{
-    id:"migration_v1",
-    complete:true,
-    completedAt:new Date().toISOString()
-  });
 }
-
-async function loadAllCourses(){
-  courses=await dbGetAll(STORE_COURSES);
-
-  if(!courses.length){
-    courses=defaultCourses();
-    for(const course of courses){
-      await dbPut(STORE_COURSES,course);
-    }
-  }
-
-  courses.sort((a,b)=>a.id.localeCompare(b.id));
-}
-
-async function saveCourse(course){
-  await dbPut(STORE_COURSES,course);
-}
-
-async function loadChat(id){
-  const record=await dbGet(STORE_CHATS,id);
-  return record?.messages||[];
-}
-
-async function saveChat(id,messages){
-  await dbPut(STORE_CHATS,{id,messages});
-}
-
-async function loadCourseFiles(courseId){
-  return (await dbGetAll(STORE_FILES))
-    .filter(file=>file.courseId===courseId)
-    .sort((a,b)=>a.addedAt-b.addedAt);
-}
-
-/* =====================================================
-   INITIAL STARTUP
-===================================================== */
-
-async function init(){
+function buildContext(courseList){let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples.\n\n';courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});return txt}
+async function sendCourseChat(){let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';try{let ans=await callGeminiFast(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message}save();renderCourseChat()}
+async function sendGeneral(){
+  let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;
+  let btn=document.getElementById('generalSendBtn');btn.disabled=true;btn.textContent='Thinking... 🤔';
+  let box=document.getElementById('generalMsgs');
+  let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);
+  let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking... 🤔';box.appendChild(a);
+  inp.value='';
+  let start=Date.now();
   try{
-    db=await openDatabase();
-    await migrateOldData();
-    await loadAllCourses();
-    applyTheme();
-    renderCourses();
-    goHome(false);
-
-    if(navigator.storage?.persist){
-      navigator.storage.persist().catch(()=>{});
-    }
-
-    updateStorageStatus();
-  }catch(error){
-    showError(
-      "Ọjọ́ọ̀la could not open its local database. "+
-      "Please reload the app and send the error details.",
-      error
-    );
-  }
-}
-
-function applyTheme(){
-  document.body.classList.toggle("dark",!!settings.dark);
-}
-
-init();
-
-/* =====================================================
-   NAVIGATION
-===================================================== */
-
-function hidePages(){
-  ["homePage","coursePage","chatScreen"].forEach(id=>{
-    document.getElementById(id).classList.add("hidden");
-  });
-}
-
-function goHome(push=true){
-  if(push)history.pushState({page:"home"},"","#home");
-
-  hidePages();
-  document.getElementById("homePage").classList.remove("hidden");
-  document.getElementById("topbar").classList.remove("hidden");
-  document.getElementById("bottomNav").classList.remove("hidden");
-
-  renderCourses();
-}
-
-async function openGeneral(push=true){
-  if(push)history.pushState({page:"general"},"","#general");
-
-  currentMode="general";
-  currentCourseId=null;
-  currentFiles=[];
-  currentChat=await loadChat("general");
-  showChat("General Chat");
-}
-
-async function openCoursePage(id,push=true){
-  const course=courses.find(c=>c.id===id);
-  if(!course)return;
-
-  if(push)history.pushState({page:"course",id},"","#"+id);
-
-  currentCourseId=id;
-  hidePages();
-
-  document.getElementById("topbar").classList.remove("hidden");
-  document.getElementById("bottomNav").classList.remove("hidden");
-  document.getElementById("coursePage").classList.remove("hidden");
-
-  document.getElementById("coursePageTitle").textContent=
-    course.code+" — "+course.name;
-
-  document.getElementById("courseDescription").textContent=
-    course.description||"Your course workspace.";
-
-  document.getElementById("courseDescriptionInput").value=
-    course.description||"";
-
-  document.getElementById("referenceState").textContent=
-    course.referenceEnabled?"ON":"OFF";
-
-  await renderCourseFiles();
-}
-
-async function openCourseChat(push=true){
-  const course=courses.find(c=>c.id===currentCourseId);
-  if(!course)return;
-
-  if(push){
-    history.pushState(
-      {page:"chat",id:course.id},"","#chat-"+course.id
-    );
-  }
-
-  currentMode="course";
-  currentFiles=[];
-  currentChat=await loadChat("course:"+course.id);
-  showChat(course.code+" — "+course.name);
-}
-
-function showChat(title){
-  hidePages();
-
-  document.getElementById("topbar").classList.add("hidden");
-  document.getElementById("bottomNav").classList.add("hidden");
-  document.getElementById("chatScreen").classList.remove("hidden");
-
-  document.getElementById("chatTitle").textContent=title;
-
-  document.getElementById("chatReferenceButton")
-    .classList.toggle("hidden",currentMode!=="course");
-
-  document.getElementById("chatSearch").value="";
-  document.getElementById("chatInput").value="";
-
-  renderMessages();
-
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(scrollToBottom);
-  });
-}
-
-function backFromChat(){
-  if(currentMode==="course"){
-    openCoursePage(currentCourseId);
-  }else{
-    goHome();
-  }
-}
-
-window.addEventListener("popstate",async event=>{
-  const state=event.state;
-
-  if(!state||state.page==="home"){
-    goHome(false);
-  }else if(state.page==="general"){
-    await openGeneral(false);
-  }else if(state.page==="course"){
-    await openCoursePage(state.id,false);
-  }else if(state.page==="chat"){
-    currentCourseId=state.id;
-    currentMode="course";
-    currentChat=await loadChat("course:"+state.id);
-    showChat(getCourse()?.code||"Course Chat");
-  }
-});
-
-function getCourse(){
-  return courses.find(c=>c.id===currentCourseId);
-}
-
-/* =====================================================
-   COURSE LIST AND COURSE MANAGER
-===================================================== */
-
-function renderCourses(){
-  const grid=document.getElementById("courseGrid");
-  grid.innerHTML="";
-
-  courses.forEach(course=>{
-    const button=document.createElement("button");
-    button.className="courseTile";
-
-    const title=document.createElement("strong");
-    title.textContent=course.code;
-
-    const subtitle=document.createElement("span");
-    subtitle.className="muted";
-    subtitle.textContent=course.name;
-
-    button.append(title,subtitle);
-    button.onclick=()=>openCoursePage(course.id);
-
-    grid.appendChild(button);
-  });
-}
-
-function openCourseManager(){
-  let html=`
-    <div class="modalHead">
-      <h3>Manage courses</h3>
-      <button class="iconbtn" onclick="closeModal()">✕</button>
-    </div>`;
-
-  courses.forEach((course,index)=>{
-    html+=`
-      <div class="card">
-        <label class="muted">Course code</label>
-        <input id="courseCode${index}" value="${escapeAttr(course.code)}">
-        <label class="muted">Course name</label>
-        <input id="courseName${index}" value="${escapeAttr(course.name)}">
-      </div>`;
-  });
-
-  html+=`
-    <button class="primary" onclick="saveCourseNames()">Save courses</button>`;
-
-  openModal(html);
-}
-
-async function saveCourseNames(){
-  for(let i=0;i<courses.length;i++){
-    courses[i].code=
-      document.getElementById("courseCode"+i).value.trim()||
-      courses[i].code;
-
-    courses[i].name=
-      document.getElementById("courseName"+i).value.trim()||
-      courses[i].name;
-
-    await saveCourse(courses[i]);
-  }
-
-  closeModal();
-  renderCourses();
-
-  if(currentCourseId){
-    await openCoursePage(currentCourseId,false);
-  }
-
-  toast("Courses saved");
-}
-
-async function saveCourseDescription(){
-  const course=getCourse();
-  if(!course)return;
-
-  course.description=
-    document.getElementById("courseDescriptionInput").value.trim();
-
-  await saveCourse(course);
-  document.getElementById("courseDescription").textContent=
-    course.description||"Your course workspace.";
-
-  toast("Description saved");
-}
-
-async function toggleReference(){
-  const course=getCourse();
-  if(!course)return;
-
-  course.referenceEnabled=!course.referenceEnabled;
-  await saveCourse(course);
-
-  document.getElementById("referenceState").textContent=
-    course.referenceEnabled?"ON":"OFF";
-}
-
-async function toggleCourseReferenceFromChat(){
-  const course=getCourse();
-  if(!course)return;
-
-  course.referenceEnabled=!course.referenceEnabled;
-  await saveCourse(course);
-
-  document.getElementById("chatReferenceButton").textContent=
-    "Course reference: "+(course.referenceEnabled?"ON":"OFF");
-
-  toast("Course reference "+(course.referenceEnabled?"enabled":"disabled"));
-}
-
-/* =====================================================
-   FILE UPLOADS — FILE BLOBS GO INTO INDEXEDDB
-===================================================== */
-
-document.getElementById("courseFilesInput")
-.addEventListener("change",async event=>{
-  const selected=[...event.target.files];
-  const course=getCourse();
-  if(!course)return;
-
-  for(const file of selected){
-    if(!isSupportedFile(file)){
-      toast("Only PDF and image files are supported.");
-      continue;
-    }
-
-    try{
-      const record={
-        id:crypto.randomUUID(),
-        courseId:course.id,
-        name:file.name,
-        mimeType:file.type||guessMime(file.name),
-        size:file.size,
-        blob:file,
-        included:true,
-        addedAt:Date.now()
-      };
-
-      await dbPut(STORE_FILES,record);
-    }catch(error){
-      showError(
-        "Could not save "+file.name+
-        ". Check available browser storage.",
-        error
-      );
-    }
-  }
-
-  event.target.value="";
-  await renderCourseFiles();
-  await updateStorageStatus();
-});
-
-function isSupportedFile(file){
-  return file.type==="application/pdf"||
-    file.type.startsWith("image/")||
-    /\.pdf$/i.test(file.name);
-}
-
-function guessMime(name){
-  if(/\.pdf$/i.test(name))return "application/pdf";
-  if(/\.png$/i.test(name))return "image/png";
-  if(/\.jpe?g$/i.test(name))return "image/jpeg";
-  if(/\.webp$/i.test(name))return "image/webp";
-  return "application/octet-stream";
-}
-
-async function renderCourseFiles(){
-  const course=getCourse();
-  if(!course)return;
-
-  const files=await loadCourseFiles(course.id);
-  const box=document.getElementById("courseFilesList");
-  box.innerHTML="";
-
-  if(!files.length){
-    box.innerHTML="<p class='muted'>No course materials uploaded.</p>";
-    return;
-  }
-
-  for(const file of files){
-    const row=document.createElement("div");
-    row.className="fileRow";
-
-    const label=document.createElement("label");
-    label.className="fileName";
-    label.style.display="flex";
-    label.style.alignItems="center";
-    label.style.gap="8px";
-
-    const checkbox=document.createElement("input");
-    checkbox.type="checkbox";
-    checkbox.style.width="auto";
-    checkbox.checked=file.included!==false;
-
-    checkbox.onchange=async()=>{
-      file.included=checkbox.checked;
-      await dbPut(STORE_FILES,file);
-    };
-
-    const name=document.createElement("span");
-    name.textContent=file.name;
-
-    label.append(checkbox,name);
-
-    const controls=document.createElement("div");
-    controls.className="fileControls";
-
-    const size=document.createElement("span");
-    size.className="muted";
-    size.textContent=formatSize(file.size);
-
-    const remove=document.createElement("button");
-    remove.className="secondary danger";
-    remove.textContent="Delete";
-    remove.onclick=async()=>{
-      if(!confirm("Delete "+file.name+"?"))return;
-      await dbDelete(STORE_FILES,file.id);
-      await renderCourseFiles();
-      await updateStorageStatus();
-    };
-
-    controls.append(size,remove);
-    row.append(label,controls);
-    box.appendChild(row);
-  }
-}
-
-function formatSize(bytes){
-  if(!bytes)return "";
-  if(bytes<1024*1024)return (bytes/1024).toFixed(0)+" KB";
-  return (bytes/1024/1024).toFixed(1)+" MB";
-}
-
-/* =====================================================
-   CHAT ATTACHMENTS
-===================================================== */
-
-document.getElementById("chatFileInput")
-.addEventListener("change",async event=>{
-  for(const file of [...event.target.files]){
-    if(!isSupportedFile(file)){
-      toast("Only PDF and image files are supported.");
-      continue;
-    }
-
-    currentFiles.push({
-      id:crypto.randomUUID(),
-      name:file.name,
-      mimeType:file.type||guessMime(file.name),
-      size:file.size,
-      blob:file
-    });
-  }
-
-  renderAttachmentPreview();
-  event.target.value="";
-});
-
-function renderAttachmentPreview(){
-  const box=document.getElementById("attachmentPreview");
-  box.innerHTML="";
-
-  currentFiles.forEach(file=>{
-    const chip=document.createElement("span");
-    chip.className="attachmentChip";
-
-    const name=document.createElement("span");
-    name.textContent=file.name;
-
-    const remove=document.createElement("button");
-    remove.textContent="×";
-    remove.onclick=()=>{
-      currentFiles=currentFiles.filter(item=>item.id!==file.id);
-      renderAttachmentPreview();
-    };
-
-    chip.append(name,remove);
-    box.appendChild(chip);
-  });
-}
-
-/* =====================================================
-   SAFE MARKDOWN RENDERING
-===================================================== */
-
-function escapeHTML(text){
-  return String(text).replace(/[&<>"']/g,char=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  })[char]);
-}
-
-function escapeAttr(text){
-  return escapeHTML(text);
-}
-
-function markdown(text){
-  let safe=escapeHTML(text||"");
-  const blocks=[];
-
-  safe=safe.replace(/```([\s\S]*?)```/g,(match,code)=>{
-    blocks.push("<pre><code>"+code.trim()+"</code></pre>");
-    return "%%BLOCK"+(blocks.length-1)+"%%";
-  });
-
-  safe=safe.replace(/`([^`]+)`/g,"<code>$1</code>");
-  safe=safe.replace(/^### (.+)$/gm,"<h3>$1</h3>");
-  safe=safe.replace(/^## (.+)$/gm,"<h2>$1</h2>");
-  safe=safe.replace(/^# (.+)$/gm,"<h1>$1</h1>");
-  safe=safe.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");
-  safe=safe.replace(/\*(.*?)\*/g,"<em>$1</em>");
-  safe=safe.replace(/^\s*[-*] (.+)$/gm,"<li>$1</li>");
-  safe=safe.replace(/%%BLOCK(\d+)%%/g,(match,index)=>blocks[Number(index)]);
-  safe=safe.replace(/\n/g,"<br>");
-
-  return safe;
-}
-
-/* =====================================================
-   CHAT DISPLAY AND PERSISTENCE
-===================================================== */
-
-function chatStorageId(){
-  return currentMode==="general"?
-    "general":"course:"+currentCourseId;
-}
-
-async function persistChat(){
-  await saveChat(chatStorageId(),currentChat);
-}
-
-function renderMessages(){
-  const box=document.getElementById("messages");
-  box.innerHTML="";
-
-  if(!currentChat.length){
-    box.innerHTML=`
-      <div class="card" style="text-align:center;margin-top:25px">
-        <h3>Start a conversation</h3>
-        <p class="muted">
-          Ask a question, discuss a topic or study your uploaded materials.
-        </p>
-      </div>`;
-    return;
-  }
-
-  currentChat.forEach((message,index)=>{
-    const item=document.createElement("div");
-    item.className="message "+
-      (message.role==="user"?"user":"ai");
-    item.dataset.index=index;
-
-    const bubble=document.createElement("div");
-    bubble.className="bubble";
-
-    const content=document.createElement("div");
-    content.className="messageText";
-    content.innerHTML=markdown(message.text||"");
-
-    bubble.appendChild(content);
-
-    if(message.role!=="user"){
-      const actions=document.createElement("div");
-      actions.className="messageActions";
-
-      const copy=document.createElement("button");
-      copy.textContent="Copy";
-      copy.onclick=()=>copyMessage(index);
-
-      const share=document.createElement("button");
-      share.textContent="Share";
-      share.onclick=()=>shareMessage(index);
-
-      const read=document.createElement("button");
-      read.textContent="Read aloud";
-      read.onclick=()=>speakMessage(index);
-
-      actions.append(copy,share,read);
-      bubble.appendChild(actions);
-    }
-
-    item.appendChild(bubble);
-    box.appendChild(item);
-  });
-}
-
-async function appendMessage(message){
-  const follow=nearBottom();
-
-  currentChat.push(message);
-  await persistChat();
-  renderMessages();
-
-  if(follow){
-    requestAnimationFrame(scrollToBottom);
-  }
-}
-
-async function copyMessage(index){
-  const text=currentChat[index]?.text||"";
-  try{
-    await navigator.clipboard.writeText(text);
-    toast("Copied");
-  }catch(error){
-    showError("Could not copy this message.",error);
-  }
-}
-
-async function shareMessage(index){
-  const text=currentChat[index]?.text||"";
-
-  if(navigator.share){
-    try{
-      await navigator.share({title:"Ọjọ́ọ̀la",text});
-    }catch(error){}
-  }else{
-    await copyMessage(index);
-  }
-}
-
-function speakMessage(index){
-  const text=currentChat[index]?.text||"";
-
-  if(!("speechSynthesis" in window)){
-    toast("Read aloud is not supported.");
-    return;
-  }
-
-  speechSynthesis.cancel();
-  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-}
-
-/* =====================================================
-   CHAT SEARCH
-===================================================== */
-
-function searchMessages(){
-  const query=document.getElementById("chatSearch")
-    .value.toLowerCase().trim();
-
-  searchMatches=[];
-  searchIndex=-1;
-
-  if(!query)return;
-
-  currentChat.forEach((message,index)=>{
-    if((message.text||"").toLowerCase().includes(query)){
-      searchMatches.push(index);
-    }
-  });
-
-  if(searchMatches.length){
-    searchIndex=0;
-    highlightSearch();
-  }
-}
-
-function moveSearch(direction){
-  if(!searchMatches.length)return;
-
-  searchIndex=
-    (searchIndex+direction+searchMatches.length)%searchMatches.length;
-
-  highlightSearch();
-}
-
-function highlightSearch(){
-  document.querySelectorAll(".message").forEach(element=>{
-    element.style.outline="none";
-  });
-
-  const element=document.querySelector(
-    `[data-index="${searchMatches[searchIndex]}"]`
-  );
-
-  if(element){
-    element.style.outline="2px solid var(--blue)";
-    element.scrollIntoView({behavior:"smooth",block:"center"});
-  }
-}
-
-/* =====================================================
-   SCROLLING
-===================================================== */
-
-function nearBottom(){
-  const area=document.getElementById("chatArea");
-  return area.scrollHeight-area.scrollTop-area.clientHeight<130;
-}
-
-function scrollToBottom(){
-  const area=document.getElementById("chatArea");
-  area.scrollTo({top:area.scrollHeight,behavior:"smooth"});
-  document.getElementById("downButton").classList.add("hidden");
-}
-
-function updateDownButton(){
-  document.getElementById("downButton")
-    .classList.toggle("hidden",nearBottom());
-}
-
-/* =====================================================
-   GEMINI ATTACHMENT PREPARATION
-===================================================== */
-
-async function blobToBase64(blob){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-
-    reader.onload=()=>{
-      const result=String(reader.result);
-      resolve(result.split(",")[1]);
-    };
-
-    reader.onerror=()=>reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
-
-async function makeInlinePart(file){
-  return {
-    inline_data:{
-      mime_type:file.mimeType||file.blob.type||"application/octet-stream",
-      data:await blobToBase64(file.blob)
-    }
-  };
-}
-
-async function collectGeminiFiles(){
-  const selected=[];
-
-  if(currentMode==="course"){
-    const course=getCourse();
-
-    if(course?.referenceEnabled){
-      const stored=await loadCourseFiles(course.id);
-      stored.filter(file=>file.included!==false)
-        .forEach(file=>selected.push(file));
-    }
-  }
-
-  currentFiles.forEach(file=>selected.push(file));
-
-  const totalBytes=selected.reduce(
-    (sum,file)=>sum+(file.size||file.blob.size||0),0
-  );
-
-  /*
-    This cap is intentionally conservative.
-    The Gemini request also contains conversation text and JSON overhead.
-  */
-  if(totalBytes>12*1024*1024){
-    throw new Error(
-      "The selected files are too large to send together. "+
-      "Return to your course materials and temporarily untick some files."
-    );
-  }
-
-  const parts=[];
-
-  for(const file of selected){
-    parts.push(await makeInlinePart(file));
-  }
-
-  return parts;
-}
-
-function buildStudyInstructions(){
-  if(currentMode!=="course"){
-    return "You are Ọjọ́ọ̀la, a helpful AI study partner. "+
-      "Explain concepts clearly. Use headings, examples and bullet points "+
-      "when they improve understanding.";
-  }
-
-  const course=getCourse();
-
-  let context=
-    "You are Ọjọ́ọ̀la, the student's AI study partner.\n"+
-    "Course: "+course.code+" — "+course.name+"\n";
-
-  if(course.description){
-    context+="Course description: "+course.description+"\n";
-  }
-
-  if(course.referenceEnabled){
-    context+=
-      "The attached course materials are the primary study reference. "+
-      "Base answers on their actual contents. If the materials do not "+
-      "support an answer, clearly distinguish that from what they contain.";
-  }else{
-    context+="Course reference materials are disabled. Answer normally.";
-  }
-
-  return context;
-}
-
-/* =====================================================
-   GEMINI CHAT
-===================================================== */
-
-function resizeInput(element){
-  element.style.height="auto";
-  element.style.height=Math.min(element.scrollHeight,130)+"px";
-}
-
-function handleEnter(event){
-  if(event.key==="Enter"&&!event.shiftKey){
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-async function sendMessage(){
-  if(isGenerating)return;
-
-  const input=document.getElementById("chatInput");
-  const prompt=input.value.trim();
-
-  if(!prompt&&!currentFiles.length)return;
-
-  if(!settings.apiKey){
-    openSettings();
-    toast("Add your Gemini API key first.");
-    return;
-  }
-
-  let attachmentParts;
-
-  try{
-    attachmentParts=await collectGeminiFiles();
-  }catch(error){
-    showError(error.message,error);
-    return;
-  }
-
-  const previousMessages=currentChat.slice();
-  const fileNames=currentFiles.map(file=>file.name);
-
-  const finalPrompt=prompt+(fileNames.length?
-    "\n\nThe user attached: "+fileNames.join(", "):"");
-
-  currentFiles=[];
-  renderAttachmentPreview();
-
-  input.value="";
-  input.style.height="45px";
-
-  const follow=nearBottom();
-
-  currentChat.push({role:"user",text:finalPrompt});
-  const answerIndex=currentChat.length;
-  currentChat.push({role:"model",text:""});
-
-  await persistChat();
-  renderMessages();
-
-  if(follow)scrollToBottom();
-
-  isGenerating=true;
-  const runId=++requestNumber;
-  controller=new AbortController();
-
-  document.getElementById("sendButton").classList.add("hidden");
-  document.getElementById("stopButton").classList.remove("hidden");
-
-  const typing=document.createElement("div");
-  typing.className="typing";
-  typing.id="typingIndicator";
-  typing.textContent="Ọjọ́ọ̀la is thinking...";
-  document.getElementById("messages").appendChild(typing);
-
-  try{
-    const history=previousMessages.slice(-20).map(message=>({
-      role:message.role==="user"?"user":"model",
-      parts:[{text:message.text||""}]
-    }));
-
-    const answer=await callGemini(
-      finalPrompt,
-      history,
-      buildStudyInstructions(),
-      attachmentParts,
-      controller.signal
-    );
-
-    if(runId!==requestNumber)return;
-
-    currentChat[answerIndex].text=answer;
-    await persistChat();
-
-  }catch(error){
-    if(runId!==requestNumber)return;
-
-    if(error.name==="AbortError"){
-      if(!currentChat[answerIndex].text){
-        currentChat[answerIndex].text="Generation stopped.";
-      }
-    }else{
-      currentChat[answerIndex].text=
-        "I couldn't complete that response.\n\n"+error.message;
-    }
-
-    await persistChat();
-
-  }finally{
-    if(runId===requestNumber){
-      isGenerating=false;
-      controller=null;
-
-      document.getElementById("typingIndicator")?.remove();
-      document.getElementById("sendButton").classList.remove("hidden");
-      document.getElementById("stopButton").classList.add("hidden");
-
-      renderMessages();
-      scrollToBottom();
-    }
-  }
-}
-
-async function callGemini(prompt,history,instructions,attachments,signal){
-  let lastError=null;
-
-  for(const model of MODELS){
-    if(signal.aborted){
-      throw new DOMException("Stopped","AbortError");
-    }
-
-    try{
-      return await callGeminiModel(
-        model,prompt,history,instructions,attachments,signal
-      );
-    }catch(error){
-      if(error.name==="AbortError")throw error;
-
-      lastError=error;
-
-      if([400,401,403].includes(error.status)){
-        throw error;
-      }
-    }
-  }
-
-  throw lastError||new Error("All available Gemini models failed.");
-}
-
-async function callGeminiModel(
-  model,prompt,history,instructions,attachments,signal
-){
-  const contents=[...history];
-
-  const parts=[
-    {text:instructions+"\n\nUser question:\n"+prompt},
-    ...attachments
-  ];
-
-  contents.push({role:"user",parts});
-
-  const endpoint=
-    "https://generativelanguage.googleapis.com/v1beta/models/"+
-    model+":streamGenerateContent?alt=sse";
-
-  const timeoutController=new AbortController();
-  const combined=new AbortController();
-
-  const abort=()=>combined.abort();
-
-  signal.addEventListener("abort",abort,{once:true});
-  timeoutController.signal.addEventListener("abort",abort,{once:true});
-
-  const timeout=setTimeout(()=>{
-    timeoutController.abort();
-  },45000);
-
-  try{
-    const response=await fetch(endpoint,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "x-goog-api-key":settings.apiKey
-      },
-      body:JSON.stringify({
-        contents,
-        generationConfig:{
-          temperature:0.7,
-          maxOutputTokens:8192
-        }
-      }),
-      signal:combined.signal
-    });
-
-    if(!response.ok){
-      const body=await response.text();
-      let detail=body;
-
-      try{
-        detail=JSON.parse(body).error?.message||body;
-      }catch(error){}
-
-      const apiError=new Error(
-        "Gemini API error ("+response.status+"): "+detail
-      );
-
-      apiError.status=response.status;
-      throw apiError;
-    }
-
-    if(!response.body){
-      throw new Error("Streaming response is unavailable.");
-    }
-
-    const reader=response.body.getReader();
-    const decoder=new TextDecoder();
-
-    let buffer="";
-    let answer="";
-
-    while(true){
-      const result=await reader.read();
-
-      if(result.done)break;
-
-      buffer+=decoder.decode(result.value,{stream:true});
-
-      const events=buffer.split(/\r?\n\r?\n/);
-      buffer=events.pop()||"";
-
-      for(const event of events){
-        const line=event.split(/\r?\n/)
-          .find(item=>item.startsWith("data:"));
-
-        if(!line)continue;
-
-        const raw=line.slice(5).trim();
-        if(!raw||raw==="[DONE]")continue;
-
-        try{
-          const data=JSON.parse(raw);
-          const textPart=data.candidates?.[0]?.content?.parts
-            ?.map(part=>part.text||"").join("")||"";
-
-          if(textPart){
-            answer+=textPart;
-            updateStreamingAnswer(answer);
-          }
-        }catch(error){}
-      }
-    }
-
-    buffer+=decoder.decode();
-
-    if(buffer.trim().startsWith("data:")){
-      try{
-        const data=JSON.parse(buffer.trim().slice(5).trim());
-        answer+=data.candidates?.[0]?.content?.parts
-          ?.map(part=>part.text||"").join("")||"";
-      }catch(error){}
-    }
-
-    if(!answer.trim()){
-      throw new Error("Gemini returned an empty response.");
-    }
-
-    return answer;
-
-  }finally{
-    clearTimeout(timeout);
-    signal.removeEventListener("abort",abort);
-  }
-}
-
-function updateStreamingAnswer(text){
-  const last=currentChat[currentChat.length-1];
-
-  if(!last||last.role!=="model")return;
-
-  const follow=nearBottom();
-  last.text=text;
-
-  renderMessages();
-
-  if(follow){
-    requestAnimationFrame(scrollToBottom);
-  }
-}
-
-function stopGeneration(){
-  if(controller)controller.abort();
-}
-
-/* =====================================================
-   SETTINGS
-===================================================== */
-
-function openSettings(){
-  const html=`
-    <div class="modalHead">
-      <h3>Ọjọ́ọ̀la settings</h3>
-      <button class="iconbtn" onclick="closeModal()">✕</button>
-    </div>
-
-    <label>Gemini API key</label>
-    <input id="apiKeyInput" type="password"
-      placeholder="Enter your API key"
-      value="${escapeAttr(settings.apiKey)}">
-
-    <p class="muted">
-      Your API key is stored locally in this browser.
-      Do not share it with anyone.
-    </p>
-
-    <button class="primary" onclick="saveSettingsFromModal()">
-      Save settings
-    </button>
-
-    <hr style="margin:17px 0">
-
-    <button class="secondary settingButton" onclick="toggleTheme()">
-      Toggle dark mode
-    </button>
-
-    <button class="secondary settingButton" onclick="installApp()">
-      Install Ọjọ́ọ̀la
-    </button>
-
-    <button class="secondary settingButton" onclick="checkForUpdates()">
-      Check for app updates
-    </button>
-
-    <button class="secondary settingButton" onclick="showStorageInfo()">
-      Storage information
-    </button>
-
-    <button class="secondary settingButton danger" onclick="clearChats()">
-      Clear conversations
-    </button>
-
-    <button class="secondary settingButton danger" onclick="clearAllAppData()">
-      Delete all app data
-    </button>
-
-    <p class="muted">
-      Clearing conversations does not delete your course materials.
-      Deleting all app data removes courses, files and conversations.
-    </p>
-  `;
-
-  openModal(html);
-}
-
-function saveSettingsFromModal(){
-  settings.apiKey=
-    document.getElementById("apiKeyInput").value.trim();
-
-  saveSettings();
-  closeModal();
-  toast("Settings saved");
-}
-
-function toggleTheme(){
-  settings.dark=!settings.dark;
-  saveSettings();
-  applyTheme();
-
-  if(!document.getElementById("modal").classList.contains("hidden")){
-    openSettings();
-  }
-}
-
-async function clearChats(){
-  if(!confirm(
-    "Clear all General and Course conversations? "+
-    "Your course materials will remain."
-  ))return;
-
-  const chats=await dbGetAll(STORE_CHATS);
-
-  for(const chat of chats){
-    await dbDelete(STORE_CHATS,chat.id);
-  }
-
-  currentChat=[];
-  closeModal();
-
-  if(!document.getElementById("chatScreen").classList.contains("hidden")){
-    renderMessages();
-  }
-
-  toast("Conversations cleared");
-}
-
-async function clearAllAppData(){
-  if(!confirm(
-    "This permanently deletes all courses, uploaded files and conversations. Continue?"
-  ))return;
-
-  if(!confirm("Final confirmation: delete ALL Ọjọ́ọ̀la study data?"))return;
-
-  const stores=[STORE_COURSES,STORE_CHATS,STORE_FILES,STORE_META];
-
-  for(const name of stores){
-    const records=await dbGetAll(name);
-
-    for(const record of records){
-      await dbDelete(name,record.id);
-    }
-  }
-
-  courses=defaultCourses();
-
-  for(const course of courses){
-    await saveCourse(course);
-  }
-
-  currentChat=[];
-  currentFiles=[];
-
-  closeModal();
-  goHome(false);
-  renderCourses();
-  toast("App data deleted");
-}
-
-/* =====================================================
-   STORAGE INFORMATION
-===================================================== */
-
-async function updateStorageStatus(){
-  const status=document.getElementById("storageStatus");
-  if(!status)return;
-
-  if(navigator.storage?.estimate){
-    try{
-      const estimate=await navigator.storage.estimate();
-      status.textContent=
-        "Browser storage used: "+
-        formatSize(estimate.usage||0)+
-        (estimate.quota?
-          " of approximately "+formatSize(estimate.quota):"");
-    }catch(error){}
-  }
-}
-
-async function showStorageInfo(){
-  const files=await dbGetAll(STORE_FILES);
-  const chats=await dbGetAll(STORE_CHATS);
-
-  const total=files.reduce((sum,file)=>sum+(file.size||0),0);
-
-  let quotaText="Browser storage estimate unavailable.";
-
-  if(navigator.storage?.estimate){
-    try{
-      const estimate=await navigator.storage.estimate();
-      quotaText=
-        "Browser storage used: "+formatSize(estimate.usage||0)+
-        "\nAvailable quota: "+formatSize(estimate.quota||0);
-    }catch(error){}
-  }
-
-  openModal(`
-    <div class="modalHead">
-      <h3>Storage information</h3>
-      <button class="iconbtn" onclick="openSettings()">✕</button>
-    </div>
-    <div class="card">
-      <p>Uploaded files: <strong>${files.length}</strong></p>
-      <p>Size of uploaded files: <strong>${formatSize(total)}</strong></p>
-      <p>Saved conversations: <strong>${chats.length}</strong></p>
-    </div>
-    <p class="muted">${escapeHTML(quotaText)}</p>
-    <p class="muted">
-      Your course documents and conversations are stored in IndexedDB.
-    </p>
-  `);
-}
-
-/* =====================================================
-   MODAL AND SMALL UTILITIES
-===================================================== */
-
-function openModal(html){
-  document.getElementById("modalBox").innerHTML=html;
-  document.getElementById("modal").classList.remove("hidden");
-}
-
-function closeModal(){
-  document.getElementById("modal").classList.add("hidden");
-}
-
-function modalBackdrop(event){
-  if(event.target.id==="modal")closeModal();
-}
-
-function toast(message){
-  const element=document.createElement("div");
-
-  element.textContent=message;
-  element.style.cssText=
-    "position:fixed;z-index:90;bottom:85px;left:50%;"+
-    "transform:translateX(-50%);background:#172033;color:white;"+
-    "padding:11px 16px;border-radius:20px;font-size:13px;"+
-    "max-width:90%;text-align:center";
-
-  document.body.appendChild(element);
-  setTimeout(()=>element.remove(),2500);
-}
-
-/* =====================================================
-   ERROR DIAGNOSTICS
-===================================================== */
-
-function showError(message,error){
-  const details=[
-    "Message: "+message,
-    error?.stack||"",
-    "Page: "+location.href,
-    "Time: "+new Date().toISOString()
-  ].filter(Boolean).join("\n\n");
-
-  document.getElementById("errorDetails").textContent=details;
-  document.getElementById("errorPanel").classList.remove("hidden");
-}
-
-window.addEventListener("error",event=>{
-  showError(event.message||"Unknown JavaScript error",{
-    stack:
-      "File: "+event.filename+
-      "\nLine: "+event.lineno+
-      "\nColumn: "+event.colno
-  });
-});
-
-window.addEventListener("unhandledrejection",event=>{
-  const reason=event.reason;
-
-  showError(reason?.message||String(reason),reason);
-});
-
-function copyError(){
-  navigator.clipboard.writeText(
-    document.getElementById("errorDetails").textContent
-  ).then(()=>toast("Error details copied"));
-}
-
-function hideError(){
-  document.getElementById("errorPanel").classList.add("hidden");
-}
-
-/* =====================================================
-   PWA INSTALL AND SERVICE WORKER
-===================================================== */
-
-window.addEventListener("beforeinstallprompt",event=>{
-  event.preventDefault();
-  installPrompt=event;
-});
-
-async function installApp(){
-  if(!installPrompt){
-    toast("Open your browser menu and choose Add to Home screen.");
-    return;
-  }
-
-  installPrompt.prompt();
-  await installPrompt.userChoice;
-  installPrompt=null;
-}
-
-async function checkForUpdates(){
-  if(!("serviceWorker" in navigator)){
-    toast("Service workers are not supported.");
-    return;
-  }
-
-  try{
-    const registration=await navigator.serviceWorker.getRegistration();
-
-    if(registration){
-      await registration.update();
-      toast("Update check completed.");
-    }else{
-      toast("The app service worker is not registered.");
-    }
-  }catch(error){
-    showError("Could not check for updates.",error);
-  }
-}
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load",async()=>{
-    try{
-      const registration=await navigator.serviceWorker.register(
-        "./service-worker.js"
-      );
-
-      registration.update();
-    }catch(error){
-      showError("Service worker registration failed.",error);
-    }
-  });
-}
+    let ans=await callGeminiFast('You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. General question: '+q, []);
+    a.textContent=ans;
+    console.log('General chat took ' + ((Date.now()-start)/1000) + 's');
+  }catch(e){a.textContent='Error: '+e.message}
+  btn.disabled=false;btn.textContent='Send Message 🚀';
+}
+function openSettings(){lockKeyView();document.getElementById('settingsModal').classList.remove('hidden')}
+function closeSettings(){document.getElementById('settingsModal').classList.add('hidden')}
+function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'••••••••'+apiKey.slice(-4):'••••••••';document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved - Locked':'❌ No key yet';document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyView').classList.remove('hidden');document.getElementById('keyEdit').classList.add('hidden')}
+function editKey(){document.getElementById('keyView').classList.add('hidden');document.getElementById('keyEdit').classList.remove('hidden');document.getElementById('apiKeyInput').focus()}
+function cancelKeyEdit(){lockKeyView()}
+function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);cachedModel=null;cachedModelTime=0;lockKeyView();showToast('keyToast')}
+applyTheme();render();if(window.lucide) lucide.createIcons();
 </script>
 </body>
 </html>
