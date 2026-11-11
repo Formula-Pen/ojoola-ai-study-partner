@@ -3374,14 +3374,19 @@ async function shareText(text){
   }
 }
 
+
+
+
 /* READ ALOUD */
 
 let speechPlayer={
   text:"",
   position:0,
   total:0,
+  charPosition:0,
   speaking:false,
   paused:false,
+  timer:null,
   container:null,
   token:0,
   utterance:null
@@ -3389,36 +3394,12 @@ let speechPlayer={
 
 function estimateDuration(t){
   const words=t.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1,Math.round(words/145*60));
+  return Math.max(1,Math.ceil(words/145*60));
 }
 
 function formatTime(s){
   s=Math.max(0,Math.floor(s));
   return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
-}
-
-function cleanSpeechText(text){
-  return String(text||"")
-    .replace(/```[\s\S]*?```/g," ")
-    .replace(/`([^`]+)`/g,"$1")
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g,"$1")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
-    .replace(/^#{1,6}\s*/gm,"")
-    .replace(/^\s*[-*+]\s+/gm,"")
-    .replace(/^\s*\d+\.\s+/gm,"")
-    .replace(/\*\*\*([^*]+)\*\*\*/g,"$1")
-    .replace(/\*\*([^*]+)\*\*/g,"$1")
-    .replace(/__([^_]+)__/g,"$1")
-    .replace(/\*([^*]+)\*/g,"$1")
-    .replace(/_([^_]+)_/g,"$1")
-    .replace(/[#*]+/g," ")
-    .replace(/&nbsp;/gi," ")
-    .replace(/&amp;/gi,"&")
-    .replace(/&lt;/gi,"<")
-    .replace(/&gt;/gi,">")
-    .replace(/[ \t]+\n/g,"\n")
-    .replace(/\n{3,}/g,"\n\n")
-    .trim();
 }
 
 function createPlaybackUI(container){
@@ -3427,30 +3408,29 @@ function createPlaybackUI(container){
   const p=document.createElement("div");
   p.className="playback";
 
-  p.innerHTML=`<div class="playbackTop">
-    <button title="Rewind 10 seconds" onclick="rewindSpeech()">↶10</button>
-    <button id="speechPlayBtn" onclick="toggleSpeechPlay()">▶</button>
-    <button title="Forward 10 seconds" onclick="forwardSpeech()">10↷</button>
-    <input id="speechSeek" type="range" min="0" max="100" value="0" oninput="seekSpeech(this.value)">
-    <span id="speechTime" class="time">0:00 / 0:00</span>
-    <button onclick="stopSpeech()">■</button>
-  </div>`;
+  p.innerHTML=`
+    <div class="playbackTop">
+      <button title="Rewind 10 seconds" onclick="rewindSpeech()">↶10</button>
+      <button id="speechPlayBtn" title="Play/Pause" onclick="toggleSpeechPlay()">❚❚</button>
+      <button title="Forward 10 seconds" onclick="forwardSpeech()">10↷</button>
+      <input id="speechSeek" type="range" min="0" max="100" value="0" oninput="seekSpeech(this.value)">
+      <span id="speechTime" class="time">0:00 / 0:00</span>
+      <button title="Stop" onclick="stopSpeech()">■</button>
+    </div>
+  `;
 
   container.appendChild(p);
 }
 
 function toggleReadAloud(text,container){
+
   if(!("speechSynthesis" in window)){
     alert("Read aloud is not supported by this browser.");
     return;
   }
 
-  const speechText=cleanSpeechText(text);
-
-  if(!speechText)return;
-
   if(
-    speechPlayer.text===speechText &&
+    speechPlayer.text===text &&
     speechPlayer.container===container
   ){
     toggleSpeechPlay();
@@ -3460,12 +3440,14 @@ function toggleReadAloud(text,container){
   stopSpeech();
 
   speechPlayer={
-    text:speechText,
+    text,
     position:0,
-    total:estimateDuration(speechText),
-    speaking:false,
+    total:estimateDuration(text),
+    charPosition:0,
+    speaking:true,
     paused:false,
-    container:container,
+    timer:null,
+    container,
     token:speechPlayer.token+1,
     utterance:null
   };
@@ -3475,14 +3457,14 @@ function toggleReadAloud(text,container){
 }
 
 function startSpeechFromPosition(){
+
   if(!speechPlayer.text)return;
 
   const token=speechPlayer.token;
 
   speechSynthesis.cancel();
 
-  const remaining=
-    speechPlayer.text.slice(speechPlayer.position);
+  const remaining=speechPlayer.text.slice(speechPlayer.charPosition);
 
   if(!remaining.trim()){
     finishSpeech();
@@ -3491,78 +3473,71 @@ function startSpeechFromPosition(){
 
   const u=new SpeechSynthesisUtterance(remaining);
 
+  speechPlayer.utterance=u;
+
   u.lang="en-US";
   u.rate=.95;
-
-  speechPlayer.utterance=u;
-  speechPlayer.speaking=true;
-  speechPlayer.paused=false;
 
   u.onboundary=e=>{
     if(token!==speechPlayer.token)return;
 
     if(typeof e.charIndex==="number"){
-      speechPlayer.position=Math.min(
+      speechPlayer.charPosition=Math.min(
         speechPlayer.text.length,
-        speechPlayer.positionBase+e.charIndex
+        speechPlayer.charPosition+e.charIndex
       );
-
-      updateSpeechUI();
     }
   };
 
   u.onend=()=>{
-    if(token!==speechPlayer.token)return;
-
-    speechPlayer.position=speechPlayer.text.length;
-    finishSpeech();
+    if(token===speechPlayer.token){
+      finishSpeech();
+    }
   };
 
   u.onerror=e=>{
-    if(token!==speechPlayer.token)return;
-
-    if(e.error!=="canceled" && e.error!=="interrupted"){
+    if(
+      token===speechPlayer.token &&
+      e.error!=="canceled" &&
+      e.error!=="interrupted"
+    ){
+      clearInterval(speechPlayer.timer);
+      speechPlayer.timer=null;
       speechPlayer.speaking=false;
       speechPlayer.paused=false;
       updateSpeechUI();
     }
   };
 
-  speechPlayer.positionBase=speechPlayer.position;
-
   speechSynthesis.speak(u);
+
+  speechPlayer.speaking=true;
+  speechPlayer.paused=false;
+
+  startSpeechTimer();
   updateSpeechUI();
 }
 
-function toggleSpeechPlay(){
-  if(!speechPlayer.text)return;
+function startSpeechTimer(){
 
-  if(speechPlayer.speaking && !speechPlayer.paused){
+  clearInterval(speechPlayer.timer);
 
-    /* Save the last reported spoken position. */
-    speechPlayer.paused=true;
-    speechPlayer.speaking=false;
+  speechPlayer.timer=setInterval(()=>{
 
-    speechPlayer.token++;
+    if(!speechPlayer.speaking || speechPlayer.paused)return;
 
-    speechSynthesis.cancel();
-
-    speechPlayer.utterance=null;
+    speechPlayer.position=Math.min(
+      speechPlayer.total,
+      speechPlayer.position+1
+    );
 
     updateSpeechUI();
-    return;
-  }
 
-  if(speechPlayer.paused){
-    speechPlayer.paused=false;
-    startSpeechFromPosition();
-    return;
-  }
-
-  startSpeechFromPosition();
+  },1000);
 }
 
 function updateSpeechUI(){
+
   const c=speechPlayer.container;
   if(!c)return;
 
@@ -3570,34 +3545,72 @@ function updateSpeechUI(){
   const time=c.querySelector("#speechTime");
   const play=c.querySelector("#speechPlayBtn");
 
-  const ratio=speechPlayer.text.length
-    ?speechPlayer.position/speechPlayer.text.length
-    :0;
-
-  const currentTime=ratio*speechPlayer.total;
-
   if(seek){
-    seek.value=ratio*100;
+    seek.value=speechPlayer.total
+      ?speechPlayer.position/speechPlayer.total*100
+      :0;
   }
 
   if(time){
     time.textContent=
-      formatTime(currentTime)+" / "+
+      formatTime(speechPlayer.position)+
+      " / "+
       formatTime(speechPlayer.total);
   }
 
   if(play){
     play.textContent=
-      speechPlayer.speaking?"❚❚":"▶";
+      speechPlayer.speaking && !speechPlayer.paused
+        ?"❚❚"
+        :"▶";
   }
 }
 
+function toggleSpeechPlay(){
+
+  if(!speechPlayer.text)return;
+
+  if(speechPlayer.speaking && !speechPlayer.paused){
+
+    speechSynthesis.pause();
+
+    speechPlayer.paused=true;
+
+    clearInterval(speechPlayer.timer);
+    speechPlayer.timer=null;
+
+    updateSpeechUI();
+    return;
+  }
+
+  if(speechPlayer.paused){
+
+    speechPlayer.paused=false;
+
+    speechSynthesis.resume();
+
+    startSpeechTimer();
+
+    speechPlayer.speaking=true;
+
+    updateSpeechUI();
+    return;
+  }
+
+  speechPlayer.token++;
+  speechPlayer.speaking=true;
+  speechPlayer.paused=false;
+
+  startSpeechFromPosition();
+}
+
 function stopSpeech(){
+
   const token=(speechPlayer.token||0)+1;
 
-  if("speechSynthesis" in window){
-    speechSynthesis.cancel();
-  }
+  speechSynthesis.cancel();
+
+  clearInterval(speechPlayer.timer);
 
   speechPlayer.container
     ?.querySelector(".playback")
@@ -3607,129 +3620,99 @@ function stopSpeech(){
     text:"",
     position:0,
     total:0,
+    charPosition:0,
     speaking:false,
     paused:false,
+    timer:null,
     container:null,
     token,
-    utterance:null,
-    positionBase:0
+    utterance:null
   };
 }
 
 function finishSpeech(){
+
+  clearInterval(speechPlayer.timer);
+
+  speechPlayer.timer=null;
+  speechPlayer.position=speechPlayer.total;
+  speechPlayer.charPosition=speechPlayer.text.length;
   speechPlayer.speaking=false;
   speechPlayer.paused=false;
-  speechPlayer.position=speechPlayer.text.length;
   speechPlayer.utterance=null;
 
   updateSpeechUI();
 }
 
 function seekSpeech(v){
+
   if(!speechPlayer.text)return;
 
-  speechPlayer.position=Math.floor(
+  const wasPlaying=speechPlayer.speaking && !speechPlayer.paused;
+
+  speechPlayer.position=Number(v)/100*speechPlayer.total;
+
+  speechPlayer.charPosition=Math.floor(
     Number(v)/100*speechPlayer.text.length
   );
 
-  speechPlayer.token++;
+  if(wasPlaying){
 
-  speechSynthesis.cancel();
+    speechPlayer.token++;
+    speechPlayer.speaking=true;
+    speechPlayer.paused=false;
 
-  speechPlayer.speaking=false;
-  speechPlayer.paused=true;
+    startSpeechFromPosition();
 
-  startSpeechFromPosition();
+  }else{
+
+    speechPlayer.speaking=false;
+    speechPlayer.paused=true;
+
+    speechSynthesis.cancel();
+
+    clearInterval(speechPlayer.timer);
+    speechPlayer.timer=null;
+
+    updateSpeechUI();
+  }
 }
 
 function rewindSpeech(){
+
   if(!speechPlayer.text)return;
 
-  const seconds=Math.max(
-    0,
-    speechPlayer.position/
-    speechPlayer.text.length*
-    speechPlayer.total-10
-  );
+  const newPosition=Math.max(0,speechPlayer.position-10);
 
   seekSpeech(
-    seconds/speechPlayer.total*100
+    speechPlayer.total
+      ?newPosition/speechPlayer.total*100
+      :0
   );
 }
 
 function forwardSpeech(){
+
   if(!speechPlayer.text)return;
 
-  const seconds=Math.min(
+  const newPosition=Math.min(
     speechPlayer.total,
-    speechPlayer.position/
-    speechPlayer.text.length*
-    speechPlayer.total+10
+    speechPlayer.position+10
   );
 
   seekSpeech(
-    seconds/speechPlayer.total*100
+    speechPlayer.total
+      ?newPosition/speechPlayer.total*100
+      :100
   );
 }
+  
 
 
 
-function escapeRegex(s){
 
-  return s.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
-  );
-}
 
-function applySearch(
-  type,
-  q,
-  matches
-){
 
-  const isGeneral=
-    type==="general";
-
-  const msgs=
-    isGeneral
-      ?generalChat
-      :(courses[currentCourseIndex]?.chat||[]);
-
-  const box=
-    $(isGeneral
-      ?"generalMsgs"
-      :"courseMsgs");
-
-  matches.forEach(i=>{
-
-    const el=
-      box.querySelectorAll(
-        ".messageText"
-      )[i];
-
-    if(!el)return;
-
-    const raw=
-      msgs[i]?.text||"";
-
-    const html=
-      renderMarkdown(raw);
-
-    const re=
-      new RegExp(
-        escapeRegex(q),
-        "gi"
-      );
-
-    el.innerHTML=
-      html.replace(
-        re,
-        m=>
-          `<mark class="highlight">${m}</mark>`
-      );
-  });
-}
 
 function runGeneralSearch(){
 
