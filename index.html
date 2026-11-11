@@ -7,24 +7,24 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-:root{--bg:#F0F7FF;--card:#ffffff;--text:#0F172A;--muted:#64748B;--border:#DBEAFE;--input:#F1F5F9;--grad:linear-gradient(135deg,#2563EB,#06B6D4);--grad2:linear-gradient(90deg,#2563EB,#06B6D4);--primary:#2563EB}
+:root{--bg:#F0F7FF;--card:#ffffff;--text:#0F172A;--muted:#64748B;--border:#DBEAFE;--input:#F1F5F9;--grad:linear-gradient(135deg,#2563EB,#06B6D4);--grad2:linear-gradient(90deg,#2563EB,#06B6D4)}
 body.dark{--bg:#0F172A;--card:#1E293B;--text:#F1F5F9;--muted:#94A3B8;--border:#334155;--input:#0F172A}
 body{background:var(--bg);color:var(--text);transition:.3s}
 button{cursor:pointer;border:none;font-family:inherit}
 .hidden{display:none!important}
 
 /* WELCOME - WHITE + BLUE STUDY */
-#welcome{min-height:100vh;background:linear-gradient(180deg,#FFFFFF 0%,#EFF6FF 35%,#DBEAFE 55%,#2563EB 82%,#06B6D4 100%);color:#0F172A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;position:relative;overflow:hidden}
-.acad{position:absolute;font-size:34px;animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;z-index:1;transition:transform .3s}
-@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-16px) rotate(4deg)}}
+#welcome{min-height:100vh;background:linear-gradient(180deg,#FFFFFF 0%,#EFF6FF 35%,#DBEAFE 55%,#2563EB 82%,#06B6D4 100%);color:#0F172A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;position:relative;overflow:hidden}
+.acad{position:absolute;font-size:30px;animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;z-index:1}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-14px) rotate(4deg)}}
 .acad.jump{animation:jump .6s ease}
-@keyframes jump{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(-42px) rotate(20deg) scale(1.25)}100%{transform:translateY(0) rotate(360deg)}}
-.logoCircle{width:108px;height:108px;background:linear-gradient(135deg,#2563EB,#06B6D4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:56px;box-shadow:0 16px 32px rgba(37,99,235,.35);z-index:2;animation:float 3.5s ease-in-out infinite}
-#welcome h1{font-size:32px;margin:22px 0 8px;z-index:2;line-height:1.2;color:#0F172A}
-#welcome p{color:#475569;font-size:16px;max-width:340px;z-index:2;line-height:1.5}
-.wBtn{width:100%;max-width:360px;background:linear-gradient(90deg,#2563EB,#06B6D4);color:white;font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:26px;z-index:2;box-shadow:0 10px 25px rgba(37,99,235,.3)}
+@keyframes jump{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(-38px) rotate(20deg) scale(1.2)}100%{transform:translateY(0) rotate(360deg)}}
+.logoCircle{width:96px;height:96px;background:linear-gradient(135deg,#2563EB,#06B6D4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;box-shadow:0 14px 28px rgba(37,99,235,.35);z-index:2;animation:float 3.5s ease-in-out infinite}
+#welcome h1{font-size:28px;margin:18px 0 6px;z-index:2;line-height:1.2;color:#0F172A;white-space:nowrap}
+#welcome .subtitle{color:#475569;font-size:14px;z-index:2;white-space:nowrap;line-height:1.4;max-width:100%}
+.wBtn{width:100%;max-width:360px;background:linear-gradient(90deg,#2563EB,#06B6D4);color:white;font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:22px;z-index:2;box-shadow:0 10px 25px rgba(37,99,235,.3)}
 .wBtn2{width:100%;max-width:360px;background:white;color:#1D4ED8;border:2px solid #2563EB;font-weight:800;font-size:17px;padding:15px;border-radius:16px;margin-top:12px;z-index:2}
-.wHint{margin-top:18px;font-size:13px;color:#64748B;z-index:2}
+.wHint{margin-top:16px;font-size:12px;color:#64748B;z-index:2}
 
 /* APP */
 header{background:var(--grad);color:white;padding:18px 16px 22px;border-radius:0 0 24px 24px;position:sticky;top:0;z-index:10}
@@ -73,7 +73,7 @@ textarea{min-height:80px;resize:vertical}
 </head>
 <body>
 
-<!-- WELCOME - STUDY, NOT CHAT -->
+<!-- WELCOME - STUDY, NOT CHAT - NO SETTINGS HERE -->
 <div id="welcome">
   <span class="acad" style="top:10%;left:10%;animation-delay:0s" onclick="bounce(this)">📚</span>
   <span class="acad" style="top:14%;right:12%;animation-delay:.6s" onclick="bounce(this)">✏️</span>
@@ -86,7 +86,7 @@ textarea{min-height:80px;resize:vertical}
 
   <div class="logoCircle">🎓</div>
   <h1>Welcome to Ojoola AI</h1>
-  <p>Your AI Study Partner. Learn Smarter, Not Harder.</p>
+  <div class="subtitle">Your AI Study Partner - Learn Smarter, Not Harder.</div>
   <button class="wBtn" onclick="goStudy()">📚 Proceed to Study</button>
   <button class="wBtn2" onclick="goGeneral()">💬 Proceed to General Chat</button>
   <div class="wHint">Tap any book, pen or lightbulb - it will jump ✨</div>
@@ -193,7 +193,6 @@ if(raw && raw.length===15){
 let current = 0;
 let theme = localStorage.getItem('ojoola_theme')||'system';
 let apiKey = localStorage.getItem('ojoola_key')||'';
-
 function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
 function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
 function applyTheme(){
@@ -207,7 +206,6 @@ function applyTheme(){
 }
 function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
 if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
-
 function goWelcome(){document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
 function goStudy(){document.getElementById('welcome').classList.add('hidden');document.getElementById('app').classList.remove('hidden');showView('home');render()}
 function goGeneral(){document.getElementById('welcome').classList.add('hidden');document.getElementById('app').classList.remove('hidden');showView('general')}
@@ -239,7 +237,6 @@ function addPics(e){Array.from(e.target.files).forEach(f=>{let r=new FileReader(
 function renderPics(){let el=document.getElementById('picList');el.innerHTML='';courses[current].pics.forEach((p,idx)=>{let w=document.createElement('div');w.style.position='relative';w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';el.appendChild(w)})}
 function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
 function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
-
 async function callGemini(prompt, images){
   if(!apiKey){alert('No API Key. Go to Settings and paste your key first.');openSettings();return null}
   let parts=[{text:prompt}];
@@ -267,11 +264,9 @@ async function sendGeneral(){
   let pics=[];used.forEach(c=>pics.push(...c.pics));
   try{let ans=await callGemini(buildContext(used)+'General question: '+q, pics);a.textContent=ans}catch(e){a.textContent='Error: '+e.message}
 }
-
 function openSettings(){document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved':'❌ No key yet';document.getElementById('settingsModal').classList.remove('hidden')}
 function closeSettings(){document.getElementById('settingsModal').classList.add('hidden')}
 function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved':'❌ No key yet';alert(apiKey?'Key Saved ✅':'Key cleared')}
-
 applyTheme();render();if(window.lucide) lucide.createIcons();
 </script>
 </body>
