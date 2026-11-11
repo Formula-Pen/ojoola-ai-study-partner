@@ -167,7 +167,7 @@ textarea{min-height:80px;resize:vertical}
     <div id="keyToast" class="toast hidden">Saved 🔒</div>
     <button class="primary" style="margin-top:12px;background:#0F172A" onclick="testConnection()">🔍 Test Connection - Is My Key Working?</button>
     <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
-    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - app finds the best flash model for your key every time. No hardcoded model.</p>
+    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - app finds the best flash model for your key. List cached 24h, fallback on busy.</p>
   </div>
   <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
   <button class="ghost" onclick="closeSettings()">Close</button>
@@ -180,8 +180,8 @@ if(raw && raw.length===15){ courses = raw.map(c=>({name:c.name||'',code:c.code||
 let current = 0;
 let theme = localStorage.getItem('ojoola_theme')||'system';
 let apiKey = localStorage.getItem('ojoola_key')||'';
-let cachedModel = null;
-let cachedModelTime = 0;
+let cachedModelList = null;
+let cachedModelListTime = 0;
 function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
 function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
 function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
@@ -230,7 +230,6 @@ async function testConnection(){
     el.textContent='✅ Key WORKS! Found: '+names;el.style.color='#16A34A';
   }catch(e){el.textContent='❌ Network error: '+e.message;el.style.color='#DC2626'}
 }
-// *** AUTO-PICK - NO HARDCODED MODEL. Ask Google what flash models work for THIS key, pick best one. ***
 function scoreModel(name){
   let n=name.toLowerCase();
   if(n.includes('tts')||n.includes('image')||n.includes('embedding')||n.includes('preview-tts')||n.includes('robotics')||n.includes('veo')||n.includes('imagen')) return -100;
@@ -244,87 +243,138 @@ function scoreModel(name){
   if(n.includes('flash')) return 70;
   return 0;
 }
-async function getBestModel(){
-  if(cachedModel && (Date.now()-cachedModelTime)<60000) return cachedModel;
-  let controller=new AbortController();
-  let timer=setTimeout(()=>controller.abort(),8000);
-  try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey,{signal:controller.signal});
-    clearTimeout(timer);
-    let j=await res.json().catch(()=>({}));
-    if(j.error) throw new Error('Google said: '+(j.error.message||'models list failed'));
-    let cands=(j.models||[]).map(m=>{
-      let nm=(m.name||'').replace('models/','');
-      let supports=m.supportedGenerationMethods||[];
-      let canGen=supports.length===0 || supports.includes('generateContent');
-      return {name:nm,score:scoreModel(nm),canGen:canGen};
-    }).filter(x=>x.canGen && x.score>0);
-    cands.sort((a,b)=>b.score-a.score);
-    if(!cands.length) throw new Error('Google returned no flash model for this key. Create a new key in Google AI Studio.');
-    cachedModel=cands[0].name;
-    cachedModelTime=Date.now();
-    let badge=document.getElementById('modelBadge');
-    if(badge) badge.textContent='Model: Auto-Picked - '+cachedModel+' (from your key)';
-    return cachedModel;
-  }catch(e){
-    clearTimeout(timer);
-    if(cachedModel) return cachedModel;
-    throw e;
+async function getModelList(forceRefresh){
+  if(!forceRefresh && cachedModelList && (Date.now()-cachedModelListTime)<86400000) return cachedModelList;
+  if(!forceRefresh){
+    try{
+      let saved = JSON.parse(localStorage.getItem('ojoola_model_list')||'null');
+      if(saved && saved.time && (Date.now()-saved.time)<86400000 && Array.isArray(saved.list) && saved.list.length){
+        cachedModelList = saved.list;
+        cachedModelListTime = saved.time;
+        return cachedModelList;
+      }
+    }catch(e){}
   }
+  let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey);
+  let j=await res.json().catch(()=>({}));
+  if(j.error) throw new Error('Google said: '+(j.error.message||'models list failed'));
+  let cands=(j.models||[]).map(m=>{
+    let nm=(m.name||'').replace('models/','');
+    let supports=m.supportedGenerationMethods||[];
+    let canGen=supports.length===0 || supports.includes('generateContent');
+    return {name:nm,score:scoreModel(nm),canGen:canGen};
+  }).filter(x=>x.canGen && x.score>0);
+  cands.sort((a,b)=>b.score-a.score);
+  if(!cands.length) throw new Error('Google returned no flash model for this key. Create a new key in Google AI Studio.');
+  cachedModelList=cands;
+  cachedModelListTime=Date.now();
+  try{ localStorage.setItem('ojoola_model_list', JSON.stringify({time:cachedModelListTime, list:cands})); }catch(e){}
+  let badge=document.getElementById('modelBadge');
+  if(badge) badge.textContent='Model: Auto-Picked - '+cands[0].name+' (cached 24h)';
+  return cands;
 }
-async function tryOneModel(modelName, parts){
-  let controller=new AbortController();
-  let timer=setTimeout(()=>controller.abort(),10000);
-  try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+modelName+':generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
-    clearTimeout(timer);
-    let j=await res.json().catch(()=>({}));
-    if(!res.ok || j.error){
-      let msg=(j.error && j.error.message) || ('HTTP '+res.status);
-      if(msg.toLowerCase().includes('api key') || msg.includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
-      throw new Error('Google said: '+res.status+' - '+msg);
+async function tryOneModelStream(modelName, parts, onChunk){
+  let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+modelName+':streamGenerateContent?alt=sse&key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]})});
+  if(!res.ok || !res.body){
+    let j={}; try{ j=await res.json(); }catch(e){}
+    let msg=(j.error && j.error.message) || ('HTTP '+res.status);
+    if(msg.toLowerCase().includes('api key') || msg.includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
+    let err=new Error('Google said: '+res.status+' - '+msg);
+    err.status=res.status;
+    throw err;
+  }
+  let reader=res.body.getReader();
+  let decoder=new TextDecoder();
+  let buffer='';
+  let full='';
+  let gotAny=false;
+  while(true){
+    let r=await reader.read();
+    if(r.done) break;
+    buffer+=decoder.decode(r.value,{stream:true});
+    let lines=buffer.split('\n');
+    buffer=lines.pop();
+    for(let line of lines){
+      line=line.trim();
+      if(!line.startsWith('data:')) continue;
+      let dataStr=line.slice(5).trim();
+      if(!dataStr || dataStr==='[DONE]') continue;
+      try{
+        let chunk=JSON.parse(dataStr);
+        if(chunk.error){
+          let e2=new Error('Google said: '+(chunk.error.status||'')+' - '+(chunk.error.message||'stream error'));
+          e2.status=chunk.error.code||0;
+          throw e2;
+        }
+        let txt=(chunk.candidates && chunk.candidates[0] && chunk.candidates[0].content) ? chunk.candidates[0].content.parts.map(p=>p.text||'').join('') : '';
+        if(txt){ full+=txt; gotAny=true; if(onChunk) onChunk(full); }
+      }catch(e){ if(e.status!==undefined) throw e; }
     }
-    if(j.candidates && j.candidates[0] && j.candidates[0].content) return j.candidates[0].content.parts.map(p=>p.text||'').join('');
-    throw new Error('Google returned no answer. Status: '+res.status);
-  }catch(e){
-    clearTimeout(timer);
-    if(e.name==='AbortError') throw new Error('Google did not answer in 10s (timeout). Your network is fine - Google was slow. Try again.');
-    throw e;
   }
+  if(!gotAny && !full) throw new Error('Google returned no answer.');
+  return full;
 }
-async function callGeminiFast(prompt, images){
+async function callGeminiFast(prompt, images, onChunk){
   if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
   let parts=[{text:prompt}];
   (images||[]).slice(0,2).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inlineData:{mimeType:mt,data:b}})});
-  let model=await getBestModel();
-  try{
-    return await tryOneModel(model, parts);
-  }catch(e){
-    let msg=String(e.message||'');
-    if(msg.includes('404') || msg.toLowerCase().includes('no longer available') || msg.includes('not found')){
-      cachedModel=null;
-      let model2=await getBestModel();
-      if(model2!==model) return await tryOneModel(model2, parts);
-      // If same model returned, force refresh by clearing cache and trying list again once
-      cachedModel=null; cachedModelTime=0;
-      let m3=await getBestModel();
-      if(m3!==model) return await tryOneModel(m3, parts);
+  let models=await getModelList(false);
+  let lastErr=null;
+  for(let i=0;i<models.length;i++){
+    try{
+      let ans=await tryOneModelStream(models[i].name, parts, onChunk);
+      let badge=document.getElementById('modelBadge');
+      if(badge) badge.textContent='Model: Auto-Picked - '+models[i].name+' (cached 24h)';
+      return ans;
+    }catch(e){
+      lastErr=e;
+      let s=e.status||0;
+      let m=String(e.message||'');
+      let isRetryable = s===503 || s===429 || s===404 || m.includes('503') || m.includes('429') || m.includes('404') || m.toLowerCase().includes('overloaded') || m.toLowerCase().includes('high demand') || m.toLowerCase().includes('not found') || m.toLowerCase().includes('no longer available');
+      if(isRetryable){
+        if(onChunk) onChunk('');
+        continue;
+      }
+      throw e;
     }
-    throw e;
   }
+  if(lastErr){
+    if(String(lastErr.message||'').includes('404') || String(lastErr.message||'').includes('not found')){
+      try{ localStorage.removeItem('ojoola_model_list'); cachedModelList=null; cachedModelListTime=0; }catch(e){}
+    }
+    throw new Error('All models busy right now. Tried: '+models.map(x=>x.name).join(', ')+'. Last error: '+lastErr.message);
+  }
+  throw new Error('No model available.');
 }
 function buildContext(courseList){let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples.\n\n';courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});return txt}
-async function sendCourseChat(){let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';try{let ans=await callGeminiFast(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message}save();renderCourseChat()}
+async function sendCourseChat(){
+  let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;
+  courses[current].chat.push({role:'user',text:q});
+  let aiIndex=courses[current].chat.length;
+  courses[current].chat.push({role:'ai',text:'Thinking...'});
+  save();renderCourseChat();inp.value='';
+  let el=document.getElementById('courseMsgs');
+  let aiEl=el.lastChild;
+  try{
+    let ans=await callGeminiFast(buildContext([courses[current]])+'Question: '+q, courses[current].pics, (partial)=>{
+      if(partial){ courses[current].chat[aiIndex].text=partial; if(aiEl) aiEl.textContent=partial; }
+    });
+    courses[current].chat[aiIndex].text=ans||'No answer.';
+  }catch(e){courses[current].chat[aiIndex].text='Error: '+e.message}
+  save();renderCourseChat();
+}
 async function sendGeneral(){
   let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;
-  let btn=document.getElementById('generalSendBtn');btn.disabled=true;btn.textContent='Thinking... 🤔';
+  let btn=document.getElementById('generalSendBtn');btn.disabled=true;btn.textContent='Thinking...';
   let box=document.getElementById('generalMsgs');
   let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);
-  let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking... 🤔';box.appendChild(a);
+  let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking...';box.appendChild(a);
   inp.value='';
   let start=Date.now();
   try{
-    let ans=await callGeminiFast('You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. General question: '+q, []);
+    let ans=await callGeminiFast('You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. General question: '+q, [], (partial)=>{
+      if(partial) a.textContent=partial;
+    });
     a.textContent=ans;
     console.log('General chat took ' + ((Date.now()-start)/1000) + 's');
   }catch(e){a.textContent='Error: '+e.message}
@@ -335,7 +385,7 @@ function closeSettings(){document.getElementById('settingsModal').classList.add(
 function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'••••••••'+apiKey.slice(-4):'••••••••';document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved - Locked':'❌ No key yet';document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyView').classList.remove('hidden');document.getElementById('keyEdit').classList.add('hidden')}
 function editKey(){document.getElementById('keyView').classList.add('hidden');document.getElementById('keyEdit').classList.remove('hidden');document.getElementById('apiKeyInput').focus()}
 function cancelKeyEdit(){lockKeyView()}
-function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);cachedModel=null;cachedModelTime=0;lockKeyView();showToast('keyToast')}
+function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);cachedModelList=null;cachedModelListTime=0;try{localStorage.removeItem('ojoola_model_list');}catch(e){}lockKeyView();showToast('keyToast')}
 applyTheme();render();if(window.lucide) lucide.createIcons();
 </script>
 </body>
