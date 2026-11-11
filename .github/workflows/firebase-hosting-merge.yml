@@ -8,15 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check key
-        env:
-          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_OJOOLA_AI_STUDY_PARTNER }}
-        run: |
-          echo "Secret length: ${#SA}"
-          echo "$SA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('type')); print(d.get('client_email')); print(d.get('project_id'))"
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_OJOOLA_AI_STUDY_PARTNER }}'
           channelId: live
           projectId: ojoola-ai-study-partner
+          firebaseToolsVersion: 13.35.1
