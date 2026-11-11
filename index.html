@@ -7,7 +7,7 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-:root{--bg:#EEF2FF;--card:#ffffff;--text:#0F172A;--muted:#64748B;--border:#E2E8F0;--input:#F1F5F9;--grad:linear-gradient(135deg,#7C3AED,#2563EB,#06B6D4);--grad2:linear-gradient(90deg,#7C3AED,#2563EB,#06B6D4);--primary:#6D28D9}
+:root{--bg:#EEF2FF;--card:#ffffff;--text:#0F172A;--muted:#64748B;--border:#E2E8F0;--input:#F1F5F9;--grad:linear-gradient(135deg,#7C3AED,#2563EB,#06B6D4);--grad2:linear-gradient(90deg,#7C3AED,#2563EB,#06B6D4)}
 body.dark{--bg:#0F172A;--card:#1E293B;--text:#F1F5F9;--muted:#94A3B8;--border:#334155;--input:#0F172A}
 body{background:var(--bg);color:var(--text);transition:.3s}
 button{cursor:pointer;border:none;font-family:inherit}
@@ -21,7 +21,7 @@ button{cursor:pointer;border:none;font-family:inherit}
 #welcome h1{font-size:32px;margin:22px 0 8px;z-index:2;line-height:1.2}
 #welcome p{opacity:.92;font-size:16px;max-width:340px;z-index:2}
 .wBtn{width:100%;max-width:360px;background:white;color:#4C1D95;font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:26px;z-index:2;box-shadow:0 10px 25px rgba(0,0,0,.2)}
-.wBtn2{width:100%;max-width:360px;background:rgba(255,255,255,.18);color:white;border:1.5px solid rgba(255,255,255,.6);font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:12px;z-index:2;backdrop-filter:blur(6px)}
+.wBtn2{width:100%;max-width:360px;background:rgba(255,255,255,.18);color:white;border:1.5px solid rgba(255,255,255,.6);font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:12px;z-index:2}
 .wSmall{margin-top:16px;font-size:13px;opacity:.85;z-index:2}
 .wSmall b{text-decoration:underline}
 
@@ -37,14 +37,13 @@ header{background:var(--grad);color:white;padding:18px 16px 22px;border-radius:0
 .card p{color:var(--muted);font-size:14px;line-height:1.5;margin-top:6px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(min-width:700px){.grid{grid-template-columns:1fr 1fr 1fr}}
-.course{cursor:pointer;position:relative;overflow:hidden}
-.course:before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:var(--grad2)}
-.pill{display:inline-flex;align-items:center;gap:5px;background:#EFF6FF;color:#1D4ED8;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-top:10px}
-body.dark .pill{background:#1E3A8A;color:#BFDBFE}
-body.dark .pill{color:#DBEAFE}
-.badge{display:inline-block;background:#EFF6FF;color:#1D4ED8;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-top:8px}
-body.dark .badge{background:#1E3A8A;color:#BFDBFE}
-.switchRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);border-radius:14px;padding:10px 12px;margin-top:12px}
+.course{cursor:pointer;padding:16px 14px;display:flex;flex-direction:column;gap:6px;min-height:92px;justify-content:center;position:relative;overflow:hidden}
+.course:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad2)}
+.course .num{font-size:12px;font-weight:800;color:#7C3AED;letter-spacing:.5px;text-transform:uppercase}
+.course .title{font-size:17px;font-weight:800;line-height:1.2}
+.course .sub{font-size:13px;color:var(--muted)}
+.course:active{transform:scale(.98)}
+.switchRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);border-radius:14px;padding:12px;margin-top:12px}
 .switch{width:52px;height:30px;background:#CBD5E1;border-radius:999px;position:relative;transition:.2s;flex-shrink:0}
 .switch:after{content:"";position:absolute;width:24px;height:24px;background:white;border-radius:50%;top:3px;left:3px;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .switch.on{background:#2563EB}
@@ -66,7 +65,7 @@ textarea{min-height:80px;resize:vertical}
 .msg{padding:11px 14px;border-radius:16px;margin:8px 0;max-width:88%;font-size:15px;line-height:1.5;white-space:pre-wrap}
 .me{background:var(--grad2);color:white;margin-left:auto;border-bottom-right-radius:4px}
 .ai{background:var(--input);border-bottom-left-radius:4px}
-.fileRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px}
+.fileRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px;gap:8px}
 .thumb{width:64px;height:64px;object-fit:cover;border-radius:10px}
 .flex{display:flex;gap:8px;align-items:center}
 </style>
@@ -81,7 +80,7 @@ textarea{min-height:80px;resize:vertical}
   <div class="bubble" style="width:28px;height:28px;top:18%;left:82%"></div>
   <div class="logoBox">💬</div>
   <h1>Welcome to Ojoola AI</h1>
-  <p>Your AI Study Partner. Learn Smarter, Not Harder. Chat With Your Courses, Your Way.</p>
+  <p>Your AI Study Partner. Learn Smarter, Not Harder.</p>
   <button class="wBtn" onclick="goStudy()">📚 Proceed to Study</button>
   <button class="wBtn2" onclick="goGeneral()">💬 Proceed to General Chat</button>
   <div class="wSmall">Tap a bubble for a surprise ✨ • <b onclick="openSettings()">Settings</b></div>
@@ -94,7 +93,7 @@ textarea{min-height:80px;resize:vertical}
   <div class="topRow">
     <div>
       <h1>🎓 Ojoola AI</h1>
-      <p>Your AI Study Partner • 15 Courses • PDFs + Pictures</p>
+      <p>Your AI Study Partner</p>
     </div>
     <button class="setBtn" onclick="openSettings()"><i data-lucide="settings" style="width:16px;height:16px"></i> Settings</button>
   </div>
@@ -103,7 +102,8 @@ textarea{min-height:80px;resize:vertical}
 <div class="wrap" id="homeView">
   <div class="card">
     <h3><i data-lucide="sparkles" style="color:#7C3AED"></i> How Referencing Works</h3>
-    <p>Turn <b style="color:var(--text)">Referencing ON</b> for courses you want AI to use. Turn it OFF to exclude that course. Inside a course, <b style="color:var(--text)">Chat from THIS course only</b> limits AI to just that course.</p>
+    <p>Turn <b style="color:var(--text)">Referencing ON</b> inside a course to let AI use it. Turn it OFF to exclude it. Default is ON for all courses.</p>
+    <button class="primary" style="margin-top:12px" onclick="turnAllOn()">Turn All Referencing ON ✅</button>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px">
     <button class="primary" style="flex:1" onclick="showView('home')">📚 My Courses</button>
@@ -115,7 +115,7 @@ textarea{min-height:80px;resize:vertical}
 <div class="wrap hidden" id="generalView">
   <div class="card">
     <h3>💬 General Chat</h3>
-    <p>Ask anything. This chat uses Referencing ON courses. If no course has files, it answers from general knowledge.</p>
+    <p>Ask anything. This chat uses courses with Referencing ON. If no course has files, it answers from general knowledge.</p>
   </div>
   <div class="card"><div id="generalMsgs"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
     <textarea id="generalInput" placeholder="Ask me anything..."></textarea>
@@ -131,7 +131,7 @@ textarea{min-height:80px;resize:vertical}
 </div>
 </div>
 
-<!-- COURSE MODAL -->
+<!-- COURSE MODAL - THIS IS THE INSIDE PAGE -->
 <div id="courseModal" class="modal hidden"><div class="modalBox">
   <div class="flex" style="justify-content:space-between"><h2 id="modalTitle">Course 1</h2><button class="ghost" style="width:auto;margin:0;padding:8px 12px" onclick="closeCourse()">Close ✕</button></div>
   <p style="color:var(--muted);font-size:14px;margin-top:6px">Rename your course, upload PDFs and pictures, then chat.</p>
@@ -140,13 +140,13 @@ textarea{min-height:80px;resize:vertical}
   <label style="font-weight:700;margin-top:10px;display:block">Course Code (optional)</label>
   <input id="courseCode" placeholder="e.g. ANA 101">
   <button class="primary" style="margin-top:10px" onclick="saveCourseName()">Save Name & Code</button>
+  <div class="switchRow"><div><b>Referencing</b><div style="font-size:12px;color:var(--muted)" id="refLabel">AI will use this course</div></div><div class="switch on" id="refSwitch" onclick="toggleRef()"></div></div>
   <h3 style="margin-top:18px">📄 PDFs - Max 4</h3>
   <div id="pdfList"></div>
   <h3 style="margin-top:16px">🖼️ Pictures - Many Allowed</h3>
   <button class="smallBtn" onclick="document.getElementById('picInput').click()">+ Add Pictures</button>
   <input type="file" id="picInput" accept="image/*" multiple class="hidden" onchange="addPics(event)">
   <div id="picList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
-  <div class="switchRow"><div><b>Referencing</b><div style="font-size:12px;color:var(--muted)">AI will use this course</div></div><div class="switch" id="refSwitch" onclick="toggleRef()"></div></div>
   <h3 style="margin-top:18px">💬 Chat For This Course Only</h3>
   <div id="courseMsgs" style="margin-top:8px"></div>
   <textarea id="courseInput" placeholder="Ask about this course..."></textarea>
@@ -173,12 +173,18 @@ textarea{min-height:80px;resize:vertical}
     <div id="keyStatus" style="margin-top:8px;font-weight:700">❌ No key yet</div>
     <button class="primary" style="margin-top:10px" onclick="saveKey()">Save Key</button>
   </div>
-  <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. 15 Courses. Upload PDFs and pictures. AI answers from your files.</p></div>
+  <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
   <button class="ghost" onclick="closeSettings()">Close</button>
 </div></div>
 
 <script>
-let courses = JSON.parse(localStorage.getItem('ojoola_courses')||'null') || Array.from({length:15},(_,i)=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]}));
+let raw = JSON.parse(localStorage.getItem('ojoola_courses')||'null');
+let courses;
+if(raw && raw.length===15){
+  courses = raw.map(c=>({name:c.name||'',code:c.code||'',pdfs:c.pdfs||[null,null,null,null],pics:c.pics||[],ref:true,chat:c.chat||[]}));
+} else {
+  courses = Array.from({length:15},()=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]}));
+}
 let current = 0;
 let theme = localStorage.getItem('ojoola_theme')||'system';
 let apiKey = localStorage.getItem('ojoola_key')||'';
@@ -194,7 +200,7 @@ function applyTheme(){
   document.getElementById('thDark').className = theme==='dark'?'active':'';
 }
 function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
 
 function goWelcome(){document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
 function goStudy(){document.getElementById('welcome').classList.add('hidden');document.getElementById('app').classList.remove('hidden');showView('home');render()}
@@ -210,26 +216,27 @@ document.getElementById('welcome').addEventListener('click',(e)=>{
   let s=document.createElement('div');s.textContent=['💬','❤️','✨','🎉','😊'][Math.floor(Math.random()*5)];s.style.cssText='position:absolute;left:'+(e.clientX-20)+'px;top:'+(e.clientY-20)+'px;font-size:28px;animation:float 1.2s ease';document.getElementById('welcome').appendChild(s);setTimeout(()=>s.remove(),1200);
 });
 
+function turnAllOn(){courses.forEach(c=>c.ref=true);save();render();alert('All Referencing ON ✅')}
 function render(){
   let g=document.getElementById('courseGrid');g.innerHTML='';
   courses.forEach((c,i)=>{
-    let name=c.name||('Course '+(i+1));
-    let sub=c.name?('Course '+(i+1)+' • '+(c.code||'')):'Tap to add course';
-    let pdfCount=c.pdfs.filter(x=>x).length;
+    let display = c.name ? c.name : 'Course '+(i+1);
+    let sub = c.name ? (c.code ? c.code : 'Tap to open') : 'Tap to open';
     let d=document.createElement('div');d.className='card course';d.onclick=()=>openCourse(i);
-    d.innerHTML='<span class="pill">📖 Course '+(i+1)+'</span><h3 style="margin-top:10px">'+name+'</h3><p>'+sub+'</p><span class="pill">📄 '+pdfCount+'/4 PDFs</span> <span class="pill">🖼️ '+c.pics.length+' Pictures</span><br><span class="badge">'+(c.name?'Ready ✅':'Empty - Tap to Fill')+'</span><div class="switchRow" onclick="event.stopPropagation();current=i;toggleRef(true)"><div><b>Referencing '+(c.ref?'ON':'OFF')+'</b><div style="font-size:12px;color:var(--muted)">'+(c.ref?'AI will use this course':'AI will skip this course')+'</div></div><div class="switch '+(c.ref?'on':'')+'"></div></div>';
+    d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';
     g.appendChild(d);
   });
-  lucide.createIcons();
+  if(window.lucide) lucide.createIcons();
 }
-function openCourse(i){current=i;let c=courses[i];document.getElementById('modalTitle').textContent='Course '+(i+1)+' - '+(c.name||'Empty');document.getElementById('courseName').value=c.name;document.getElementById('courseCode').value=c.code;document.getElementById('refSwitch').className='switch '+(c.ref?'on':'');renderPdfs();renderPics();renderCourseChat();document.getElementById('courseModal').classList.remove('hidden')}
+function openCourse(i){current=i;let c=courses[i];document.getElementById('modalTitle').textContent=c.name || ('Course '+(i+1));document.getElementById('courseName').value=c.name;document.getElementById('courseCode').value=c.code;updateRefUI();renderPdfs();renderPics();renderCourseChat();document.getElementById('courseModal').classList.remove('hidden')}
 function closeCourse(){document.getElementById('courseModal').classList.add('hidden');render()}
-function saveCourseName(){courses[current].name=document.getElementById('courseName').value.trim();courses[current].code=document.getElementById('courseCode').value.trim();save();document.getElementById('modalTitle').textContent='Course '+(current+1)+' - '+(courses[current].name||'Empty');alert('Saved ✅')}
-function toggleRef(fromGrid){courses[current].ref=!courses[current].ref;save();if(!fromGrid){document.getElementById('refSwitch').className='switch '+(courses[current].ref?'on':'')}render()}
+function saveCourseName(){courses[current].name=document.getElementById('courseName').value.trim();courses[current].code=document.getElementById('courseCode').value.trim();save();document.getElementById('modalTitle').textContent=courses[current].name || ('Course '+(current+1));alert('Saved ✅')}
+function updateRefUI(){let on=courses[current].ref;document.getElementById('refSwitch').className='switch '+(on?'on':'');document.getElementById('refLabel').textContent=on?'AI will use this course':'AI will skip this course'}
+function toggleRef(){courses[current].ref=!courses[current].ref;save();updateRefUI()}
 function renderPdfs(){let el=document.getElementById('pdfList');el.innerHTML='';courses[current].pdfs.forEach((p,idx)=>{let row=document.createElement('div');row.className='fileRow';row.innerHTML='<span><b>PDF '+(idx+1)+':</b> '+(p?p.name:'Empty')+'</span>';let b=document.createElement('button');b.className='smallBtn';b.textContent=p?'Replace':'Upload PDF';b.onclick=()=>{let inp=document.createElement('input');inp.type='file';inp.accept='application/pdf';inp.onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{courses[current].pdfs[idx]={name:f.name,data:r.result};save();renderPdfs()};r.readAsDataURL(f)};inp.click()};row.appendChild(b);el.appendChild(row)})}
 function addPics(e){Array.from(e.target.files).forEach(f=>{let r=new FileReader();r.onload=()=>{courses[current].pics.push({name:f.name,data:r.result});save();renderPics()};r.readAsDataURL(f)});e.target.value=''}
 function renderPics(){let el=document.getElementById('picList');el.innerHTML='';courses[current].pics.forEach((p,idx)=>{let w=document.createElement('div');w.style.position='relative';w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';el.appendChild(w)})}
-function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about Course '+(current+1)+'. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
+function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
 function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
 
 async function callGemini(prompt, images){
@@ -243,13 +250,13 @@ async function callGemini(prompt, images){
 }
 function buildContext(courseList){
   let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. Use only the provided course info if given.\n\n';
-  courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course '+(i+1)+' '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});
+  courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});
   return txt;
 }
 async function sendCourseChat(){
   let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;
   courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';
-  try{let ans=await callGemini(buildContext([courses[current]])+'Question about Course '+(current+1)+': '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message+' - Check your API Key in Settings.'}
+  try{let ans=await callGemini(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message+' - Check your API Key in Settings.'}
   save();renderCourseChat();
 }
 async function sendGeneral(){
@@ -264,7 +271,7 @@ function openSettings(){document.getElementById('apiKeyInput').value=apiKey;docu
 function closeSettings(){document.getElementById('settingsModal').classList.add('hidden')}
 function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved':'❌ No key yet';alert(apiKey?'Key Saved ✅':'Key cleared')}
 
-applyTheme();render();lucide.createIcons();
+applyTheme();render();if(window.lucide) lucide.createIcons();
 </script>
 </body>
 </html>
