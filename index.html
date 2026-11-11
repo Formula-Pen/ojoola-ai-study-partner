@@ -68,9 +68,6 @@ textarea{min-height:80px;resize:vertical}
 .msg.me{background:var(--grad2);color:white;margin-left:auto;margin-right:0;border-bottom-right-radius:4px;align-self:flex-end;text-align:left}
 .msg.ai{background:var(--input);color:var(--text);margin-right:auto;margin-left:0;border-bottom-left-radius:4px;align-self:flex-start;text-align:left}
 @media(min-width:700px){.msg.ai{max-width:82%}.msg.me{max-width:75%}}
-.answerSplit{display:flex;flex-direction:column;gap:12px;width:100%}
-@media(min-width:800px){.answerSplit{flex-direction:row;align-items:flex-start}.answerSplit .answerText{flex:1;min-width:0}.answerSplit .chartCard{width:320px;flex-shrink:0;position:sticky;top:80px}}
-.chartCard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 4px 16px rgba(37,99,235,.08)}
 .fileRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px;gap:8px}
 .thumb{width:64px;height:64px;object-fit:cover;border-radius:10px}
 .flex{display:flex;gap:8px;align-items:center}
@@ -120,7 +117,7 @@ textarea{min-height:80px;resize:vertical}
   <div class="card"><h3>💬 General Chat</h3><p>Ask anything. This chat uses courses with Referencing ON.</p></div>
   <div class="card"><div id="generalMsgs" class="chatList"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
     <div class="chatInputWrap"><textarea id="generalInput" placeholder="Ask me anything..."></textarea>
-    <button class="primary" onclick="sendGeneral()">Send Message 🚀</button></div>
+    <button class="primary" id="generalSendBtn" onclick="sendGeneral()">Send Message 🚀</button></div>
   </div>
 </div>
 <div class="nav">
@@ -168,7 +165,9 @@ textarea{min-height:80px;resize:vertical}
     <div id="keyView" class="lockBox"><div><b id="keyText">••••••••</b><br><span id="keyStatus">❌ No key yet</span></div><button class="editBtn" onclick="editKey()">✏️ Edit</button></div>
     <div id="keyEdit" class="hidden"><input id="apiKeyInput" type="password" placeholder="AIza..."><button class="primary" style="margin-top:10px" onclick="saveKey()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelKeyEdit()">Cancel</button></div>
     <div id="keyToast" class="toast hidden">Saved 🔒</div>
-    <p style="margin-top:10px;font-size:13px">Now using new Google models: gemini-3.8-flash first. If you still see an error, create a NEW key in Google AI Studio and paste it here.</p>
+    <button class="primary" style="margin-top:12px;background:#0F172A" onclick="testConnection()">🔍 Test Connection - Is My Key Working?</button>
+    <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
+    <p style="margin-top:10px;font-size:13px">If Test says Key Invalid, create a NEW key in Google AI Studio and paste it here.</p>
   </div>
   <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
   <button class="ghost" onclick="closeSettings()">Close</button>
@@ -217,33 +216,58 @@ function addPics(e){Array.from(e.target.files).forEach(f=>{let r=new FileReader(
 function renderPics(){let el=document.getElementById('picList');el.innerHTML='';courses[current].pics.forEach((p,idx)=>{let w=document.createElement('div');w.style.position='relative';w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';el.appendChild(w)})}
 function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
 function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
-// *** CORRECT GOOGLE FIX - v1beta + NEW 3.x MODELS ***
-async function callGemini(prompt, images){
+async function testConnection(){
+  let el=document.getElementById('testResult');
+  if(!apiKey){el.textContent='❌ No key saved yet. Tap Edit and paste your key.';el.style.color='#DC2626';return}
+  el.textContent='Testing... please wait...';el.style.color='#64748B';
+  try{
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey);
+    let j=await res.json();
+    if(j.error){el.textContent='❌ Key FAILED: '+j.error.message;el.style.color='#DC2626';return}
+    let names=(j.models||[]).map(m=>m.name.replace('models/','')).filter(n=>n.includes('flash')).slice(0,5).join(', ');
+    el.textContent='✅ Key WORKS! Found: '+names;el.style.color='#16A34A';
+  }catch(e){el.textContent='❌ Network error: '+e.message;el.style.color='#DC2626'}
+}
+// *** GENERAL CHAT FAST FIX - 1 MODEL ONLY, 10s MAX ***
+async function callGeminiFast(prompt, images){
   if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
   let parts=[{text:prompt}];
-  (images||[]).slice(0,4).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inline_data:{mime_type:mt,data:b}})});
-  let models=['gemini-3.8-flash','gemini-3.5-flash-lite','gemini-2.5-flash'];
-  let lastError='';
-  for(let m of models){
-    try{
-      let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]})});
-      let j=await res.json();
-      if(j.error){
-        lastError=j.error.message||'';
-        if(lastError.toLowerCase().includes('api key') || lastError.includes('API_KEY_INVALID') || res.status===400 || res.status===403){
-          throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
-        }
-        continue;
-      }
-      if(j.candidates && j.candidates[0] && j.candidates[0].content) return j.candidates[0].content.parts.map(p=>p.text||'').join('');
-      lastError='No answer from '+m;
-    }catch(e){ if(e.message.includes('API Key')) throw e; lastError=e.message; }
+  (images||[]).slice(0,2).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inlineData:{mimeType:mt,data:b}})});
+  let controller = new AbortController();
+  let timer = setTimeout(()=>controller.abort(), 10000);
+  try{
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
+    clearTimeout(timer);
+    let j=await res.json();
+    if(j.error){
+      if((j.error.message||'').toLowerCase().includes('api key') || (j.error.message||'').includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
+      throw new Error(j.error.message||'Google error');
+    }
+    if(j.candidates && j.candidates[0] && j.candidates[0].content) return j.candidates[0].content.parts.map(p=>p.text||'').join('');
+    throw new Error('No answer from Google');
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError') throw new Error('Google took too long (10s). Check your internet and try again.');
+    throw e;
   }
-  throw new Error('Google could not answer. ' + lastError + ' Try a new API Key in Settings.');
 }
-function buildContext(courseList){let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. Use only the provided course info if given.\n\n';courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});return txt}
-async function sendCourseChat(){let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';try{let ans=await callGemini(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message}save();renderCourseChat()}
-async function sendGeneral(){let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;let box=document.getElementById('generalMsgs');let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking... 🤔';box.appendChild(a);inp.value='';let used=courses.filter(c=>c.ref);let pics=[];used.forEach(c=>pics.push(...c.pics));try{let ans=await callGemini(buildContext(used)+'General question: '+q, pics);a.textContent=ans}catch(e){a.textContent='Error: '+e.message}}
+function buildContext(courseList){let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples.\n\n';courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});return txt}
+async function sendCourseChat(){let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;courses[current].chat.push({role:'user',text:q});courses[current].chat.push({role:'ai',text:'Thinking... 🤔'});save();renderCourseChat();inp.value='';try{let ans=await callGeminiFast(buildContext([courses[current]])+'Question: '+q, courses[current].pics);courses[current].chat[courses[current].chat.length-1].text=ans||'No answer.'}catch(e){courses[current].chat[courses[current].chat.length-1].text='Error: '+e.message}save();renderCourseChat()}
+async function sendGeneral(){
+  let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;
+  let btn=document.getElementById('generalSendBtn');btn.disabled=true;btn.textContent='Thinking... 🤔';
+  let box=document.getElementById('generalMsgs');
+  let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);
+  let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking... 🤔';box.appendChild(a);
+  inp.value='';
+  let start=Date.now();
+  try{
+    let ans=await callGeminiFast('You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. General question: '+q, []);
+    a.textContent=ans;
+    console.log('General chat took ' + ((Date.now()-start)/1000) + 's');
+  }catch(e){a.textContent='Error: '+e.message}
+  btn.disabled=false;btn.textContent='Send Message 🚀';
+}
 function openSettings(){lockKeyView();document.getElementById('settingsModal').classList.remove('hidden')}
 function closeSettings(){document.getElementById('settingsModal').classList.add('hidden')}
 function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'••••••••'+apiKey.slice(-4):'••••••••';document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved - Locked':'❌ No key yet';document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyView').classList.remove('hidden');document.getElementById('keyEdit').classList.add('hidden')}
