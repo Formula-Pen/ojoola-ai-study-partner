@@ -1,117 +1,99 @@
-/* =========================================
-   OJOOLA AI - SERVICE WORKER
-   Automatic cache updates and cleanup
-========================================= */
+"use strict";
 
-const CACHE_NAME = "ojoola-ai-v3";
-const CACHE_PREFIX = "ojoola-ai-";
+const CACHE_NAME = "ojooola-study-v5";
+const APP_PREFIX = "ojooola-study-";
+
+const APP_FILES = [
+  "./",
+  "./index.html",
+  "./manifest.json"
+];
 
 /* INSTALL */
 self.addEventListener("install", event => {
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_FILES))
+      .then(() => self.skipWaiting())
+  );
 });
 
 /* ACTIVATE */
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames
+      .then(names =>
+        Promise.all(
+          names
             .filter(name =>
-              name.startsWith(CACHE_PREFIX) &&
+              name.startsWith(APP_PREFIX) &&
               name !== CACHE_NAME
             )
             .map(name => caches.delete(name))
-        );
-      })
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
 
 /* FETCH */
 self.addEventListener("fetch", event => {
-
   const request = event.request;
-  const url = new URL(request.url);
 
-  // Only handle GET requests
   if (request.method !== "GET") return;
 
-  // Ignore external websites and APIs
+  const url = new URL(request.url);
+
+  /* Do not cache external websites or Gemini API requests. */
   if (url.origin !== self.location.origin) return;
 
-  // NETWORK FIRST FOR HTML PAGES
+  /* HTML navigation: network first, cached app as fallback. */
   if (request.mode === "navigate") {
-
     event.respondWith(
       fetch(request)
         .then(response => {
           if (response.ok) {
             const copy = response.clone();
-
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, copy);
-            });
+            caches.open(CACHE_NAME)
+              .then(cache => cache.put("./index.html", copy));
           }
-
           return response;
         })
         .catch(async () => {
-          const cached = await caches.match(request);
-
-          if (cached) return cached;
-
-          return caches.match("./index.html");
+          const cache = await caches.open(CACHE_NAME);
+          return (
+            await cache.match(request) ||
+            await cache.match("./index.html") ||
+            await cache.match("./")
+          );
         })
     );
-
     return;
   }
 
-  // CACHE STATIC FILES ONLY
-  const isStaticFile =
-    /\.(js|css|png|jpg|jpeg|webp|svg|ico|woff2|json)$/i
-      .test(url.pathname);
-
-  if (!isStaticFile) return;
-
+  /* Same-origin app files: cache first, update in background. */
   event.respondWith(
-    caches.open(CACHE_NAME).then(async cache => {
-
-      const cached = await cache.match(request);
-
-      const networkFetch = fetch(request)
+    caches.match(request).then(cached => {
+      const networkUpdate = fetch(request)
         .then(response => {
-
           if (response.ok) {
-            cache.put(request, response.clone());
+            const copy = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => cache.put(request, copy));
           }
-
           return response;
         });
 
-      // Return cached file immediately while checking for updates
-      if (cached) {
-        event.waitUntil(
-          networkFetch.catch(() => {})
-        );
+      event.waitUntil(networkUpdate.catch(() => {}));
 
-        return cached;
-      }
-
-      // If no cached file exists, use the network
-      return networkFetch;
+      return cached || networkUpdate;
     })
   );
-
 });
 
-/* RECEIVE UPDATE MESSAGE */
+/* Allow the page to request an immediate update. */
 self.addEventListener("message", event => {
-
   if (event.data === "SKIP_WAITING") {
     self.skipWaiting();
   }
-
 });
