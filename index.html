@@ -167,7 +167,7 @@ textarea{min-height:80px;resize:vertical}
     <div id="keyToast" class="toast hidden">Saved 🔒</div>
     <button class="primary" style="margin-top:12px;background:#0F172A" onclick="testConnection()">🔍 Test Connection - Is My Key Working?</button>
     <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
-    <p style="margin-top:10px;font-size:13px">If Test says Key Invalid, create a NEW key in Google AI Studio and paste it here.</p>
+    <p style="margin-top:10px;font-size:13px">Now using: gemini-2.5-flash - the real model from your Test list.</p>
   </div>
   <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
   <button class="ghost" onclick="closeSettings()">Close</button>
@@ -228,7 +228,7 @@ async function testConnection(){
     el.textContent='✅ Key WORKS! Found: '+names;el.style.color='#16A34A';
   }catch(e){el.textContent='❌ Network error: '+e.message;el.style.color='#DC2626'}
 }
-// *** GENERAL CHAT FAST FIX - 1 MODEL ONLY, 10s MAX ***
+// *** FIX - USE REAL MODEL gemini-2.5-flash, NOT ALIAS. SHOW REAL GOOGLE ERROR. ***
 async function callGeminiFast(prompt, images){
   if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
   let parts=[{text:prompt}];
@@ -236,18 +236,19 @@ async function callGeminiFast(prompt, images){
   let controller = new AbortController();
   let timer = setTimeout(()=>controller.abort(), 10000);
   try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
+    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]}),signal:controller.signal});
     clearTimeout(timer);
-    let j=await res.json();
-    if(j.error){
-      if((j.error.message||'').toLowerCase().includes('api key') || (j.error.message||'').includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
-      throw new Error(j.error.message||'Google error');
+    let j=await res.json().catch(()=>({}));
+    if(!res.ok || j.error){
+      let msg=(j.error && j.error.message) || ('HTTP '+res.status);
+      if(msg.toLowerCase().includes('api key') || msg.includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
+      throw new Error('Google said: '+res.status+' - '+msg);
     }
     if(j.candidates && j.candidates[0] && j.candidates[0].content) return j.candidates[0].content.parts.map(p=>p.text||'').join('');
-    throw new Error('No answer from Google');
+    throw new Error('Google returned no answer. Status: '+res.status);
   }catch(e){
     clearTimeout(timer);
-    if(e.name==='AbortError') throw new Error('Google took too long (10s). Check your internet and try again.');
+    if(e.name==='AbortError') throw new Error('Google did not answer in 10s (Status: timeout). Your network is fine - Google was slow. Try again.');
     throw e;
   }
 }
