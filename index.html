@@ -2859,14 +2859,32 @@ function renderCourseFiles(){
   im.innerHTML="";
 
 
-  if(!c.pdfs.length){
+  const validPDFs=
+    c.pdfs.filter(
+      f=>
+        f&&
+        typeof f==="object"
+    );
+
+  const validPictures=
+    c.pictures.filter(
+      f=>
+        f&&
+        typeof f==="object"
+    );
+
+
+  if(!validPDFs.length){
 
     p.innerHTML=
       '<div class="muted">No PDF materials added yet.</div>';
   }
 
 
-  c.pdfs.forEach((f,i)=>{
+  validPDFs.forEach(f=>{
+
+    const originalIndex=
+      c.pdfs.indexOf(f);
 
     const d=
       document.createElement(
@@ -2884,7 +2902,7 @@ function renderCourseFiles(){
 
     info.innerHTML=
       `<div style="font-weight:700;overflow-wrap:anywhere">
-        📄 ${escapeHTML(f.name)}
+        📄 ${escapeHTML(f.name||"Unnamed PDF")}
        </div>
 
        <div class="muted">
@@ -2900,7 +2918,7 @@ function renderCourseFiles(){
     b.textContent="Delete";
 
     b.onclick=
-      ()=>deleteCoursePDF(i);
+      ()=>deleteCoursePDF(originalIndex);
 
     d.append(info,b);
 
@@ -2908,14 +2926,17 @@ function renderCourseFiles(){
   });
 
 
-  if(!c.pictures.length){
+  if(!validPictures.length){
 
     im.innerHTML=
       '<div class="muted">No pictures added yet.</div>';
   }
 
 
-  c.pictures.forEach((f,i)=>{
+  validPictures.forEach(f=>{
+
+    const originalIndex=
+      c.pictures.indexOf(f);
 
     const d=
       document.createElement(
@@ -2939,10 +2960,10 @@ function renderCourseFiles(){
     img.className=
       "courseThumb";
 
-    img.alt=f.name;
+    img.alt=f.name||"Course picture";
 
     img.src=
-      `data:${f.mimeType||"image/jpeg"};base64,${f.data}`;
+      `data:${f.mimeType||"image/jpeg"};base64,${f.data||""}`;
 
     const label=
       document.createElement(
@@ -2951,7 +2972,7 @@ function renderCourseFiles(){
 
     label.innerHTML=
       `<div style="font-weight:700;overflow-wrap:anywhere">
-        ${escapeHTML(f.name)}
+        ${escapeHTML(f.name||"Unnamed picture")}
        </div>
 
        <div class="muted">
@@ -2969,7 +2990,7 @@ function renderCourseFiles(){
     b.textContent="Delete";
 
     b.onclick=
-      ()=>deleteCoursePicture(i);
+      ()=>deleteCoursePicture(originalIndex);
 
     d.append(left,b);
 
