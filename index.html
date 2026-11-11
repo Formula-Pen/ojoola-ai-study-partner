@@ -3374,7 +3374,6 @@ async function shareText(text){
   }
 }
 
-
 /* READ ALOUD */
 
 let speechPlayer={
@@ -3383,7 +3382,6 @@ let speechPlayer={
   total:0,
   speaking:false,
   paused:false,
-  timer:null,
   container:null,
   token:0,
   utterance:null
@@ -3399,6 +3397,30 @@ function formatTime(s){
   return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
 }
 
+function cleanSpeechText(text){
+  return String(text||"")
+    .replace(/```[\s\S]*?```/g," ")
+    .replace(/`([^`]+)`/g,"$1")
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g,"$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
+    .replace(/^#{1,6}\s*/gm,"")
+    .replace(/^\s*[-*+]\s+/gm,"")
+    .replace(/^\s*\d+\.\s+/gm,"")
+    .replace(/\*\*\*([^*]+)\*\*\*/g,"$1")
+    .replace(/\*\*([^*]+)\*\*/g,"$1")
+    .replace(/__([^_]+)__/g,"$1")
+    .replace(/\*([^*]+)\*/g,"$1")
+    .replace(/_([^_]+)_/g,"$1")
+    .replace(/[#*]+/g," ")
+    .replace(/&nbsp;/gi," ")
+    .replace(/&amp;/gi,"&")
+    .replace(/&lt;/gi,"<")
+    .replace(/&gt;/gi,">")
+    .replace(/[ \t]+\n/g,"\n")
+    .replace(/\n{3,}/g,"\n\n")
+    .trim();
+}
+
 function createPlaybackUI(container){
   container.querySelector(".playback")?.remove();
 
@@ -3407,45 +3429,14 @@ function createPlaybackUI(container){
 
   p.innerHTML=`<div class="playbackTop">
     <button title="Rewind 10 seconds" onclick="rewindSpeech()">↶10</button>
-    <button id="speechPlayBtn" title="Play/Pause" onclick="toggleSpeechPlay()">▶</button>
+    <button id="speechPlayBtn" onclick="toggleSpeechPlay()">▶</button>
     <button title="Forward 10 seconds" onclick="forwardSpeech()">10↷</button>
     <input id="speechSeek" type="range" min="0" max="100" value="0" oninput="seekSpeech(this.value)">
     <span id="speechTime" class="time">0:00 / 0:00</span>
-    <button title="Stop" onclick="stopSpeech()">■</button>
+    <button onclick="stopSpeech()">■</button>
   </div>`;
 
   container.appendChild(p);
-}
-
-function cleanSpeechText(text){
-  let s=String(text||"");
-
-  s=s.replace(/```[\s\S]*?```/g," ");
-  s=s.replace(/`([^`]+)`/g,"$1");
-  s=s.replace(/!\[([^\]]*)\]\([^)]+\)/g,"$1");
-  s=s.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1");
-
-  s=s.replace(/^#{1,6}\s*/gm,"");
-  s=s.replace(/^\s*[-*+]\s+/gm,"");
-  s=s.replace(/^\s*\d+\.\s+/gm,"");
-
-  s=s.replace(/\*\*\*([^*]+)\*\*\*/g,"$1");
-  s=s.replace(/\*\*([^*]+)\*\*/g,"$1");
-  s=s.replace(/__([^_]+)__/g,"$1");
-  s=s.replace(/\*([^*]+)\*/g,"$1");
-  s=s.replace(/_([^_]+)_/g,"$1");
-
-  s=s.replace(/[#*]+/g," ");
-
-  s=s.replace(/&nbsp;/gi," ");
-  s=s.replace(/&amp;/gi,"&");
-  s=s.replace(/&lt;/gi,"<");
-  s=s.replace(/&gt;/gi,">");
-
-  s=s.replace(/[ \t]+\n/g,"\n");
-  s=s.replace(/\n{3,}/g,"\n\n");
-
-  return s.trim();
 }
 
 function toggleReadAloud(text,container){
@@ -3472,9 +3463,8 @@ function toggleReadAloud(text,container){
     text:speechText,
     position:0,
     total:estimateDuration(speechText),
-    speaking:true,
+    speaking:false,
     paused:false,
-    timer:null,
     container:container,
     token:speechPlayer.token+1,
     utterance:null
@@ -3491,32 +3481,8 @@ function startSpeechFromPosition(){
 
   speechSynthesis.cancel();
 
-  const ratio=
-    speechPlayer.total
-      ?speechPlayer.position/speechPlayer.total
-      :0;
-
-  let at=Math.floor(
-    ratio*speechPlayer.text.length
-  );
-
-  at=Math.max(
-    0,
-    Math.min(
-      speechPlayer.text.length-1,
-      at
-    )
-  );
-
-  if(at>0){
-    const space=speechPlayer.text.indexOf(" ",at);
-
-    if(space>0){
-      at=space+1;
-    }
-  }
-
-  const remaining=speechPlayer.text.slice(at);
+  const remaining=
+    speechPlayer.text.slice(speechPlayer.position);
 
   if(!remaining.trim()){
     finishSpeech();
@@ -3529,118 +3495,101 @@ function startSpeechFromPosition(){
   u.rate=.95;
 
   speechPlayer.utterance=u;
+  speechPlayer.speaking=true;
+  speechPlayer.paused=false;
 
-  u.onend=()=>{
-    if(token===speechPlayer.token){
-      finishSpeech();
-    }
-  };
+  u.onboundary=e=>{
+    if(token!==speechPlayer.token)return;
 
-  u.onerror=e=>{
-    if(
-      token===speechPlayer.token &&
-      e.error!=="canceled"
-    ){
-      speechPlayer.speaking=false;
-      speechPlayer.paused=false;
-      clearInterval(speechPlayer.timer);
-      speechPlayer.timer=null;
+    if(typeof e.charIndex==="number"){
+      speechPlayer.position=Math.min(
+        speechPlayer.text.length,
+        speechPlayer.positionBase+e.charIndex
+      );
+
       updateSpeechUI();
     }
   };
 
+  u.onend=()=>{
+    if(token!==speechPlayer.token)return;
+
+    speechPlayer.position=speechPlayer.text.length;
+    finishSpeech();
+  };
+
+  u.onerror=e=>{
+    if(token!==speechPlayer.token)return;
+
+    if(e.error!=="canceled" && e.error!=="interrupted"){
+      speechPlayer.speaking=false;
+      speechPlayer.paused=false;
+      updateSpeechUI();
+    }
+  };
+
+  speechPlayer.positionBase=speechPlayer.position;
+
   speechSynthesis.speak(u);
-  startSpeechTimer();
   updateSpeechUI();
 }
 
-function startSpeechTimer(){
-  clearInterval(speechPlayer.timer);
+function toggleSpeechPlay(){
+  if(!speechPlayer.text)return;
 
-  speechPlayer.timer=setInterval(()=>{
-    if(
-      !speechPlayer.speaking ||
-      speechPlayer.paused
-    ){
-      return;
-    }
+  if(speechPlayer.speaking && !speechPlayer.paused){
 
-    speechPlayer.position=Math.min(
-      speechPlayer.total,
-      speechPlayer.position+.25
-    );
+    /* Save the last reported spoken position. */
+    speechPlayer.paused=true;
+    speechPlayer.speaking=false;
+
+    speechPlayer.token++;
+
+    speechSynthesis.cancel();
+
+    speechPlayer.utterance=null;
 
     updateSpeechUI();
-  },250);
+    return;
+  }
+
+  if(speechPlayer.paused){
+    speechPlayer.paused=false;
+    startSpeechFromPosition();
+    return;
+  }
+
+  startSpeechFromPosition();
 }
 
 function updateSpeechUI(){
   const c=speechPlayer.container;
-
   if(!c)return;
 
   const seek=c.querySelector("#speechSeek");
   const time=c.querySelector("#speechTime");
   const play=c.querySelector("#speechPlayBtn");
 
+  const ratio=speechPlayer.text.length
+    ?speechPlayer.position/speechPlayer.text.length
+    :0;
+
+  const currentTime=ratio*speechPlayer.total;
+
   if(seek){
-    seek.value=speechPlayer.total
-      ?speechPlayer.position/speechPlayer.total*100
-      :0;
+    seek.value=ratio*100;
   }
 
   if(time){
     time.textContent=
-      formatTime(speechPlayer.position)+
-      " / "+
+      formatTime(currentTime)+" / "+
       formatTime(speechPlayer.total);
   }
 
   if(play){
     play.textContent=
-      speechPlayer.speaking &&
-      !speechPlayer.paused
-        ?"❚❚"
-        :"▶";
+      speechPlayer.speaking?"❚❚":"▶";
   }
-}
-
-function toggleSpeechPlay(){
-  if(!speechPlayer.text)return;
-
-  if(
-    speechPlayer.speaking &&
-    !speechPlayer.paused
-  ){
-    speechPlayer.paused=true;
-
-    clearInterval(speechPlayer.timer);
-    speechPlayer.timer=null;
-
-    speechSynthesis.pause();
-
-    updateSpeechUI();
-    return;
-  }
-
-  if(
-    speechPlayer.speaking &&
-    speechPlayer.paused
-  ){
-    speechPlayer.paused=false;
-
-    speechSynthesis.resume();
-
-    startSpeechTimer();
-    updateSpeechUI();
-    return;
-  }
-
-  speechPlayer.speaking=true;
-  speechPlayer.paused=false;
-  speechPlayer.token++;
-
-  startSpeechFromPosition();
 }
 
 function stopSpeech(){
@@ -3649,8 +3598,6 @@ function stopSpeech(){
   if("speechSynthesis" in window){
     speechSynthesis.cancel();
   }
-
-  clearInterval(speechPlayer.timer);
 
   speechPlayer.container
     ?.querySelector(".playback")
@@ -3662,20 +3609,17 @@ function stopSpeech(){
     total:0,
     speaking:false,
     paused:false,
-    timer:null,
     container:null,
     token,
-    utterance:null
+    utterance:null,
+    positionBase:0
   };
 }
 
 function finishSpeech(){
-  clearInterval(speechPlayer.timer);
-
-  speechPlayer.timer=null;
-  speechPlayer.position=speechPlayer.total;
   speechPlayer.speaking=false;
   speechPlayer.paused=false;
+  speechPlayer.position=speechPlayer.text.length;
   speechPlayer.utterance=null;
 
   updateSpeechUI();
@@ -3684,55 +3628,50 @@ function finishSpeech(){
 function seekSpeech(v){
   if(!speechPlayer.text)return;
 
-  speechPlayer.position=
-    Number(v)/100*speechPlayer.total;
+  speechPlayer.position=Math.floor(
+    Number(v)/100*speechPlayer.text.length
+  );
 
-  if(speechPlayer.speaking){
-    speechPlayer.token++;
-    speechSynthesis.cancel();
-    speechPlayer.paused=false;
-    startSpeechFromPosition();
-  }else{
-    updateSpeechUI();
-  }
+  speechPlayer.token++;
+
+  speechSynthesis.cancel();
+
+  speechPlayer.speaking=false;
+  speechPlayer.paused=true;
+
+  startSpeechFromPosition();
 }
 
 function rewindSpeech(){
   if(!speechPlayer.text)return;
 
-  speechPlayer.position=
-    Math.max(0,speechPlayer.position-10);
+  const seconds=Math.max(
+    0,
+    speechPlayer.position/
+    speechPlayer.text.length*
+    speechPlayer.total-10
+  );
 
-  if(speechPlayer.speaking){
-    speechPlayer.token++;
-    speechSynthesis.cancel();
-    speechPlayer.paused=false;
-    startSpeechFromPosition();
-  }else{
-    updateSpeechUI();
-  }
+  seekSpeech(
+    seconds/speechPlayer.total*100
+  );
 }
 
 function forwardSpeech(){
   if(!speechPlayer.text)return;
 
-  speechPlayer.position=
-    Math.min(speechPlayer.total,speechPlayer.position+10);
+  const seconds=Math.min(
+    speechPlayer.total,
+    speechPlayer.position/
+    speechPlayer.text.length*
+    speechPlayer.total+10
+  );
 
-  if(speechPlayer.position>=speechPlayer.total){
-    finishSpeech();
-    return;
-  }
-
-  if(speechPlayer.speaking){
-    speechPlayer.token++;
-    speechSynthesis.cancel();
-    speechPlayer.paused=false;
-    startSpeechFromPosition();
-  }else{
-    updateSpeechUI();
-  }
+  seekSpeech(
+    seconds/speechPlayer.total*100
+  );
 }
+
 
 
 function escapeRegex(s){
