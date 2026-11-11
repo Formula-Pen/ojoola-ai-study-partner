@@ -2,391 +2,1811 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ojoola AI - Your AI Study Partner</title>
-<script src="https://unpkg.com/lucide@latest"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta name="theme-color" content="#1677ff">
+<title>Ojoola AI</title>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-:root{--bg:#F0F7FF;--card:#ffffff;--text:#0F172A;--muted:#64748B;--border:#DBEAFE;--input:#F1F5F9;--grad:linear-gradient(135deg,#2563EB,#06B6D4);--grad2:linear-gradient(90deg,#2563EB,#06B6D4)}
-body.dark{--bg:#0F172A;--card:#1E293B;--text:#F1F5F9;--muted:#94A3B8;--border:#334155;--input:#0F172A}
-body{background:var(--bg);color:var(--text);transition:.3s}
-button{cursor:pointer;border:none;font-family:inherit}
-.hidden{display:none!important}
-#welcome{min-height:100vh;background:linear-gradient(180deg,#FFFFFF 0%,#EFF6FF 35%,#DBEAFE 55%,#2563EB 82%,#06B6D4 100%);color:#0F172A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;position:relative;overflow:hidden}
-.acad{position:absolute;font-size:30px;animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;z-index:1}
-@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-14px) rotate(4deg)}}
-.acad.jump{animation:jump .6s ease}
-@keyframes jump{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(-38px) rotate(20deg) scale(1.2)}100%{transform:translateY(0) rotate(360deg)}}
-.logoCircle{width:96px;height:96px;background:linear-gradient(135deg,#2563EB,#06B6D4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;box-shadow:0 14px 28px rgba(37,99,235,.35);z-index:2;animation:float 3.5s ease-in-out infinite}
-#welcome h1{font-size:28px;margin:18px 0 6px;z-index:2;line-height:1.2;color:#0F172A;white-space:nowrap}
-#welcome .subtitle{color:#475569;font-size:14px;z-index:2;white-space:nowrap;line-height:1.4;max-width:100%}
-.wBtn{width:100%;max-width:360px;background:linear-gradient(90deg,#2563EB,#06B6D4);color:white;font-weight:800;font-size:17px;padding:16px;border-radius:16px;margin-top:22px;z-index:2;box-shadow:0 10px 25px rgba(37,99,235,.3)}
-.wBtn2{width:100%;max-width:360px;background:white;color:#1D4ED8;border:2px solid #2563EB;font-weight:800;font-size:17px;padding:15px;border-radius:16px;margin-top:12px;z-index:2}
-.wHint{margin-top:16px;font-size:12px;color:#64748B;z-index:2}
-header{background:var(--grad);color:white;padding:18px 16px 22px;border-radius:0 0 24px 24px;position:sticky;top:0;z-index:10}
-.topRow{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.topRow h1{font-size:24px;display:flex;align-items:center;gap:8px}
-.topRow p{font-size:13px;opacity:.92;margin-top:4px}
-.setBtn{background:white;color:#1D4ED8;padding:9px 14px;border-radius:999px;font-weight:700;display:flex;align-items:center;gap:6px;font-size:14px}
-.wrap{padding:16px;max-width:900px;margin:0 auto;padding-bottom:90px}
-.card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:14px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(37,99,235,.06)}
-.card h3{font-size:17px;display:flex;align-items:center;gap:8px}
-.card p{color:var(--muted);font-size:14px;line-height:1.5;margin-top:6px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(min-width:700px){.grid{grid-template-columns:1fr 1fr 1fr}}
-.course{cursor:pointer;padding:16px 14px;display:flex;flex-direction:column;gap:6px;min-height:92px;justify-content:center;position:relative;overflow:hidden}
-.course:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad2)}
-.course .num{font-size:12px;font-weight:800;color:#2563EB;letter-spacing:.5px;text-transform:uppercase}
-.course .title{font-size:17px;font-weight:800;line-height:1.2}
-.course .sub{font-size:13px;color:var(--muted)}
-.course:active{transform:scale(.98)}
-.switchRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);border-radius:14px;padding:12px;margin-top:12px}
-.switch{width:52px;height:30px;background:#CBD5E1;border-radius:999px;position:relative;transition:.2s;flex-shrink:0}
-.switch:after{content:"";position:absolute;width:24px;height:24px;background:white;border-radius:50%;top:3px;left:3px;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-.switch.on{background:#2563EB}
-.switch.on:after{left:25px}
-input,textarea{width:100%;background:var(--input);border:1px solid var(--border);color:var(--text);padding:13px;border-radius:12px;font-size:15px;outline:none;margin-top:8px}
-textarea{min-height:80px;resize:vertical}
-.primary{background:var(--grad2);color:white;padding:14px;border-radius:12px;font-weight:800;width:100%;font-size:15px}
-.ghost{background:var(--input);color:var(--text);padding:12px;border-radius:12px;font-weight:700;width:100%;margin-top:8px}
-.smallBtn{background:#16A34A;color:white;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700}
-.editBtn{background:#2563EB;color:white;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;flex-shrink:0}
-.lockBox{background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.lockBox b{font-size:15px;color:var(--text)}
-.lockBox span{font-size:12px;color:var(--muted)}
-.toast{background:#DCFCE7;color:#166534;padding:10px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;margin-top:10px}
-.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 6px calc(10px + env(safe-area-inset-bottom));z-index:20}
-.nav button{background:none;color:var(--muted);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600}
-.nav button.active{color:#2563EB}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:12px 0}
-.modalBox{background:var(--card);width:100%;max-width:620px;max-height:none;overflow:visible;border-radius:24px;padding:20px;margin:auto 0}
-.seg{display:flex;background:var(--input);border-radius:12px;padding:4px;gap:4px;margin-top:10px}
-.seg button{flex:1;padding:10px;border-radius:9px;background:transparent;color:var(--muted);font-weight:700}
-.seg button.active{background:#2563EB;color:white}
-.chatList{display:flex;flex-direction:column;gap:10px;width:100%;overflow:visible;max-height:none}
-.msg{padding:12px 14px;border-radius:18px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-width:88%;overflow:visible}
-.msg.me{background:var(--grad2);color:white;margin-left:auto;margin-right:0;border-bottom-right-radius:4px;align-self:flex-end;text-align:left}
-.msg.ai{background:var(--input);color:var(--text);margin-right:auto;margin-left:0;border-bottom-left-radius:4px;align-self:flex-start;text-align:left}
-@media(min-width:700px){.msg.ai{max-width:82%}.msg.me{max-width:75%}}
-.fileRow{display:flex;justify-content:space-between;align-items:center;background:var(--input);padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px;gap:8px}
-.thumb{width:64px;height:64px;object-fit:cover;border-radius:10px}
-.flex{display:flex;gap:8px;align-items:center}
-.chatInputWrap{position:sticky;bottom:0;background:var(--card);padding:10px 0 4px;margin-top:12px}
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f4f7fb;
+  color:#172033;
+  height:100vh;
+  overflow:hidden;
+}
+button,input,textarea{font:inherit}
+button{cursor:pointer;border:0}
+.app{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.top{
+  height:62px;
+  background:linear-gradient(135deg,#1677ff,#0758d9);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  flex-shrink:0;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:800;
+  font-size:20px;
+}
+.logo{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  background:#fff;
+  color:#1677ff;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+}
+.top-actions{
+  display:flex;
+  gap:8px;
+}
+.icon-btn{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:rgba(255,255,255,.16);
+  color:#fff;
+  font-size:18px;
+}
+.main{
+  flex:1;
+  min-height:0;
+  display:flex;
+}
+.sidebar{
+  width:260px;
+  background:#fff;
+  border-right:1px solid #e5eaf2;
+  padding:14px;
+  overflow:auto;
+}
+.nav-btn{
+  width:100%;
+  text-align:left;
+  padding:13px 14px;
+  margin-bottom:7px;
+  border-radius:12px;
+  background:transparent;
+  color:#526078;
+  font-weight:700;
+}
+.nav-btn.active{
+  background:#e8f1ff;
+  color:#1268ed;
+}
+.section-title{
+  font-size:11px;
+  font-weight:800;
+  color:#8993a6;
+  margin:20px 8px 8px;
+  text-transform:uppercase;
+}
+.course-btn{
+  width:100%;
+  text-align:left;
+  padding:11px 12px;
+  margin-bottom:5px;
+  border-radius:10px;
+  background:transparent;
+  color:#45516a;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.course-btn.active{
+  background:#eef5ff;
+  color:#1268ed;
+  font-weight:700;
+}
+.course-dot{
+  width:8px;
+  height:8px;
+  background:#1677ff;
+  border-radius:50%;
+}
+.content{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+.page{
+  display:none;
+  flex:1;
+  min-height:0;
+}
+.page.active{
+  display:flex;
+  flex-direction:column;
+}
+.page-head{
+  background:#fff;
+  border-bottom:1px solid #e6ebf3;
+  padding:14px 18px;
+}
+.page-head h2{
+  font-size:18px;
+}
+.page-head p{
+  color:#7a8498;
+  font-size:12px;
+  margin-top:4px;
+}
+.messages{
+  flex:1;
+  overflow:auto;
+  padding:20px;
+}
+.empty{
+  max-width:520px;
+  margin:70px auto;
+  text-align:center;
+  color:#7c879b;
+}
+.empty-icon{
+  width:65px;
+  height:65px;
+  border-radius:20px;
+  background:#e7f0ff;
+  color:#1677ff;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+  margin:0 auto 15px;
+}
+.empty h3{
+  color:#26334b;
+  margin-bottom:8px;
+}
+.msg{
+  display:flex;
+  margin:0 auto 15px;
+  max-width:800px;
+}
+.msg.user{
+  justify-content:flex-end;
+}
+.bubble{
+  max-width:78%;
+  padding:12px 14px;
+  border-radius:16px;
+  line-height:1.55;
+  font-size:14px;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.msg.user .bubble{
+  background:#1677ff;
+  color:#fff;
+  border-bottom-right-radius:5px;
+}
+.msg.ai .bubble{
+  background:#fff;
+  border:1px solid #e3e8f0;
+  color:#26334b;
+  border-bottom-left-radius:5px;
+}
+.thinking{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#1677ff;
+  animation:pulse 1s infinite;
+}
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+@keyframes pulse{
+  0%,100%{opacity:.25;transform:translateY(0)}
+  50%{opacity:1;transform:translateY(-3px)}
+}
+.composer{
+  background:#fff;
+  border-top:1px solid #e5eaf2;
+  padding:10px 14px;
+}
+.preview{
+  display:none;
+  gap:8px;
+  margin-bottom:8px;
+  overflow:auto;
+}
+.preview img{
+  width:65px;
+  height:65px;
+  object-fit:cover;
+  border-radius:10px;
+}
+.compose-row{
+  max-width:850px;
+  margin:auto;
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+}
+.attach{
+  width:43px;
+  height:43px;
+  border-radius:12px;
+  background:#eef3f9;
+  color:#1677ff;
+  flex-shrink:0;
+}
+textarea{
+  flex:1;
+  min-height:43px;
+  max-height:130px;
+  resize:none;
+  border:1px solid #dce3ee;
+  border-radius:14px;
+  padding:12px;
+  outline:none;
+  background:#fafcff;
+}
+textarea:focus{
+  border-color:#1677ff;
+}
+.primary{
+  min-height:43px;
+  padding:0 16px;
+  border-radius:12px;
+  background:#1677ff;
+  color:#fff;
+  font-weight:800;
+  white-space:nowrap;
+}
+.primary.stop{
+  background:#e53935;
+}
+.settings{
+  padding:22px;
+  overflow:auto;
+}
+.card{
+  background:#fff;
+  border:1px solid #e4e9f1;
+  border-radius:16px;
+  padding:18px;
+  max-width:700px;
+  margin:0 auto 15px;
+}
+.card h3{
+  margin-bottom:8px;
+}
+.card p{
+  color:#758096;
+  font-size:13px;
+  line-height:1.5;
+}
+.field{
+  margin-top:15px;
+}
+.field label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  margin-bottom:6px;
+  color:#536078;
+}
+.field input{
+  width:100%;
+  height:44px;
+  border:1px solid #dce3ee;
+  border-radius:10px;
+  padding:0 12px;
+  outline:none;
+}
+.row{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+.secondary{
+  background:#edf2f8;
+  color:#34415a;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:700;
+}
+.danger{
+  background:#ffeaea;
+  color:#d93030;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:700;
+}
+.mobile-nav{
+  display:none;
+}
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:80px;
+  transform:translateX(-50%) translateY(20px);
+  background:#182235;
+  color:#fff;
+  padding:10px 15px;
+  border-radius:10px;
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+  z-index:20;
+  font-size:13px;
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+@media(max-width:750px){
+  .sidebar{display:none}
+  .mobile-nav{
+    display:flex;
+    height:60px;
+    background:#fff;
+    border-top:1px solid #e4e9f1;
+    flex-shrink:0;
+    justify-content:space-around;
+  }
+  .mobile-nav button{
+    flex:1;
+    background:#fff;
+    color:#718096;
+    font-size:11px;
+    font-weight:700;
+  }
+  .mobile-nav button.active{
+    color:#1677ff;
+  }
+  .messages{padding:15px 12px}
+  .bubble{max-width:88%}
+  .composer{padding:8px}
+  .primary{padding:0 12px}
+}
 </style>
 </head>
+
 <body>
 
-<div id="welcome">
-  <span class="acad" style="top:10%;left:10%;animation-delay:0s" onclick="bounce(this)">📚</span>
-  <span class="acad" style="top:14%;right:12%;animation-delay:.6s" onclick="bounce(this)">✏️</span>
-  <span class="acad" style="top:38%;left:4%;animation-delay:1.2s" onclick="bounce(this)">📝</span>
-  <span class="acad" style="top:34%;right:5%;animation-delay:1.8s" onclick="bounce(this)">🔬</span>
-  <span class="acad" style="top:68%;left:8%;animation-delay:.3s" onclick="bounce(this)">🧮</span>
-  <span class="acad" style="top:72%;right:9%;animation-delay:1s" onclick="bounce(this)">📐</span>
-  <span class="acad" style="top:82%;left:42%;animation-delay:1.5s" onclick="bounce(this)">💡</span>
-  <span class="acad" style="top:8%;left:46%;animation-delay:2s" onclick="bounce(this)">🎓</span>
-  <div class="logoCircle">🎓</div>
-  <h1>Welcome to Ojoola AI</h1>
-  <div class="subtitle">Your AI Study Partner - Learn Smarter, Not Harder.</div>
-  <button class="wBtn" onclick="goHome()">🏠 Proceed to Home Page</button>
-  <button class="wBtn2" onclick="goStudy()">📚 Proceed to Study</button>
-  <div class="wHint">Tap any book, pen or lightbulb - it will jump ✨</div>
-</div>
+<div class="app">
 
-<div id="app" class="hidden">
-<header>
-  <div class="topRow">
-    <div><h1>🎓 Ojoola AI</h1><p>Your AI Study Partner</p></div>
-    <button class="setBtn" onclick="openSettings()"><i data-lucide="settings" style="width:16px;height:16px"></i> Settings</button>
+<header class="top">
+  <div class="brand">
+    <div class="logo">O</div>
+    <span>Ojoola AI</span>
+  </div>
+
+  <div class="top-actions">
+    <button class="icon-btn" onclick="openSettings()">⚙</button>
   </div>
 </header>
-<div class="wrap" id="homeView">
-  <div class="card">
-    <h3><i data-lucide="sparkles" style="color:#2563EB"></i> How Referencing Works</h3>
-    <p>Turn <b style="color:var(--text)">Referencing ON</b> inside a course to let AI use it. Turn it OFF to exclude it. Default is ON for all courses.</p>
-    <button class="primary" style="margin-top:12px" onclick="turnAllOn()">Turn All Referencing ON ✅</button>
-    <div id="allOnToast" class="toast hidden">All Referencing ON ✅</div>
+
+<div class="main">
+
+<aside class="sidebar">
+
+  <button class="nav-btn active" data-page="general">
+    💬 General Chat
+  </button>
+
+  <button class="nav-btn" data-page="courses">
+    📚 My Courses
+  </button>
+
+  <button class="nav-btn" data-page="settings">
+    ⚙ Settings
+  </button>
+
+  <div class="section-title">Courses</div>
+
+  <div id="courseList"></div>
+
+</aside>
+
+<section class="content">
+
+<!-- GENERAL -->
+
+<div class="page active" id="page-general">
+
+  <div class="page-head">
+    <h2>General Chat</h2>
+    <p>Ask anything and continue your conversation later.</p>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:14px">
-    <button class="primary" style="flex:1" onclick="showView('home')">📚 My Courses</button>
-    <button class="ghost" style="flex:1;margin:0" onclick="goGeneral()">💬 General Chat</button>
+
+  <div class="messages" id="generalMessages"></div>
+
+  <div class="composer">
+
+    <div class="preview" id="generalPreview"></div>
+
+    <div class="compose-row">
+
+      <button class="attach"
+        onclick="document.getElementById('generalImageInput').click()">📎</button>
+
+      <input
+        type="file"
+        id="generalImageInput"
+        accept="image/*"
+        multiple
+        hidden
+        onchange="handleImages(this,'general')">
+
+      <textarea
+        id="generalInput"
+        placeholder="Ask Ojoola AI anything..."
+        rows="1"></textarea>
+
+      <button class="primary" id="generalSend"
+        onclick="sendGeneral()">Send 🚀</button>
+
+    </div>
   </div>
-  <div class="grid" id="courseGrid"></div>
-</div>
-<div class="wrap hidden" id="generalView">
-  <div class="card"><h3>💬 General Chat</h3><p>Ask anything. This chat uses courses with Referencing ON.</p><p id="modelBadge" style="font-size:12px;font-weight:700;color:#2563EB;margin-top:6px">Model: Auto-Pick - will find best flash model for your key</p></div>
-  <div class="card"><div id="generalMsgs" class="chatList"><div class="msg ai">Hello! I am Ojoola AI. Ask me anything, or go to a course to chat from its PDFs and pictures.</div></div>
-    <div class="chatInputWrap"><textarea id="generalInput" placeholder="Ask me anything..."></textarea>
-    <button class="primary" id="generalSendBtn" onclick="sendGeneral()">Send Message 🚀</button></div>
-  </div>
-</div>
-<div class="nav">
-  <button class="active" id="navHome" onclick="showView('home')"><i data-lucide="home"></i>Home</button>
-  <button id="navGeneral" onclick="showView('general')"><i data-lucide="message-circle"></i>General Chat</button>
-  <button onclick="openSettings()"><i data-lucide="settings"></i>Settings</button>
-</div>
 </div>
 
-<div id="courseModal" class="modal hidden"><div class="modalBox">
-  <div class="flex" style="justify-content:space-between"><h2 id="modalTitle">Course 1</h2><button class="ghost" style="width:auto;margin:0;padding:8px 12px" onclick="closeCourse()">Close ✕</button></div>
-  <p style="color:var(--muted);font-size:14px;margin-top:6px">Fields are locked. Tap Edit to change, then Save to lock again.</p>
-  <div id="courseToast" class="toast hidden">Saved 🔒</div>
-  <label style="font-weight:700;margin-top:14px;display:block">Course Name 🔒</label>
-  <div id="nameView" class="lockBox"><div><b id="nameText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
-  <div id="nameEdit" class="hidden"><input id="courseName" placeholder="e.g. Anatomy 101"></div>
-  <label style="font-weight:700;margin-top:12px;display:block">Course Code 🔒</label>
-  <div id="codeView" class="lockBox"><div><b id="codeText">-</b><br><span>Locked - tap Edit to change</span></div><button class="editBtn" onclick="editCourseFields()">✏️ Edit</button></div>
-  <div id="codeEdit" class="hidden"><input id="courseCode" placeholder="e.g. ANA 101"></div>
-  <div id="saveCourseRow" class="hidden"><button class="primary" style="margin-top:10px" onclick="saveCourseName()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelCourseEdit()">Cancel</button></div>
-  <div class="switchRow"><div><b>Referencing</b><div style="font-size:12px;color:var(--muted)" id="refLabel">AI will use this course</div></div><div class="switch on" id="refSwitch" onclick="toggleRef()"></div></div>
-  <h3 style="margin-top:18px">📄 PDFs - Max 4</h3>
-  <div id="pdfList"></div>
-  <h3 style="margin-top:16px">🖼️ Pictures - Many Allowed</h3>
-  <button class="smallBtn" onclick="document.getElementById('picInput').click()">+ Add Pictures</button>
-  <input type="file" id="picInput" accept="image/*" multiple class="hidden" onchange="addPics(event)">
-  <div id="picList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
-  <h3 style="margin-top:18px">💬 Chat For This Course Only</h3>
-  <div id="courseMsgs" class="chatList" style="margin-top:8px"></div>
-  <div class="chatInputWrap"><textarea id="courseInput" placeholder="Ask about this course..."></textarea>
-  <button class="primary" onclick="sendCourseChat()">Send Message 🚀</button>
-  <button class="ghost" onclick="clearCourseChat()">Clear Chat</button></div>
-</div></div>
+<!-- COURSES -->
 
-<div id="settingsModal" class="modal hidden"><div class="modalBox">
-  <h2>Settings</h2>
-  <div class="card" style="margin-top:14px">
-    <h3>🎨 Appearance</h3>
-    <div class="seg"><button id="thSystem" onclick="setTheme('system')">System</button><button id="thLight" onclick="setTheme('light')">Light</button><button id="thDark" onclick="setTheme('dark')">Dark</button></div>
-    <p>System follows your phone. Light is bright. Dark is navy.</p>
+<div class="page" id="page-courses">
+
+  <div class="page-head">
+    <h2 id="courseTitle">My Courses</h2>
+    <p id="courseSubtitle">Choose a course to study with Ojoola AI.</p>
   </div>
-  <div class="card">
-    <h3>🔑 Gemini API Key 🔒</h3>
-    <p>Locked by default. Tap Edit to change, then Save to lock again. Saved only in YOUR browser.</p>
-    <div id="keyView" class="lockBox"><div><b id="keyText">••••••••</b><br><span id="keyStatus">❌ No key yet</span></div><button class="editBtn" onclick="editKey()">✏️ Edit</button></div>
-    <div id="keyEdit" class="hidden"><input id="apiKeyInput" type="password" placeholder="AIza..."><button class="primary" style="margin-top:10px" onclick="saveKey()">💾 Save & Lock Again</button><button class="ghost" onclick="cancelKeyEdit()">Cancel</button></div>
-    <div id="keyToast" class="toast hidden">Saved 🔒</div>
-    <button class="primary" style="margin-top:12px;background:#0F172A" onclick="testConnection()">🔍 Test Connection - Is My Key Working?</button>
-    <div id="testResult" style="margin-top:10px;font-size:13px;font-weight:700;white-space:pre-wrap"></div>
-    <p style="margin-top:10px;font-size:13px">Model: Auto-Pick - app finds the best flash model for your key. List cached 24h, fallback on busy.</p>
+
+  <div class="messages" id="courseMessages"></div>
+
+  <div class="composer" id="courseComposer" style="display:none">
+
+    <div class="preview" id="coursePreview"></div>
+
+    <div class="compose-row">
+
+      <button class="attach"
+        onclick="document.getElementById('courseImageInput').click()">📎</button>
+
+      <input
+        type="file"
+        id="courseImageInput"
+        accept="image/*"
+        multiple
+        hidden
+        onchange="handleImages(this,'course')">
+
+      <textarea
+        id="courseInput"
+        placeholder="Ask about this course..."
+        rows="1"></textarea>
+
+      <button class="primary" id="courseSend"
+        onclick="sendCourseChat()">Send 🚀</button>
+
+    </div>
   </div>
-  <div class="card"><h3>ℹ️ About</h3><p>Ojoola AI Study Partner. Upload PDFs and pictures. AI answers from your files.</p></div>
-  <button class="ghost" onclick="closeSettings()">Close</button>
-</div></div>
+</div>
+
+<!-- SETTINGS -->
+
+<div class="page" id="page-settings">
+
+  <div class="settings">
+
+    <div class="card">
+      <h3>Gemini API</h3>
+      <p>
+        Your API key is stored locally on this device.
+        Ojoola uses it to communicate with Gemini.
+      </p>
+
+      <div class="field">
+        <label>Gemini API Key</label>
+
+        <input
+          id="apiKeyInput"
+          type="password"
+          placeholder="Paste your Gemini API key">
+      </div>
+
+      <div class="row">
+        <button class="primary" onclick="saveApiKey()">
+          Save API Key
+        </button>
+
+        <button class="secondary" onclick="testConnection()">
+          Test Connection
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Conversation Memory</h3>
+      <p>
+        Ojoola saves your General Chat and individual course conversations
+        on this device so they can be restored when you reopen the app.
+      </p>
+
+      <div class="row">
+        <button class="danger" onclick="clearGeneralChat()">
+          Clear General Chat
+        </button>
+
+        <button class="danger" onclick="clearAllCourseChats()">
+          Clear Course Chats
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>About Ojoola AI</h3>
+      <p>
+        AI study partner for general questions and course-specific study.
+      </p>
+      <p style="margin-top:8px">
+        Model: <b id="modelStatus">Auto-Pick</b>
+      </p>
+    </div>
+
+  </div>
+</div>
+
+</section>
+</div>
+
+<nav class="mobile-nav">
+
+  <button class="active" data-page="general">
+    💬<br>Chat
+  </button>
+
+  <button data-page="courses">
+    📚<br>Courses
+  </button>
+
+  <button data-page="settings">
+    ⚙<br>Settings
+  </button>
+
+</nav>
+
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-let raw = JSON.parse(localStorage.getItem('ojoola_courses')||'null');
-let courses;
-if(raw && raw.length===15){ courses = raw.map(c=>({name:c.name||'',code:c.code||'',pdfs:c.pdfs||[null,null,null,null],pics:c.pics||[],ref:true,chat:c.chat||[]})); } else { courses = Array.from({length:15},()=>({name:'',code:'',pdfs:[null,null,null,null],pics:[],ref:true,chat:[]})); }
-let current = 0;
-let theme = localStorage.getItem('ojoola_theme')||'system';
-let apiKey = localStorage.getItem('ojoola_key')||'';
-let cachedModelList = null;
-let cachedModelListTime = 0;
-function bounce(el){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump')}
-function save(){localStorage.setItem('ojoola_courses',JSON.stringify(courses))}
-function showToast(id){let el=document.getElementById(id);el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2000)}
-function applyTheme(){document.body.classList.remove('dark');let t=theme;if(t==='system') t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(t==='dark') document.body.classList.add('dark');document.getElementById('thSystem').className=theme==='system'?'active':'';document.getElementById('thLight').className=theme==='light'?'active':'';document.getElementById('thDark').className=theme==='dark'?'active':''}
-function setTheme(v){theme=v;localStorage.setItem('ojoola_theme',v);applyTheme()}
-if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='system') applyTheme()});
-function goWelcome(){document.getElementById('welcome').classList.remove('hidden');document.getElementById('app').classList.add('hidden');window.scrollTo(0,0)}
-function enterApp(view){
-  document.getElementById('welcome').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  showView(view); render();
-  try{ history.pushState({page:'app',view:view},'', '#app'); }catch(e){}
-  window.scrollTo(0,0);
-}
-function goHome(){ enterApp('home'); }
-function goStudy(){ enterApp('home'); }
-function goGeneral(){ enterApp('general'); }
-window.addEventListener('popstate', function(e){
-  if(!e.state || e.state.page!=='app'){ goWelcome(); }
-});
-function showView(v){document.getElementById('homeView').classList.toggle('hidden',v!=='home');document.getElementById('generalView').classList.toggle('hidden',v!=='general');document.getElementById('navHome').classList.toggle('active',v==='home');document.getElementById('navGeneral').classList.toggle('active',v==='general')}
-function turnAllOn(){courses.forEach(c=>c.ref=true);save();render();showToast('allOnToast')}
-function render(){let g=document.getElementById('courseGrid');g.innerHTML='';courses.forEach((c,i)=>{let display=c.name?c.name:'Course '+(i+1);let sub=c.name?(c.code?c.code:'Tap to open'):'Tap to open';let d=document.createElement('div');d.className='card course';d.onclick=()=>openCourse(i);d.innerHTML='<div class="num">Course '+(i+1)+'</div><div class="title">'+display+'</div><div class="sub">'+sub+'</div>';g.appendChild(d)});if(window.lucide) lucide.createIcons()}
-function openCourse(i){current=i;let c=courses[i];document.getElementById('modalTitle').textContent=c.name||('Course '+(i+1));lockCourseFields();updateRefUI();renderPdfs();renderPics();renderCourseChat();document.getElementById('courseModal').classList.remove('hidden');document.getElementById('courseModal').scrollTop=0}
-function closeCourse(){document.getElementById('courseModal').classList.add('hidden');render()}
-function lockCourseFields(){let c=courses[current];document.getElementById('nameText').textContent=c.name||'Not set yet';document.getElementById('codeText').textContent=c.code||'Not set yet';document.getElementById('courseName').value=c.name;document.getElementById('courseCode').value=c.code;document.getElementById('nameView').classList.remove('hidden');document.getElementById('codeView').classList.remove('hidden');document.getElementById('nameEdit').classList.add('hidden');document.getElementById('codeEdit').classList.add('hidden');document.getElementById('saveCourseRow').classList.add('hidden')}
-function editCourseFields(){document.getElementById('nameView').classList.add('hidden');document.getElementById('codeView').classList.add('hidden');document.getElementById('nameEdit').classList.remove('hidden');document.getElementById('codeEdit').classList.remove('hidden');document.getElementById('saveCourseRow').classList.remove('hidden');document.getElementById('courseName').focus()}
-function cancelCourseEdit(){lockCourseFields()}
-function saveCourseName(){courses[current].name=document.getElementById('courseName').value.trim();courses[current].code=document.getElementById('courseCode').value.trim();save();document.getElementById('modalTitle').textContent=courses[current].name||('Course '+(current+1));lockCourseFields();showToast('courseToast')}
-function updateRefUI(){let on=courses[current].ref;document.getElementById('refSwitch').className='switch '+(on?'on':'');document.getElementById('refLabel').textContent=on?'AI will use this course':'AI will skip this course'}
-function toggleRef(){courses[current].ref=!courses[current].ref;save();updateRefUI()}
-function renderPdfs(){let el=document.getElementById('pdfList');el.innerHTML='';courses[current].pdfs.forEach((p,idx)=>{let row=document.createElement('div');row.className='fileRow';row.innerHTML='<span><b>PDF '+(idx+1)+':</b> '+(p?p.name:'Empty')+'</span>';let b=document.createElement('button');b.className='smallBtn';b.textContent=p?'Replace':'Upload PDF';b.onclick=()=>{let inp=document.createElement('input');inp.type='file';inp.accept='application/pdf';inp.onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{courses[current].pdfs[idx]={name:f.name,data:r.result};save();renderPdfs()};r.readAsDataURL(f)};inp.click()};row.appendChild(b);el.appendChild(row)})}
-function addPics(e){Array.from(e.target.files).forEach(f=>{let r=new FileReader();r.onload=()=>{courses[current].pics.push({name:f.name,data:r.result});save();renderPics()};r.readAsDataURL(f)});e.target.value=''}
-function renderPics(){let el=document.getElementById('picList');el.innerHTML='';courses[current].pics.forEach((p,idx)=>{let w=document.createElement('div');w.style.position='relative';w.innerHTML='<img class="thumb" src="'+p.data+'"><button onclick="courses['+current+'].pics.splice('+idx+',1);save();renderPics()" style="position:absolute;top:-6px;right:-6px;background:#EF4444;color:white;border-radius:50%;width:22px;height:22px;font-size:12px">✕</button>';el.appendChild(w)})}
-function renderCourseChat(){let el=document.getElementById('courseMsgs');el.innerHTML='';if(!courses[current].chat.length) el.innerHTML='<div class="msg ai">Ask me anything about this course. I will use your uploaded PDFs & pictures for this course.</div>';courses[current].chat.forEach(m=>{let d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'ai');d.textContent=m.text;el.appendChild(d)})}
-function clearCourseChat(){courses[current].chat=[];save();renderCourseChat()}
-async function testConnection(){
-  let el=document.getElementById('testResult');
-  if(!apiKey){el.textContent='❌ No key saved yet. Tap Edit and paste your key.';el.style.color='#DC2626';return}
-  el.textContent='Testing... please wait...';el.style.color='#64748B';
-  try{
-    let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey);
-    let j=await res.json();
-    if(j.error){el.textContent='❌ Key FAILED: '+j.error.message;el.style.color='#DC2626';return}
-    let names=(j.models||[]).map(m=>m.name.replace('models/','')).filter(n=>n.includes('flash')).slice(0,5).join(', ');
-    el.textContent='✅ Key WORKS! Found: '+names;el.style.color='#16A34A';
-  }catch(e){el.textContent='❌ Network error: '+e.message;el.style.color='#DC2626'}
-}
-function scoreModel(name){
-  let n=name.toLowerCase();
-  if(n.includes('tts')||n.includes('image')||n.includes('embedding')||n.includes('preview-tts')||n.includes('robotics')||n.includes('veo')||n.includes('imagen')) return -100;
-  if(!n.includes('flash')) return -100;
-  if(n.includes('latest')) return 85;
-  if(n.includes('3.8-flash') && !n.includes('lite')) return 100;
-  if(n.includes('3-flash') && !n.includes('lite')) return 95;
-  if(n.includes('2.5-flash') && !n.includes('lite')) return 40;
-  if(n.includes('2.0-flash')) return 30;
-  if(n.includes('flash') && n.includes('lite')) return 60;
-  if(n.includes('flash')) return 70;
-  return 0;
-}
-async function getModelList(forceRefresh){
-  if(!forceRefresh && cachedModelList && (Date.now()-cachedModelListTime)<86400000) return cachedModelList;
-  if(!forceRefresh){
-    try{
-      let saved = JSON.parse(localStorage.getItem('ojoola_model_list')||'null');
-      if(saved && saved.time && (Date.now()-saved.time)<86400000 && Array.isArray(saved.list) && saved.list.length){
-        cachedModelList = saved.list;
-        cachedModelListTime = saved.time;
-        return cachedModelList;
-      }
-    }catch(e){}
-  }
-  let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+apiKey);
-  let j=await res.json().catch(()=>({}));
-  if(j.error) throw new Error('Google said: '+(j.error.message||'models list failed'));
-  let cands=(j.models||[]).map(m=>{
-    let nm=(m.name||'').replace('models/','');
-    let supports=m.supportedGenerationMethods||[];
-    let canGen=supports.length===0 || supports.includes('generateContent');
-    return {name:nm,score:scoreModel(nm),canGen:canGen};
-  }).filter(x=>x.canGen && x.score>0);
-  cands.sort((a,b)=>b.score-a.score);
-  if(!cands.length) throw new Error('Google returned no flash model for this key. Create a new key in Google AI Studio.');
-  cachedModelList=cands;
-  cachedModelListTime=Date.now();
-  try{ localStorage.setItem('ojoola_model_list', JSON.stringify({time:cachedModelListTime, list:cands})); }catch(e){}
-  let badge=document.getElementById('modelBadge');
-  if(badge) badge.textContent='Model: Auto-Picked - '+cands[0].name+' (cached 24h)';
-  return cands;
-}
-async function tryOneModelStream(modelName, parts, onChunk){
-  let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+modelName+':streamGenerateContent?alt=sse&key='+apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]})});
-  if(!res.ok || !res.body){
-    let j={}; try{ j=await res.json(); }catch(e){}
-    let msg=(j.error && j.error.message) || ('HTTP '+res.status);
-    if(msg.toLowerCase().includes('api key') || msg.includes('API_KEY_INVALID')) throw new Error('Your API Key is invalid or expired. Go to Settings, create a NEW key in Google AI Studio, and paste it here.');
-    let err=new Error('Google said: '+res.status+' - '+msg);
-    err.status=res.status;
-    throw err;
-  }
-  let reader=res.body.getReader();
-  let decoder=new TextDecoder();
-  let buffer='';
-  let full='';
-  let gotAny=false;
-  while(true){
-    let r=await reader.read();
-    if(r.done) break;
-    buffer+=decoder.decode(r.value,{stream:true});
-    let lines=buffer.split('\n');
-    buffer=lines.pop();
-    for(let line of lines){
-      line=line.trim();
-      if(!line.startsWith('data:')) continue;
-      let dataStr=line.slice(5).trim();
-      if(!dataStr || dataStr==='[DONE]') continue;
-      try{
-        let chunk=JSON.parse(dataStr);
-        if(chunk.error){
-          let e2=new Error('Google said: '+(chunk.error.status||'')+' - '+(chunk.error.message||'stream error'));
-          e2.status=chunk.error.code||0;
-          throw e2;
-        }
-        let txt=(chunk.candidates && chunk.candidates[0] && chunk.candidates[0].content) ? chunk.candidates[0].content.parts.map(p=>p.text||'').join('') : '';
-        if(txt){ full+=txt; gotAny=true; if(onChunk) onChunk(full); }
-      }catch(e){ if(e.status!==undefined) throw e; }
+
+/* =========================================================
+   OJOOLA AI
+   Persistent chat + streaming + Stop Thinking
+========================================================= */
+
+const $=id=>document.getElementById(id);
+
+let currentCourse=-1;
+let activeController=null;
+let activeRequest=false;
+let selectedImages={
+  general:[],
+  course:[]
+};
+
+const MODEL_LIST=[
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash"
+];
+
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+let generalChatHistory=JSON.parse(
+  localStorage.getItem("ojoola_general_chat") || "[]"
+);
+
+let courses=JSON.parse(
+  localStorage.getItem("ojoola_courses") || "[]"
+);
+
+
+/* =========================================================
+   DEFAULT COURSES
+========================================================= */
+
+if(!courses.length){
+
+  courses=[
+    {
+      name:"Course 1",
+      code:"COURSE 1",
+      pdfs:[],
+      pics:[],
+      ref:true,
+      chat:[]
+    },
+    {
+      name:"Course 2",
+      code:"COURSE 2",
+      pdfs:[],
+      pics:[],
+      ref:true,
+      chat:[]
+    },
+    {
+      name:"Course 3",
+      code:"COURSE 3",
+      pdfs:[],
+      pics:[],
+      ref:true,
+      chat:[]
+    },
+    {
+      name:"Course 4",
+      code:"COURSE 4",
+      pdfs:[],
+      pics:[],
+      ref:true,
+      chat:[]
+    },
+    {
+      name:"Course 5",
+      code:"COURSE 5",
+      pdfs:[],
+      pics:[],
+      ref:true,
+      chat:[]
     }
-  }
-  if(!gotAny && !full) throw new Error('Google returned no answer.');
-  return full;
+  ];
+
+  saveCourses();
 }
-async function callGeminiFast(prompt, images, onChunk){
-  if(!apiKey){openSettings();throw new Error('No API Key yet. Please add your key in Settings.')}
-  let parts=[{text:prompt}];
-  (images||[]).slice(0,2).forEach(img=>{let b=img.data.split(',')[1];let mt=img.data.split(';')[0].split(':')[1];parts.push({inlineData:{mimeType:mt,data:b}})});
-  let models=await getModelList(false);
-  let lastErr=null;
-  for(let i=0;i<models.length;i++){
+
+
+/* =========================================================
+   STORAGE HELPERS
+========================================================= */
+
+function saveCourses(){
+  localStorage.setItem(
+    "ojoola_courses",
+    JSON.stringify(courses)
+  );
+}
+
+function saveGeneralChat(){
+  localStorage.setItem(
+    "ojoola_general_chat",
+    JSON.stringify(generalChatHistory)
+  );
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+function toast(message){
+
+  const el=$("toast");
+
+  el.textContent=message;
+  el.classList.add("show");
+
+  clearTimeout(toastTimer);
+
+  toastTimer=setTimeout(()=>{
+    el.classList.remove("show");
+  },2500);
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+document.querySelectorAll("[data-page]").forEach(btn=>{
+
+  btn.addEventListener("click",()=>{
+
+    const page=btn.dataset.page;
+
+    document.querySelectorAll(".page")
+      .forEach(p=>p.classList.remove("active"));
+
+    $("page-"+page).classList.add("active");
+
+    document.querySelectorAll("[data-page]")
+      .forEach(x=>x.classList.remove("active"));
+
+    document.querySelectorAll(`[data-page="${page}"]`)
+      .forEach(x=>x.classList.add("active"));
+
+    if(page==="general"){
+      loadGeneralChat();
+    }
+
+    if(page==="courses"){
+      renderCourses();
+    }
+
+  });
+
+});
+
+
+function openSettings(){
+
+  document.querySelector('[data-page="settings"]').click();
+
+}
+
+
+/* =========================================================
+   GENERAL CHAT
+========================================================= */
+
+function loadGeneralChat(){
+
+  const box=$("generalMessages");
+
+  box.innerHTML="";
+
+  if(!generalChatHistory.length){
+
+    box.innerHTML=`
+      <div class="empty">
+        <div class="empty-icon">🤖</div>
+        <h3>Welcome to Ojoola AI</h3>
+        <p>
+          Ask questions, explain difficult topics,
+          brainstorm ideas or just start a conversation.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  generalChatHistory.forEach(m=>{
+    addMessageToDOM(
+      box,
+      m.role,
+      m.text
+    );
+  });
+
+  scrollBottom(box);
+}
+
+
+/* =========================================================
+   MESSAGE UI
+========================================================= */
+
+function addMessageToDOM(box,role,text){
+
+  const row=document.createElement("div");
+
+  row.className=
+    "msg " + (role==="user" ? "user" : "ai");
+
+  const bubble=document.createElement("div");
+
+  bubble.className="bubble";
+
+  bubble.textContent=text;
+
+  row.appendChild(bubble);
+
+  box.appendChild(row);
+
+  return bubble;
+}
+
+
+function addThinking(box){
+
+  const row=document.createElement("div");
+
+  row.className="msg ai";
+
+  row.id="thinkingMessage";
+
+  row.innerHTML=`
+    <div class="bubble">
+      <div class="thinking">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+  `;
+
+  box.appendChild(row);
+
+  scrollBottom(box);
+
+  return row.querySelector(".bubble");
+}
+
+
+function scrollBottom(box){
+
+  requestAnimationFrame(()=>{
+    box.scrollTop=box.scrollHeight;
+  });
+
+}
+
+
+/* =========================================================
+   IMAGE HANDLING
+========================================================= */
+
+function handleImages(input,type){
+
+  const files=[...input.files];
+
+  selectedImages[type]=[];
+
+  const preview=$(
+    type==="general"
+      ? "generalPreview"
+      : "coursePreview"
+  );
+
+  preview.innerHTML="";
+
+  files.slice(0,2).forEach(file=>{
+
+    const reader=new FileReader();
+
+    reader.onload=e=>{
+
+      selectedImages[type].push({
+        type:file.type,
+        data:e.target.result.split(",")[1],
+        url:e.target.result
+      });
+
+      const img=document.createElement("img");
+
+      img.src=e.target.result;
+
+      preview.appendChild(img);
+
+      preview.style.display="flex";
+
+    };
+
+    reader.readAsDataURL(file);
+
+  });
+
+}
+
+
+/* =========================================================
+   GENERAL SEND
+========================================================= */
+
+async function sendGeneral(){
+
+  if(activeRequest){
+    stopAI();
+    return;
+  }
+
+  const input=$("generalInput");
+
+  const q=input.value.trim();
+
+  if(!q && !selectedImages.general.length) return;
+
+  if(!localStorage.getItem("ojoola_key")){
+    toast("Add your Gemini API key in Settings.");
+    openSettings();
+    return;
+  }
+
+  input.value="";
+
+  const images=selectedImages.general;
+
+  selectedImages.general=[];
+
+  $("generalPreview").innerHTML="";
+  $("generalPreview").style.display="none";
+
+  const box=$("generalMessages");
+
+  const empty=box.querySelector(".empty");
+
+  if(empty) empty.remove();
+
+  addMessageToDOM(box,"user",q || "Analyze this image.");
+
+  generalChatHistory.push({
+    role:"user",
+    text:q || "Analyze this image."
+  });
+
+  saveGeneralChat();
+
+  const thinking=addThinking(box);
+
+  setSendState("general",true);
+
+  let answer="";
+
+  try{
+
+    answer=await callGeminiFast(
+      q || "Analyze the attached image and explain what you see.",
+      images,
+      chunk=>{
+        thinking.textContent=answer+chunk;
+        answer+=chunk;
+        scrollBottom(box);
+      },
+      generalChatHistory
+    );
+
+    const thinkingRow=$("thinkingMessage");
+
+    if(thinkingRow) thinkingRow.remove();
+
+    addMessageToDOM(box,"ai",answer);
+
+    generalChatHistory.push({
+      role:"ai",
+      text:answer
+    });
+
+    saveGeneralChat();
+
+  }catch(e){
+
+    const thinkingRow=$("thinkingMessage");
+
+    if(thinkingRow) thinkingRow.remove();
+
+    if(e.message==="Stopped"){
+
+      addMessageToDOM(
+        box,
+        "ai",
+        "Generation stopped."
+      );
+
+    }else{
+
+      addMessageToDOM(
+        box,
+        "ai",
+        "Sorry, I couldn't complete that request.\n\n"+e.message
+      );
+
+    }
+
+  }finally{
+
+    setSendState("general",false);
+
+  }
+
+}
+
+
+/* =========================================================
+   COURSES
+========================================================= */
+
+function renderCourses(){
+
+  const list=$("courseList");
+
+  list.innerHTML="";
+
+  courses.forEach((course,i)=>{
+
+    const btn=document.createElement("button");
+
+    btn.className=
+      "course-btn"+
+      (currentCourse===i ? " active":"");
+
+    btn.innerHTML=`
+      <span class="course-dot"></span>
+      <span>${escapeHTML(course.name)}</span>
+    `;
+
+    btn.onclick=()=>openCourse(i);
+
+    list.appendChild(btn);
+
+  });
+
+}
+
+
+function openCourse(index){
+
+  currentCourse=index;
+
+  document.querySelector('[data-page="courses"]').click();
+
+  $("courseTitle").textContent=
+    courses[index].name;
+
+  $("courseSubtitle").textContent=
+    courses[index].code || "Course Chat";
+
+  $("courseComposer").style.display="block";
+
+  renderCourses();
+
+  loadCourseChat();
+
+}
+
+
+function loadCourseChat(){
+
+  const box=$("courseMessages");
+
+  box.innerHTML="";
+
+  if(currentCourse<0){
+
+    $("courseComposer").style.display="none";
+
+    box.innerHTML=`
+      <div class="empty">
+        <div class="empty-icon">📚</div>
+        <h3>Select a course</h3>
+        <p>
+          Choose a course from the menu to start studying.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  const chat=courses[currentCourse].chat || [];
+
+  if(!chat.length){
+
+    box.innerHTML=`
+      <div class="empty">
+        <div class="empty-icon">📖</div>
+        <h3>${escapeHTML(courses[currentCourse].name)}</h3>
+        <p>
+          Ask questions about this course and continue
+          the conversation whenever you return.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  chat.forEach(m=>{
+    if(m.text && m.text!=="Thinking..."){
+      addMessageToDOM(box,m.role,m.text);
+    }
+  });
+
+  scrollBottom(box);
+
+}
+
+
+/* =========================================================
+   COURSE CHAT
+========================================================= */
+
+async function sendCourseChat(){
+
+  if(currentCourse<0){
+    toast("Select a course first.");
+    return;
+  }
+
+  if(activeRequest){
+    stopAI();
+    return;
+  }
+
+  const input=$("courseInput");
+
+  const q=input.value.trim();
+
+  if(!q && !selectedImages.course.length) return;
+
+  if(!localStorage.getItem("ojoola_key")){
+    toast("Add your Gemini API key in Settings.");
+    openSettings();
+    return;
+  }
+
+  input.value="";
+
+  const images=selectedImages.course;
+
+  selectedImages.course=[];
+
+  $("coursePreview").innerHTML="";
+  $("coursePreview").style.display="none";
+
+  const course=courses[currentCourse];
+
+  const box=$("courseMessages");
+
+  const empty=box.querySelector(".empty");
+
+  if(empty) empty.remove();
+
+  const userText=q || "Analyze the attached image.";
+
+  addMessageToDOM(box,"user",userText);
+
+  course.chat.push({
+    role:"user",
+    text:userText
+  });
+
+  saveCourses();
+
+  const thinking=addThinking(box);
+
+  setSendState("course",true);
+
+  let answer="";
+
+  const courseInstruction=`
+You are Ojoola AI, the student's study partner.
+
+Current course:
+${course.name}
+Course code:
+${course.code || ""}
+
+Answer clearly and accurately.
+If the student asks about this course, prioritize the
+course context provided in this conversation.
+Do not invent information from a lecturer's material
+that you have not actually received.
+`;
+
+  try{
+
+    answer=await callGeminiFast(
+      courseInstruction+"\n\nStudent question:\n"+userText,
+      images,
+      chunk=>{
+        thinking.textContent=answer+chunk;
+        answer+=chunk;
+        scrollBottom(box);
+      },
+      course.chat
+    );
+
+    const thinkingRow=$("thinkingMessage");
+
+    if(thinkingRow) thinkingRow.remove();
+
+    addMessageToDOM(box,"ai",answer);
+
+    course.chat.push({
+      role:"ai",
+      text:answer
+    });
+
+    saveCourses();
+
+  }catch(e){
+
+    const thinkingRow=$("thinkingMessage");
+
+    if(thinkingRow) thinkingRow.remove();
+
+    if(e.message==="Stopped"){
+
+      addMessageToDOM(
+        box,
+        "ai",
+        "Generation stopped."
+      );
+
+    }else{
+
+      addMessageToDOM(
+        box,
+        "ai",
+        "Sorry, I couldn't complete that request.\n\n"+e.message
+      );
+
+    }
+
+  }finally{
+
+    setSendState("course",false);
+
+  }
+
+}
+
+
+/* =========================================================
+   GEMINI REQUEST
+========================================================= */
+
+async function callGeminiFast(
+  prompt,
+  images=[],
+  onChunk,
+  history=[]
+){
+
+  const key=localStorage.getItem("ojoola_key");
+
+  if(!key){
+    throw new Error("Gemini API key is missing.");
+  }
+
+  activeController=new AbortController();
+
+  activeRequest=true;
+
+  /*
+    Keep the most recent conversation turns.
+    The complete conversation remains stored locally.
+  */
+  const recent=history
+    .filter(m=>m.text && m.text!=="Thinking...")
+    .slice(-16);
+
+  const contents=[];
+
+  for(const m of recent){
+
+    contents.push({
+      role:m.role==="ai" ? "model" : "user",
+      parts:[
+        {
+          text:m.text
+        }
+      ]
+    });
+
+  }
+
+  /*
+    The current user message is already in history,
+    so do not duplicate it.
+  */
+
+  const models=[...MODEL_LIST];
+
+  let lastError=null;
+
+  for(const model of models){
+
+    if(!activeRequest){
+      throw new Error("Stopped");
+    }
+
     try{
-      let ans=await tryOneModelStream(models[i].name, parts, onChunk);
-      let badge=document.getElementById('modelBadge');
-      if(badge) badge.textContent='Model: Auto-Picked - '+models[i].name+' (cached 24h)';
-      return ans;
+
+      const result=await tryOneModelStream(
+        model,
+        contents,
+        onChunk,
+        activeController.signal
+      );
+
+      activeRequest=false;
+      activeController=null;
+
+      $("modelStatus").textContent=model;
+
+      return result;
+
     }catch(e){
-      lastErr=e;
-      let s=e.status||0;
-      let m=String(e.message||'');
-      let isRetryable = s===503 || s===429 || s===404 || m.includes('503') || m.includes('429') || m.includes('404') || m.toLowerCase().includes('overloaded') || m.toLowerCase().includes('high demand') || m.toLowerCase().includes('not found') || m.toLowerCase().includes('no longer available');
-      if(isRetryable){
-        if(onChunk) onChunk('');
+
+      if(
+        e.name==="AbortError" ||
+        !activeRequest
+      ){
+
+        activeRequest=false;
+        activeController=null;
+
+        throw new Error("Stopped");
+
+      }
+
+      lastError=e;
+
+    }
+
+  }
+
+  activeRequest=false;
+  activeController=null;
+
+  throw lastError || new Error("AI request failed.");
+
+}
+
+
+/* =========================================================
+   STREAMING GEMINI
+========================================================= */
+
+async function tryOneModelStream(
+  modelName,
+  contents,
+  onChunk,
+  signal
+){
+
+  const url=
+    `https://generativelanguage.googleapis.com/v1beta/models/`+
+    `${modelName}:streamGenerateContent?alt=sse`;
+
+  const response=await fetch(url,{
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/json",
+      "x-goog-api-key":
+        localStorage.getItem("ojoola_key")
+    },
+
+    body:JSON.stringify({
+
+      contents,
+
+      generationConfig:{
+        temperature:.7,
+        maxOutputTokens:2048
+      }
+
+    }),
+
+    signal
+
+  });
+
+  if(!response.ok){
+
+    let message="Gemini request failed.";
+
+    try{
+
+      const data=await response.json();
+
+      message=
+        data?.error?.message ||
+        message;
+
+    }catch{}
+
+    throw new Error(message);
+
+  }
+
+  if(!response.body){
+    throw new Error("Streaming is not available.");
+  }
+
+  const reader=
+    response.body.getReader();
+
+  const decoder=
+    new TextDecoder();
+
+  let buffer="";
+  let full="";
+
+  while(true){
+
+    const {value,done}=
+      await reader.read();
+
+    if(done) break;
+
+    buffer+=
+      decoder.decode(
+        value,
+        {stream:true}
+      );
+
+    const lines=
+      buffer.split("\n");
+
+    buffer=
+      lines.pop() || "";
+
+    for(const line of lines){
+
+      if(!line.startsWith("data:")){
         continue;
       }
-      throw e;
+
+      const raw=
+        line.slice(5).trim();
+
+      if(!raw || raw==="[DONE]"){
+        continue;
+      }
+
+      try{
+
+        const json=
+          JSON.parse(raw);
+
+        const parts=
+          json?.candidates?.[0]
+            ?.content?.parts || [];
+
+        let text="";
+
+        for(const part of parts){
+
+          if(part.text){
+            text+=part.text;
+          }
+
+        }
+
+        if(text){
+
+          full+=text;
+
+          onChunk(text);
+
+        }
+
+      }catch(e){
+
+        /*
+          Ignore incomplete SSE JSON chunks.
+        */
+
+      }
+
     }
+
   }
-  if(lastErr){
-    if(String(lastErr.message||'').includes('404') || String(lastErr.message||'').includes('not found')){
-      try{ localStorage.removeItem('ojoola_model_list'); cachedModelList=null; cachedModelListTime=0; }catch(e){}
+
+  return full;
+
+}
+
+
+/* =========================================================
+   STOP THINKING
+========================================================= */
+
+function stopAI(){
+
+  if(activeController){
+
+    activeRequest=false;
+
+    activeController.abort();
+
+    activeController=null;
+
+  }
+
+  setSendState("general",false);
+  setSendState("course",false);
+
+}
+
+
+/* =========================================================
+   SEND BUTTON STATE
+========================================================= */
+
+function setSendState(type,busy){
+
+  const btn=
+    type==="general"
+      ? $("generalSend")
+      : $("courseSend");
+
+  if(!btn) return;
+
+  if(busy){
+
+    btn.textContent="⏹ Stop Thinking";
+    btn.classList.add("stop");
+
+  }else{
+
+    btn.textContent="Send 🚀";
+    btn.classList.remove("stop");
+
+  }
+
+}
+
+
+/* =========================================================
+   API KEY
+========================================================= */
+
+function saveApiKey(){
+
+  const key=
+    $("apiKeyInput").value.trim();
+
+  if(!key){
+
+    toast("Enter your Gemini API key.");
+
+    return;
+
+  }
+
+  localStorage.setItem(
+    "ojoola_key",
+    key
+  );
+
+  toast("API key saved.");
+
+}
+
+
+async function testConnection(){
+
+  const key=
+    localStorage.getItem("ojoola_key");
+
+  if(!key){
+
+    toast("Save your API key first.");
+
+    return;
+
+  }
+
+  toast("Testing connection...");
+
+  try{
+
+    const response=
+      await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json",
+
+            "x-goog-api-key":key
+          },
+
+          body:JSON.stringify({
+            contents:[
+              {
+                parts:[
+                  {
+                    text:"Reply with OK only."
+                  }
+                ]
+              }
+            ],
+            generationConfig:{
+              maxOutputTokens:5
+            }
+          })
+        }
+      );
+
+    if(!response.ok){
+
+      const data=
+        await response.json()
+          .catch(()=>({}));
+
+      throw new Error(
+        data?.error?.message ||
+        "Connection failed."
+      );
+
     }
-    throw new Error('All models busy right now. Tried: '+models.map(x=>x.name).join(', ')+'. Last error: '+lastErr.message);
+
+    toast("Gemini connection works.");
+
+  }catch(e){
+
+    toast("Connection failed: "+e.message);
+
   }
-  throw new Error('No model available.');
+
 }
-function buildContext(courseList){let txt='You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples.\n\n';courseList.forEach((c,i)=>{if(c.ref && c.pdfs.some(x=>x)) txt+='Course: '+(c.name||'')+': has PDFs: '+c.pdfs.filter(x=>x).map(x=>x.name).join(', ')+'. Has '+c.pics.length+' pictures.\n'});return txt}
-async function sendCourseChat(){
-  let inp=document.getElementById('courseInput');let q=inp.value.trim();if(!q)return;
-  courses[current].chat.push({role:'user',text:q});
-  let aiIndex=courses[current].chat.length;
-  courses[current].chat.push({role:'ai',text:'Thinking...'});
-  save();renderCourseChat();inp.value='';
-  let el=document.getElementById('courseMsgs');
-  let aiEl=el.lastChild;
-  try{
-    let ans=await callGeminiFast(buildContext([courses[current]])+'Question: '+q, courses[current].pics, (partial)=>{
-      if(partial){ courses[current].chat[aiIndex].text=partial; if(aiEl) aiEl.textContent=partial; }
-    });
-    courses[current].chat[aiIndex].text=ans||'No answer.';
-  }catch(e){courses[current].chat[aiIndex].text='Error: '+e.message}
-  save();renderCourseChat();
+
+
+/* =========================================================
+   CLEAR CHAT
+========================================================= */
+
+function clearGeneralChat(){
+
+  if(!confirm(
+    "Clear your entire General Chat history?"
+  )) return;
+
+  generalChatHistory=[];
+
+  saveGeneralChat();
+
+  loadGeneralChat();
+
+  toast("General Chat cleared.");
+
 }
-async function sendGeneral(){
-  let inp=document.getElementById('generalInput');let q=inp.value.trim();if(!q)return;
-  let btn=document.getElementById('generalSendBtn');btn.disabled=true;btn.textContent='Thinking...';
-  let box=document.getElementById('generalMsgs');
-  let u=document.createElement('div');u.className='msg me';u.textContent=q;box.appendChild(u);
-  let a=document.createElement('div');a.className='msg ai';a.textContent='Thinking...';box.appendChild(a);
-  inp.value='';
-  let start=Date.now();
-  try{
-    let ans=await callGeminiFast('You are Ojoola AI, a friendly Nigerian study partner. Answer clearly, simply, with examples. General question: '+q, [], (partial)=>{
-      if(partial) a.textContent=partial;
-    });
-    a.textContent=ans;
-    console.log('General chat took ' + ((Date.now()-start)/1000) + 's');
-  }catch(e){a.textContent='Error: '+e.message}
-  btn.disabled=false;btn.textContent='Send Message 🚀';
+
+
+function clearAllCourseChats(){
+
+  if(!confirm(
+    "Clear the conversation history of every course?"
+  )) return;
+
+  courses.forEach(course=>{
+    course.chat=[];
+  });
+
+  saveCourses();
+
+  if(currentCourse>=0){
+    loadCourseChat();
+  }
+
+  toast("Course chats cleared.");
+
 }
-function openSettings(){lockKeyView();document.getElementById('settingsModal').classList.remove('hidden')}
-function closeSettings(){document.getElementById('settingsModal').classList.add('hidden')}
-function lockKeyView(){document.getElementById('keyText').textContent=apiKey?'••••••••'+apiKey.slice(-4):'••••••••';document.getElementById('keyStatus').textContent=apiKey?'✅ Key Saved - Locked':'❌ No key yet';document.getElementById('apiKeyInput').value=apiKey;document.getElementById('keyView').classList.remove('hidden');document.getElementById('keyEdit').classList.add('hidden')}
-function editKey(){document.getElementById('keyView').classList.add('hidden');document.getElementById('keyEdit').classList.remove('hidden');document.getElementById('apiKeyInput').focus()}
-function cancelKeyEdit(){lockKeyView()}
-function saveKey(){apiKey=document.getElementById('apiKeyInput').value.trim();localStorage.setItem('ojoola_key',apiKey);cachedModelList=null;cachedModelListTime=0;try{localStorage.removeItem('ojoola_model_list');}catch(e){}lockKeyView();showToast('keyToast')}
-applyTheme();render();if(window.lucide) lucide.createIcons();
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHTML(text){
+
+  return String(text)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================================================
+   TEXTAREA AUTO RESIZE
+========================================================= */
+
+document.addEventListener(
+  "input",
+  e=>{
+
+    if(e.target.tagName==="TEXTAREA"){
+
+      e.target.style.height="auto";
+
+      e.target.style.height=
+        Math.min(
+          e.target.scrollHeight,
+          130
+        )+"px";
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   ENTER TO SEND
+========================================================= */
+
+$("generalInput").addEventListener(
+  "keydown",
+  e=>{
+
+    if(
+      e.key==="Enter" &&
+      !e.shiftKey
+    ){
+
+      e.preventDefault();
+
+      sendGeneral();
+
+    }
+
+  }
+);
+
+
+$("courseInput").addEventListener(
+  "keydown",
+  e=>{
+
+    if(
+      e.key==="Enter" &&
+      !e.shiftKey
+    ){
+
+      e.preventDefault();
+
+      sendCourseChat();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+function init(){
+
+  const savedKey=
+    localStorage.getItem("ojoola_key");
+
+  if(savedKey){
+    $("apiKeyInput").value=savedKey;
+  }
+
+  renderCourses();
+
+  loadGeneralChat();
+
+  loadCourseChat();
+
+}
+
+init();
+
 </script>
+
 </body>
 </html>
