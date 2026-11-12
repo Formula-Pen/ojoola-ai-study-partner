@@ -213,6 +213,8 @@ async function call(path,body,btn,label){
   finally{btn.disabled=false;btn.textContent=label}
 }
 
+(function(){const n=sessionStorage.getItem("ojoola_notice");if(n){sessionStorage.removeItem("ojoola_notice");note(n)}})();
+
 async function submitIn(e){
   e.preventDefault();
   const d=await call("/api/login",{identifier:$("inId").value,password:$("inPw").value,passcode:$("inCode").value},$("goIn"),"Sign in");
