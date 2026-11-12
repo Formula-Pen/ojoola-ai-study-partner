@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1d4ed8">
+<link rel="icon" href="icons/favicon.ico">
+<title>Owner dashboard – Ọjọ́ọ̀la</title>
+<style>
+:root{--bg:#eef3fc;--card:#fff;--line:#d9e2f1;--text:#14213d;--muted:#5b6b86;--blue:#2563eb;--blue2:#1d4ed8;--soft:#eaf0ff;
+--ok:#166534;--okbg:#dcfce7;--warn:#92400e;--warnbg:#fef3c7;--err:#b91c1c;--errbg:#fee2e2}
+@media(prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#121c2e;--line:#2b3b56;--text:#e8edf7;--muted:#94a3b8;--soft:#1d3158;
+--ok:#bbf7d0;--okbg:#14391f;--warn:#fde68a;--warnbg:#3b2f0b;--err:#fecdd3;--errbg:#451c27}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+body{min-height:100svh;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
+.hidden{display:none!important}
+button{font:inherit;cursor:pointer}
+input[type=text],input[type=password],input[type=search]{width:100%;border:1.5px solid var(--line);border-radius:13px;padding:13px;background:var(--card);color:var(--text);font:inherit;outline:none}
+input:focus-visible{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.16)}
+
+.top{background:linear-gradient(160deg,#1e3a8a,#1d4ed8 55%,#3b82f6);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 18px;border-radius:0 0 26px 26px}
+.topRow{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:auto}
+.top h1{margin:0;font-size:20px}
+.top small{opacity:.8;font-size:12px}
+.ghost{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:11px;padding:8px 12px;font-size:13px;font-weight:700}
+.wrap{max-width:760px;margin:auto;padding:16px 16px 0}
+
+/* login */
+.login{max-width:400px;margin:40px auto;padding:0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 10px 34px rgba(15,35,90,.10)}
+.card h2{margin:0 0 4px}
+label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
+.primary{width:100%;margin-top:16px;border:0;border-radius:14px;padding:14px;color:#fff;font-weight:800;background:linear-gradient(135deg,var(--blue2),var(--blue))}
+.primary:disabled{opacity:.6}
+.msg{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:13px;background:var(--errbg);color:var(--err)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 6px;text-align:center}
+.stat b{display:block;font-size:22px}
+.stat span{font-size:11px;color:var(--muted)}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:4px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);padding:10px;border-radius:11px;font-weight:700}
+.tabs button.on{background:var(--soft);color:var(--blue)}
+
+/* users */
+.u{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:10px;overflow:hidden}
+.uHead{display:flex;align-items:center;gap:10px;padding:13px;width:100%;border:0;background:none;color:inherit;text-align:left}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;background:var(--soft);color:var(--blue);display:grid;place-items:center;font-weight:800}
+.nm{flex:1;min-width:0}
+.nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm span{font-size:12px;color:var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;margin-left:4px;background:var(--soft);color:var(--blue)}
+.tag.active{background:var(--okbg);color:var(--ok)}
+.tag.suspended{background:var(--warnbg);color:var(--warn)}
+.tag.revoked{background:var(--errbg);color:var(--err)}
+.tag.reset{background:var(--warnbg);color:var(--warn)}
+.uBody{border-top:1px solid var(--line);padding:13px}
+.info{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px;overflow-wrap:anywhere}
+.sec{font-size:12px;font-weight:800;margin:12px 0 6px}
+.perms{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.perm{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-size:13px}
+.perm input{width:18px;height:18px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.b{border:0;border-radius:11px;padding:10px 12px;font-size:13px;font-weight:700;background:var(--soft);color:var(--blue)}
+.b.warn{background:var(--warnbg);color:var(--warn)}
+.b.bad{background:var(--errbg);color:var(--err)}
+.b.good{background:var(--okbg);color:var(--ok)}
+
+/* activity */
+.ev{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;font-size:13px}
+.ev .t{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
+.ev.reset{border-color:#f59e0b}
+.empty{text-align:center;color:var(--muted);padding:28px 10px;font-size:14px}
+
+/* code modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:20px;z-index:10}
+.codeBox{font-family:monospace;font-size:19px;font-weight:700;letter-spacing:1px;text-align:center;background:var(--soft);color:var(--blue);padding:16px 10px;border-radius:14px;margin:12px 0;overflow-wrap:anywhere;user-select:all}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);background:#14213d;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:20}
+</style>
+</head>
+<body>
+
+<!-- OWNER LOGIN -->
+<section id="loginView" class="login hidden">
+  <div class="card">
+    <h2>Owner sign in</h2>
+    <p style="margin:0;color:var(--muted);font-size:14px">Ọjọ́ọ̀la dashboard</p>
+    <form id="loginForm">
+      <label for="ou">Owner username</label>
+      <input id="ou" type="text" autocomplete="username" autocapitalize="none" required>
+      <label for="op">Owner password</label>
+      <input id="op" type="password" autocomplete="current-password" required>
+      <button class="primary" id="loginBtn">Sign in</button>
+    </form>
+    <div id="loginMsg" class="msg hidden"></div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashView" class="hidden">
+  <header class="top">
+    <div class="topRow">
+      <div><h1>Owner dashboard</h1><small>Ọjọ́ọ̀la accounts &amp; activity</small></div>
+      <div style="display:flex;gap:8px">
+        <button class="ghost" id="refreshBtn">Refresh</button>
+        <button class="ghost" id="outBtn">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="stats" id="stats"></div>
+    <div class="tabs">
+      <button id="tUsers" class="on">Users</button>
+      <button id="tAct">Activity</button>
+    </div>
+
+    <div id="usersPane">
+      <input id="q" type="search" placeholder="Search name, username or email" style="margin-bottom:12px">
+      <div id="list"></div>
+    </div>
+    <div id="actPane" class="hidden"><div id="acts"></div></div>
+  </div>
+</section>
+
+<div id="ov" class="ov hidden">
+  <div class="card" style="max-width:380px;width:100%">
+    <h2 id="ovTitle"></h2>
+    <p id="ovText" style="margin:6px 0;color:var(--muted);font-size:13px;line-height:1.5"></p>
+    <div id="ovCode" class="codeBox"></div>
+    <button class="primary" id="ovCopy" style="margin-top:6px">Copy code</button>
+    <button class="b" id="ovClose" style="width:100%;margin-top:8px">Close</button>
+  </div>
+</div>
+
+<script>
+const API="https://ojoola-api.babatundexwale.workers.dev";
+const KEY="ojoola_admin_session";
+const PERMS=[["chat","AI chat"],["pdf","PDFs & pictures"],["read_aloud","Read Aloud"],["live","Live voice"],["experimental","Experimental"]];
+const EVT={signup:"signed up",login:"signed in",ai_chat:"asked the AI",pdf_upload:"added a PDF",picture_upload:"added a picture",read_aloud:"used Read Aloud",live_start:"started Live voice",support_open:"opened support",reset_request:"asked for a password reset"};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let users=[],activity=[],open=new Set();
+
+async function api(path,body){
+  const t=localStorage.getItem(KEY)||"";
+  const r=await fetch(API+path,{method:body?"POST":"GET",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:body?JSON.stringify(body):undefined});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401&&path!=="/api/admin/login"){signOut();throw new Error("Session expired")}
+  if(!r.ok)throw new Error(typeof d.error==="string"?d.error:(d.error&&d.error.message)||"Request failed");
+  return d;
+}
+function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2200)}
+function when(ts){if(!ts)return"never";const m=Math.floor((Date.now()-ts)/60000);if(m<1)return"just now";if(m<60)return m+" min ago";if(m<1440)return Math.floor(m/60)+" h ago";return new Date(ts).toLocaleDateString([], {day:"numeric",month:"short",year:"numeric"})}
+
+/* ---- auth ---- */
+function signOut(){localStorage.removeItem(KEY);$("dashView").classList.add("hidden");$("loginView").classList.remove("hidden")}
+$("loginForm").onsubmit=async e=>{
+  e.preventDefault();const b=$("loginBtn"),m=$("loginMsg");
+  b.disabled=true;b.textContent="Please wait…";m.classList.add("hidden");
+  try{
+    const d=await api("/api/admin/login",{username:$("ou").value,password:$("op").value});
+    localStorage.setItem(KEY,d.token);$("op").value="";await start();
+  }catch(err){m.textContent=err.message;m.classList.remove("hidden")}
+  finally{b.disabled=false;b.textContent="Sign in"}
+};
+$("outBtn").onclick=async()=>{try{await api("/api/logout",{})}catch(_){}signOut()};
+$("refreshBtn").onclick=()=>load().then(()=>toast("Updated")).catch(e=>toast(e.message));
+
+async function start(){
+  $("loginView").classList.add("hidden");$("dashView").classList.remove("hidden");
+  try{await load()}catch(_){}
+}
+
+/* ---- data ---- */
+async function load(){
+  const [u,a]=await Promise.all([api("/api/admin/users"),api("/api/admin/activity")]);
+  users=u.users;activity=a.activity;render();
+}
+function pendingResets(){
+  const cut=Date.now()-86400000,s=new Set();
+  activity.forEach(a=>{if(a.event==="reset_request"&&a.ts>cut)s.add(a.user_id)});
+  return s;
+}
+function render(){
+  const pr=pendingResets();
+  $("stats").innerHTML=[
+    [users.length,"Users"],
+    [users.filter(u=>u.role==="tester").length,"Testers"],
+    [users.filter(u=>u.status!=="active").length,"Blocked"],
+    [pr.size,"Reset asks"]
+  ].map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+  renderUsers(pr);renderActivity();
+}
+function renderUsers(pr){
+  const q=$("q").value.trim().toLowerCase();
+  const rows=users.filter(u=>!q||[u.firstName,u.username,u.email].join(" ").toLowerCase().includes(q));
+  if(!rows.length){$("list").innerHTML='<div class="empty">No users found.</div>';return}
+  $("list").innerHTML=rows.map(u=>{
+    const isOpen=open.has(u.id);
+    return `<div class="u" data-id="${u.id}">
+      <button class="uHead" data-act="toggle" data-id="${u.id}">
+        <div class="av">${esc((u.firstName||"?")[0].toUpperCase())}</div>
+        <div class="nm"><b>${esc(u.firstName)}</b><span>@${esc(u.username)}</span></div>
+        <div>${pr.has(u.id)?'<span class="tag reset">Reset asked</span>':""}<span class="tag">${esc(u.role)}</span><span class="tag ${esc(u.status)}">${esc(u.status)}</span></div>
+      </button>
+      ${isOpen?body(u):""}
+    </div>`}).join("");
+}
+function body(u){
+  const tester=u.role==="tester";
+  return `<div class="uBody">
+    <div class="info">${esc(u.email)}<br>Joined ${when(u.createdAt)} · Last sign-in ${when(u.lastLogin)}</div>
+    <div class="sec">Permissions</div>
+    <div class="perms">${PERMS.map(([k,l])=>`<label class="perm"><input type="checkbox" data-perm="${k}" data-id="${u.id}" ${u.perms[k]?"checked":""}>${l}</label>`).join("")}</div>
+    <div class="sec">Account</div>
+    <div class="acts">
+      ${u.status==="active"?`<button class="b warn" data-act="suspended" data-id="${u.id}">Suspend</button>
+        <button class="b bad" data-act="revoked" data-id="${u.id}">Revoke access</button>`
+        :`<button class="b good" data-act="active" data-id="${u.id}">Restore access</button>`}
+      <button class="b" data-act="resetcode" data-id="${u.id}">Issue reset code</button>
+      ${tester?`<button class="b" data-act="passcode" data-id="${u.id}">New tester passcode</button>
+        <button class="b" data-act="makeuser" data-id="${u.id}">Make normal user</button>`
+        :`<button class="b" data-act="maketester" data-id="${u.id}">Make tester</button>`}
+      <button class="b bad" data-act="delete" data-id="${u.id}">Delete</button>
+    </div>
+  </div>`;
+}
+function renderActivity(){
+  if(!activity.length){$("acts").innerHTML='<div class="empty">No activity yet.</div>';return}
+  $("acts").innerHTML=activity.map(a=>`<div class="ev ${a.event==="reset_request"?"reset":""}">
+    <div class="av" style="width:32px;height:32px;flex-basis:32px;border-radius:10px;font-size:13px">${esc((a.first_name||"?")[0].toUpperCase())}</div>
+    <div><b>${esc(a.first_name||"Deleted user")}</b> ${esc(EVT[a.event]||a.event)}</div>
+    <div class="t">${when(a.ts)}</div></div>`).join("");
+}
+
+/* ---- actions ---- */
+function showCode(title,text,code){
+  $("ovTitle").textContent=title;$("ovText").textContent=text;$("ovCode").textContent=code;
+  $("ov").classList.remove("hidden");
+}
+$("ovClose").onclick=()=>$("ov").classList.add("hidden");
+$("ovCopy").onclick=async()=>{
+  const c=$("ovCode").textContent;
+  try{await navigator.clipboard.writeText(c);toast("Copied")}catch(_){toast("Press and hold the code to copy")}
+};
+
+$("list").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const id=Number(b.dataset.id),act=b.dataset.act,u=users.find(x=>x.id===id);
+  if(act==="toggle"){open.has(id)?open.delete(id):open.add(id);renderUsers(pendingResets());return}
+  try{
+    if(["suspended","revoked"].includes(act)){
+      if(!confirm((act==="revoked"?"Revoke all access for ":"Suspend ")+u.firstName+"? They will be signed out."))return;
+      await api("/api/admin/status",{id,status:act});toast("Done");
+    }else if(act==="active"){await api("/api/admin/status",{id,status:"active"});toast("Access restored")}
+    else if(act==="maketester"||act==="passcode"){
+      if(act==="passcode"&&!confirm("Replace "+u.firstName+"'s passcode? The old one stops working."))return;
+      const d=await api("/api/admin/make-tester",{id});
+      showCode("Tester passcode for "+u.firstName,"Shown once. Give it to them privately. They sign in with their password plus this passcode.",d.passcode);
+    }else if(act==="makeuser"){
+      if(!confirm("Make "+u.firstName+" a normal user? Their passcode will be removed."))return;
+      await api("/api/admin/make-user",{id});toast("Done");
+    }else if(act==="resetcode"){
+      const d=await api("/api/admin/reset-code",{id});
+      showCode("Reset code for "+u.firstName,"Valid for 1 hour, works once. They tap Forgot password, then I have a reset code.",d.code);
+    }else if(act==="delete"){
+      if(!confirm("Delete "+u.firstName+" permanently?"))return;
+      await api("/api/admin/delete",{id});open.delete(id);toast("Deleted");
+    }
+    await load();
+  }catch(err){toast(err.message)}
+});
+
+$("list").addEventListener("change",async e=>{
+  const c=e.target.closest("[data-perm]");if(!c)return;
+  const id=Number(c.dataset.id);
+  const perms={};
+  document.querySelectorAll(`[data-perm][data-id="${id}"]`).forEach(x=>perms[x.dataset.perm]=x.checked);
+  try{await api("/api/admin/perms",{id,perms});users.find(x=>x.id===id).perms=perms;toast("Saved")}
+  catch(err){toast(err.message);load()}
+});
+
+$("q").oninput=()=>renderUsers(pendingResets());
+$("tUsers").onclick=()=>{$("tUsers").classList.add("on");$("tAct").classList.remove("on");$("usersPane").classList.remove("hidden");$("actPane").classList.add("hidden")};
+$("tAct").onclick=()=>{$("tAct").classList.add("on");$("tUsers").classList.remove("on");$("actPane").classList.remove("hidden");$("usersPane").classList.add("hidden")};
+
+/* ---- boot ---- */
+(async()=>{
+  if(!localStorage.getItem(KEY)){$("loginView").classList.remove("hidden");return}
+  try{const me=await api("/api/me");if(me.role!=="admin")throw 0;await start()}
+  catch(_){signOut()}
+})();
+</script>
+</body>
+</html>
