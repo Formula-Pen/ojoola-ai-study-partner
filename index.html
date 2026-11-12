@@ -1851,7 +1851,42 @@ function saveGeneral(){
   );
 }
 
+function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open("ojoola_files",1);r.onupgradeneeded=()=>r.result.createObjectStore("files");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function idbPut(k,v){const db=await idbOpen();return new Promise((res,rej)=>{const t=db.transaction("files","readwrite");t.objectStore("files").put(v,k);t.oncomplete=()=>{db.close();res();};t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);});}
+async function idbGet(k){const db=await idbOpen();return new Promise((res,rej)=>{const t=db.transaction("files","readonly");const q=t.objectStore("files").get(k);q.onsuccess=()=>{db.close();res(q.result);};q.onerror=()=>rej(q.error);});}
+async function idbDel(k){if(!k)return;try{const db=await idbOpen();const t=db.transaction("files","readwrite");t.objectStore("files").delete(k);t.oncomplete=()=>db.close();}catch(_){}}
+
+const idbDone=new Set(),idbBusy=new Set();
+
 function saveCourses(){
+  let pending=false;
+  const strip=f=>{
+    if(!f||typeof f!=="object")return f;
+    if(f.data&&!idbDone.has(f.id)){
+      pending=true;
+      if(!idbBusy.has(f.id)){
+        idbBusy.add(f.id);
+        idbPut(f.id,f.data).then(()=>{idbDone.add(f.id);idbBusy.delete(f.id);saveCourses();}).catch(e=>{idbBusy.delete(f.id);reportAppError("Could not store file: "+e.message);});
+      }
+      return f;
+    }
+    const {data,...rest}=f;
+    return rest;
+  };
+  const slim=courses.map(c=>({...c,pdfs:(c.pdfs||[]).map(strip),pictures:(c.pictures||[]).map(strip)}));
+  try{
+    localStorage.setItem("ojoola_courses",JSON.stringify(slim));
+    return true;
+  }catch(e){
+    if(!pending){
+      alert("This device may be out of storage space. Remove some large PDFs or pictures and try again.");
+      reportAppError("Could not save local data: "+e.message);
+    }
+    return pending;
+  }
+}
+
+function saveCoursesOld(){
   saveJSON(
     "ojoola_courses",
     courses
@@ -2097,7 +2132,7 @@ if("serviceWorker" in navigator){
             "./service-worker.js"
           );
 
-        await reg.update();
+        await reg.update().catch(()=>{});
 
         console.log(
           "Ọjọ́ọ̀la service worker registered; update checked."
@@ -2289,7 +2324,7 @@ function clearAllData(){
     "Clear all Ọjọ́ọ̀la local data on this device? This also removes your saved API key, courses and conversations."
   ))return;
 
-  localStorage.clear();
+  localStorage.clear();indexedDB.deleteDatabase("ojoola_files");
 
   location.reload();
 }
@@ -2550,7 +2585,7 @@ courses=
     })
   );
 
-let currentCourseIndex=null;
+let currentCourseIndex=null;  async function loadFileData(){   try{     if(navigator.storage&&navigator.storage.persist){navigator.storage.persist();}     for(const c of courses){       for(const f of [...(c.pdfs||[]),...(c.pictures||[])]){         if(f&&f.id&&!f.data){           const d=await idbGet(f.id);           if(d){f.data=d;idbDone.add(f.id);}         }       }     }     if(currentCourseIndex!==null&&courses[currentCourseIndex]){renderCourseFiles();}     saveCourses();   }catch(e){     reportAppError("Could not load files: "+e.message);   } } loadFileData();
 
 
 function renderCourses(){
@@ -3081,7 +3116,7 @@ function deleteCoursePDF(i){
     confirm("Delete this PDF?")
   ){
 
-    c.pdfs.splice(i,1);
+    idbDel((c.pdfs.splice(i,1)[0]||{}).id);
 
     saveCourses();
 
@@ -3099,7 +3134,7 @@ function deleteCoursePicture(i){
     confirm("Delete this picture?")
   ){
 
-    c.pictures.splice(i,1);
+    idbDel((c.pictures.splice(i,1)[0]||{}).id);
 
     saveCourses();
 
