@@ -4,9 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#2563eb">
+
   <title>Ojoola AI Study Partner</title>
 
-  <script>window.OJOOLA_NO_GATE=1;</script>
+  <!-- IMPORTANT: load core first -->
+  <script>
+    window.OJOOLA_NO_GATE = 1;
+  </script>
   <script src="ojoola-core.js"></script>
 
   <style>
@@ -19,8 +23,6 @@
       --border: #dbe3ef;
       --bg: #f5f8fc;
       --card: #ffffff;
-      --danger: #dc2626;
-      --success: #15803d;
       --radius: 18px;
     }
 
@@ -40,13 +42,21 @@
         Roboto,
         Arial,
         sans-serif;
+
       background:
-        radial-gradient(circle at top, rgba(59,130,246,.10), transparent 38%),
+        radial-gradient(
+          circle at top,
+          rgba(59, 130, 246, 0.10),
+          transparent 38%
+        ),
         var(--bg);
+
       color: var(--text);
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       padding: 22px 16px;
     }
 
@@ -57,12 +67,14 @@
 
     .card {
       background: var(--card);
-      border: 1px solid rgba(219,227,239,.9);
+      border: 1px solid rgba(219, 227, 239, 0.9);
       border-radius: var(--radius);
+
       padding: 30px 24px 25px;
+
       box-shadow:
-        0 18px 50px rgba(15, 23, 42, .08),
-        0 3px 12px rgba(37, 99, 235, .05);
+        0 18px 50px rgba(15, 23, 42, 0.08),
+        0 3px 12px rgba(37, 99, 235, 0.05);
     }
 
     .brand {
@@ -84,7 +96,7 @@
       font-size: 23px;
       line-height: 1.2;
       font-weight: 750;
-      letter-spacing: -.3px;
+      letter-spacing: -0.3px;
     }
 
     .brand p {
@@ -97,9 +109,11 @@
     .tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
+
       background: #eef3f9;
       border-radius: 12px;
       padding: 4px;
+
       margin-bottom: 23px;
     }
 
@@ -107,18 +121,23 @@
       border: 0;
       background: transparent;
       color: #64748b;
+
       padding: 11px 8px;
       border-radius: 9px;
+
       font-size: 14px;
       font-weight: 650;
+
       cursor: pointer;
-      transition: all .18s ease;
+      transition: all 0.18s ease;
     }
 
     .tab.active {
-      background: #fff;
+      background: #ffffff;
       color: var(--blue);
-      box-shadow: 0 2px 8px rgba(15,23,42,.08);
+
+      box-shadow:
+        0 2px 8px rgba(15, 23, 42, 0.08);
     }
 
     .form {
@@ -135,9 +154,12 @@
 
     label {
       display: block;
+
       font-size: 13px;
       font-weight: 650;
+
       color: #334155;
+
       margin-bottom: 7px;
     }
 
@@ -148,17 +170,22 @@
     input {
       width: 100%;
       height: 48px;
+
       border: 1px solid var(--border);
       border-radius: 11px;
-      background: #fff;
+
+      background: #ffffff;
       color: var(--text);
+
       padding: 0 14px;
+
       font-size: 15px;
       outline: none;
+
       transition:
-        border-color .16s ease,
-        box-shadow .16s ease,
-        background .16s ease;
+        border-color 0.16s ease,
+        box-shadow 0.16s ease,
+        background 0.16s ease;
     }
 
     input.password-input {
@@ -171,25 +198,37 @@
 
     input:focus {
       border-color: var(--blue-light);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
-      background: #fff;
+
+      box-shadow:
+        0 0 0 4px rgba(37, 99, 235, 0.10);
+
+      background: #ffffff;
     }
 
     .password-eye {
       position: absolute;
+
       right: 5px;
       top: 50%;
+
       transform: translateY(-50%);
+
       width: 40px;
       height: 40px;
+
       border: 0;
       background: transparent;
+
       color: #64748b;
+
       border-radius: 9px;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       cursor: pointer;
+
       touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
@@ -212,6 +251,7 @@
 
     .forgot-row {
       text-align: right;
+
       margin-top: -7px;
       margin-bottom: 17px;
     }
@@ -219,10 +259,14 @@
     .forgot-link {
       border: 0;
       padding: 3px 0;
+
       background: transparent;
+
       color: var(--blue);
+
       font-size: 13px;
       font-weight: 600;
+
       cursor: pointer;
     }
 
@@ -234,53 +278,69 @@
     .btn {
       width: 100%;
       min-height: 49px;
+
       border-radius: 11px;
       border: 0;
+
       font-size: 15px;
       font-weight: 700;
+
       cursor: pointer;
+
       transition:
-        transform .14s ease,
-        box-shadow .18s ease,
-        filter .18s ease;
+        transform 0.14s ease,
+        box-shadow 0.18s ease,
+        filter 0.18s ease;
     }
 
+    /*
+      Brighter Create Account / Sign In button
+    */
     .btn-primary {
-      color: #fff;
-      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+      color: #ffffff;
+
+      background:
+        linear-gradient(
+          135deg,
+          #2563eb 0%,
+          #3b82f6 100%
+        );
+
       box-shadow:
-        0 7px 20px rgba(37,99,235,.27),
-        inset 0 1px 0 rgba(255,255,255,.18);
+        0 7px 20px rgba(37, 99, 235, 0.27),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
     }
 
     .btn-primary:hover {
       filter: brightness(1.045);
+
       box-shadow:
-        0 9px 25px rgba(37,99,235,.34),
-        inset 0 1px 0 rgba(255,255,255,.18);
+        0 9px 25px rgba(37, 99, 235, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
     }
 
     .btn-primary:active {
       transform: translateY(1px);
+
       box-shadow:
-        0 4px 13px rgba(37,99,235,.24);
+        0 4px 13px rgba(37, 99, 235, 0.24);
     }
 
-    .btn-secondary {
-      background: #eef4ff;
-      color: var(--blue);
-      border: 1px solid #d8e5ff;
-    }
-
-    .btn-secondary:hover {
-      background: #e6efff;
+    .btn-primary:disabled {
+      opacity: 0.65;
+      cursor: wait;
+      transform: none;
     }
 
     .message {
       display: none;
+
       margin: 0 0 16px;
+
       padding: 11px 13px;
+
       border-radius: 10px;
+
       font-size: 13px;
       line-height: 1.45;
     }
@@ -303,36 +363,40 @@
 
     .hint {
       color: var(--muted);
+
       font-size: 12px;
       line-height: 1.5;
+
       margin-top: 8px;
     }
 
     .back-link {
       display: block;
+
       text-align: center;
+
       margin-top: 16px;
+
       color: var(--blue);
+
       font-size: 13px;
       font-weight: 600;
+
       cursor: pointer;
+
       border: 0;
       background: transparent;
-      width: 100%;
-    }
 
-    .tester-note {
-      display: none;
-      margin-top: 7px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
+      width: 100%;
     }
 
     .footer {
       text-align: center;
+
       color: #94a3b8;
+
       font-size: 11px;
+
       margin-top: 17px;
     }
 
@@ -367,7 +431,9 @@
 
       .card {
         border-color: #263449;
-        box-shadow: 0 18px 50px rgba(0,0,0,.25);
+
+        box-shadow:
+          0 18px 50px rgba(0, 0, 0, 0.25);
       }
 
       .tabs {
@@ -391,11 +457,6 @@
       .password-eye:hover {
         background: #1e293b;
       }
-
-      .btn-secondary {
-        background: #172554;
-        border-color: #1e3a8a;
-      }
     }
   </style>
 </head>
@@ -406,31 +467,65 @@
 
   <div class="card">
 
+    <!-- BRAND -->
     <div class="brand">
-      <img class="logo" src="icons/icon-192.png" alt="Ojoola">
+
+      <img
+        class="logo"
+        src="icons/icon-192.png"
+        alt="Ojoola"
+      >
+
       <h1>Ojoola AI Study Partner</h1>
-      <p>Learn smarter with your personal AI study partner.</p>
+
+      <p>
+        Learn smarter with your personal AI study partner.
+      </p>
+
     </div>
+
 
     <!-- TABS -->
     <div class="tabs">
-      <button class="tab active" id="signInTab" type="button">
+
+      <button
+        class="tab active"
+        id="signInTab"
+        type="button"
+      >
         Sign in
       </button>
 
-      <button class="tab" id="createTab" type="button">
+      <button
+        class="tab"
+        id="createTab"
+        type="button"
+      >
         Create account
       </button>
+
     </div>
 
+
     <!-- MESSAGE -->
-    <div id="message" class="message"></div>
+    <div
+      id="message"
+      class="message"
+    ></div>
+
 
     <!-- SIGN IN -->
-    <form id="signInForm" class="form active">
+    <form
+      id="signInForm"
+      class="form active"
+    >
 
       <div class="field">
-        <label for="loginIdentifier">Username or email</label>
+
+        <label for="loginIdentifier">
+          Username or email
+        </label>
+
         <input
           id="loginIdentifier"
           type="text"
@@ -438,12 +533,18 @@
           placeholder="Enter your username or email"
           required
         >
+
       </div>
 
+
       <div class="field">
-        <label for="loginPassword">Password</label>
+
+        <label for="loginPassword">
+          Password
+        </label>
 
         <div class="input-wrap">
+
           <input
             id="loginPassword"
             class="password-input"
@@ -459,10 +560,14 @@
             aria-label="Show password"
             data-target="loginPassword"
           ></button>
+
         </div>
+
       </div>
 
+
       <div class="forgot-row">
+
         <button
           type="button"
           class="forgot-link"
@@ -470,37 +575,32 @@
         >
           Forgot password?
         </button>
+
       </div>
 
-      <!-- TESTER PASSCODE -->
-      <div class="field" id="passcodeField" style="display:none;">
-        <label for="testerPasscode">Tester passcode</label>
 
-        <div class="input-wrap">
-          <input
-            id="testerPasscode"
-            type="text"
-            autocomplete="one-time-code"
-            placeholder="Enter your tester passcode"
-          >
-        </div>
-
-        <div class="tester-note">
-          Tester accounts require their individual passcode.
-        </div>
-      </div>
-
-      <button class="btn btn-primary" type="submit" id="signInBtn">
+      <button
+        class="btn btn-primary"
+        type="submit"
+        id="signInBtn"
+      >
         Sign in
       </button>
 
     </form>
 
+
     <!-- CREATE ACCOUNT -->
-    <form id="createForm" class="form">
+    <form
+      id="createForm"
+      class="form"
+    >
 
       <div class="field">
-        <label for="firstName">First name</label>
+
+        <label for="firstName">
+          First name
+        </label>
 
         <input
           id="firstName"
@@ -510,10 +610,15 @@
           maxlength="40"
           required
         >
+
       </div>
 
+
       <div class="field">
-        <label for="username">Username</label>
+
+        <label for="username">
+          Username
+        </label>
 
         <input
           id="username"
@@ -527,10 +632,15 @@
         <div class="hint">
           3–20 letters, numbers or underscores.
         </div>
+
       </div>
 
+
       <div class="field">
-        <label for="email">Email address</label>
+
+        <label for="email">
+          Email address
+        </label>
 
         <input
           id="email"
@@ -539,12 +649,18 @@
           placeholder="Enter your email"
           required
         >
+
       </div>
 
+
       <div class="field">
-        <label for="createPassword">Password</label>
+
+        <label for="createPassword">
+          Password
+        </label>
 
         <div class="input-wrap">
+
           <input
             id="createPassword"
             class="password-input"
@@ -561,24 +677,38 @@
             aria-label="Show password"
             data-target="createPassword"
           ></button>
+
         </div>
 
         <div class="hint">
           Password must be at least 8 characters.
         </div>
+
       </div>
 
-      <button class="btn btn-primary" type="submit" id="createBtn">
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+        id="createBtn"
+      >
         Create account
       </button>
 
     </form>
 
+
     <!-- FORGOT PASSWORD -->
-    <form id="forgotForm" class="form">
+    <form
+      id="forgotForm"
+      class="form"
+    >
 
       <div class="field">
-        <label for="resetEmail">Registered email</label>
+
+        <label for="resetEmail">
+          Registered email
+        </label>
 
         <input
           id="resetEmail"
@@ -587,15 +717,27 @@
           placeholder="Enter the email on your account"
           required
         >
+
       </div>
 
-      <div class="hint" style="margin-bottom:17px;">
-        If the email belongs to an account, a password-reset link will be sent to it.
+
+      <div
+        class="hint"
+        style="margin-bottom:17px;"
+      >
+        If the email belongs to an account, a password-reset
+        link will be sent to it.
       </div>
 
-      <button class="btn btn-primary" type="submit" id="resetBtn">
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+        id="resetBtn"
+      >
         Send reset link
       </button>
+
 
       <button
         type="button"
@@ -607,6 +749,7 @@
 
     </form>
 
+
     <div class="footer">
       Ojoola AI Study Partner
     </div>
@@ -615,12 +758,50 @@
 
 </div>
 
+
 <script>
 "use strict";
 
-/* ---------------------------------------------------------
+
+/* =========================================================
+   OJOOLA API
+========================================================= */
+
+/*
+  ojoola-core.js already contains the correct Worker address:
+
+  https://ojoola.babatundexwale.workers.dev
+
+  We use OjoolaCore.api here instead of relative /api/... URLs.
+*/
+const API = window.OjoolaCore && window.OjoolaCore.api
+  ? window.OjoolaCore.api
+  : "https://ojoola.babatundexwale.workers.dev";
+
+
+/*
+  IMPORTANT:
+  ojoola-core.js expects the session under:
+
+  ojoola_session
+
+  Therefore we use OjoolaCore.setSession().
+*/
+function saveSession(token) {
+  if (
+    window.OjoolaCore &&
+    typeof window.OjoolaCore.setSession === "function"
+  ) {
+    window.OjoolaCore.setSession(token);
+  } else {
+    localStorage.setItem("ojoola_session", token);
+  }
+}
+
+
+/* =========================================================
    ELEMENTS
---------------------------------------------------------- */
+========================================================= */
 
 const signInTab = document.getElementById("signInTab");
 const createTab = document.getElementById("createTab");
@@ -634,40 +815,55 @@ const message = document.getElementById("message");
 const forgotLink = document.getElementById("forgotLink");
 const backToSignIn = document.getElementById("backToSignIn");
 
-const passcodeField = document.getElementById("passcodeField");
+const loginIdentifier =
+  document.getElementById("loginIdentifier");
 
-const loginIdentifier = document.getElementById("loginIdentifier");
-const loginPassword = document.getElementById("loginPassword");
-const testerPasscode = document.getElementById("testerPasscode");
+const loginPassword =
+  document.getElementById("loginPassword");
 
-const firstName = document.getElementById("firstName");
-const username = document.getElementById("username");
-const email = document.getElementById("email");
-const createPassword = document.getElementById("createPassword");
+const firstName =
+  document.getElementById("firstName");
 
-const resetEmail = document.getElementById("resetEmail");
+const username =
+  document.getElementById("username");
+
+const email =
+  document.getElementById("email");
+
+const createPassword =
+  document.getElementById("createPassword");
+
+const resetEmail =
+  document.getElementById("resetEmail");
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    MESSAGE
---------------------------------------------------------- */
+========================================================= */
 
 function showMessage(text, type = "error") {
+
   message.textContent = text;
-  message.className = "message show " + type;
+
+  message.className =
+    "message show " + type;
 }
 
+
 function clearMessage() {
+
   message.textContent = "";
+
   message.className = "message";
 }
 
 
-/* ---------------------------------------------------------
-   TAB / FORM SWITCHING
---------------------------------------------------------- */
+/* =========================================================
+   FORM SWITCHING
+========================================================= */
 
 function hideForms() {
+
   signInForm.classList.remove("active");
   createForm.classList.remove("active");
   forgotForm.classList.remove("active");
@@ -676,7 +872,9 @@ function hideForms() {
   createTab.classList.remove("active");
 }
 
+
 function showSignIn() {
+
   hideForms();
 
   signInTab.classList.add("active");
@@ -685,7 +883,9 @@ function showSignIn() {
   clearMessage();
 }
 
+
 function showCreate() {
+
   hideForms();
 
   createTab.classList.add("active");
@@ -694,7 +894,9 @@ function showCreate() {
   clearMessage();
 }
 
+
 function showForgot() {
+
   hideForms();
 
   forgotForm.classList.add("active");
@@ -702,38 +904,65 @@ function showForgot() {
   clearMessage();
 }
 
-signInTab.addEventListener("click", showSignIn);
-createTab.addEventListener("click", showCreate);
 
-forgotLink.addEventListener("click", showForgot);
+signInTab.addEventListener(
+  "click",
+  showSignIn
+);
 
-backToSignIn.addEventListener("click", showSignIn);
+createTab.addEventListener(
+  "click",
+  showCreate
+);
+
+forgotLink.addEventListener(
+  "click",
+  showForgot
+);
+
+backToSignIn.addEventListener(
+  "click",
+  showSignIn
+);
 
 
-/* ---------------------------------------------------------
-   PASSWORD EYE ICON
-   TAP = TOGGLE
-   HOLD = REVEAL WHILE HELD
---------------------------------------------------------- */
+/* =========================================================
+   PASSWORD EYE
+   SHORT TAP = TOGGLE
+   LONG PRESS = SHOW WHILE HELD
+========================================================= */
 
 function eyeOpenSVG() {
+
   return `
-    <svg viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path>
       <circle cx="12" cy="12" r="3"></circle>
     </svg>
   `;
 }
 
+
 function eyeClosedSVG() {
+
   return `
-    <svg viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
       <path d="M3 3l18 18"></path>
       <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
       <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c6.5 0 10 8 10 8a17.5 17.5 0 0 1-3.2 4.5"></path>
@@ -742,111 +971,160 @@ function eyeClosedSVG() {
   `;
 }
 
-function setPasswordVisible(input, button, visible) {
-  input.type = visible ? "text" : "password";
-  button.innerHTML = visible ? eyeOpenSVG() : eyeClosedSVG();
+
+function setPasswordVisible(
+  input,
+  button,
+  visible
+) {
+
+  input.type =
+    visible ? "text" : "password";
+
+  button.innerHTML =
+    visible
+      ? eyeOpenSVG()
+      : eyeClosedSVG();
+
   button.setAttribute(
     "aria-label",
-    visible ? "Hide password" : "Show password"
+    visible
+      ? "Hide password"
+      : "Show password"
   );
 }
 
-document.querySelectorAll(".password-eye").forEach(button => {
 
-  const input = document.getElementById(button.dataset.target);
+document
+  .querySelectorAll(".password-eye")
+  .forEach(button => {
 
-  let holdTimer = null;
-  let holdUsed = false;
-  let pointerDown = false;
+    const input =
+      document.getElementById(
+        button.dataset.target
+      );
 
-  setPasswordVisible(input, button, false);
+    let holdTimer = null;
+    let pointerDown = false;
+    let holdUsed = false;
 
-  button.addEventListener("pointerdown", event => {
-    event.preventDefault();
-
-    pointerDown = true;
-    holdUsed = false;
-
-    /*
-      Short delay distinguishes a normal tap
-      from a long press.
-    */
-    holdTimer = setTimeout(() => {
-      if (!pointerDown) return;
-
-      holdUsed = true;
-      setPasswordVisible(input, button, true);
-    }, 350);
-  });
-
-  button.addEventListener("pointerup", event => {
-    event.preventDefault();
-
-    pointerDown = false;
-
-    if (holdTimer) {
-      clearTimeout(holdTimer);
-      holdTimer = null;
-    }
-
-    /*
-      If it was a long press, restore the password
-      when the finger is released.
-    */
-    if (holdUsed) {
-      setPasswordVisible(input, button, false);
-      return;
-    }
-
-    /*
-      Normal short tap toggles visibility.
-    */
     setPasswordVisible(
       input,
       button,
-      input.type === "password"
+      false
+    );
+
+
+    button.addEventListener(
+      "pointerdown",
+      event => {
+
+        event.preventDefault();
+
+        pointerDown = true;
+        holdUsed = false;
+
+        holdTimer = setTimeout(() => {
+
+          if (!pointerDown) return;
+
+          holdUsed = true;
+
+          setPasswordVisible(
+            input,
+            button,
+            true
+          );
+
+        }, 350);
+      }
+    );
+
+
+    button.addEventListener(
+      "pointerup",
+      event => {
+
+        event.preventDefault();
+
+        pointerDown = false;
+
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+
+
+        /* Long press:
+           hide again when released. */
+        if (holdUsed) {
+
+          setPasswordVisible(
+            input,
+            button,
+            false
+          );
+
+          holdUsed = false;
+
+          return;
+        }
+
+
+        /* Normal tap:
+           toggle visibility. */
+        setPasswordVisible(
+          input,
+          button,
+          input.type === "password"
+        );
+      }
+    );
+
+
+    button.addEventListener(
+      "pointercancel",
+      () => {
+
+        pointerDown = false;
+
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+
+        if (holdUsed) {
+          setPasswordVisible(
+            input,
+            button,
+            false
+          );
+        }
+
+        holdUsed = false;
+      }
     );
   });
 
-  button.addEventListener("pointercancel", () => {
-    pointerDown = false;
 
-    if (holdTimer) {
-      clearTimeout(holdTimer);
-      holdTimer = null;
-    }
-
-    if (holdUsed) {
-      setPasswordVisible(input, button, false);
-    }
-
-    holdUsed = false;
-  });
-
-  button.addEventListener("pointerleave", () => {
-    if (!pointerDown) return;
-
-    /*
-      Don't immediately hide on normal pointer movement.
-      The pointerup/cancel event handles the final state.
-    */
-  });
-});
-
-
-/* ---------------------------------------------------------
+/* =========================================================
    API HELPER
---------------------------------------------------------- */
+========================================================= */
 
 async function api(path, options = {}) {
 
-  const response = await fetch(path, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
-    ...options
-  });
+  const response = await fetch(
+    API + path,
+    {
+      ...options,
+
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      }
+    }
+  );
+
 
   let data = {};
 
@@ -856,243 +1134,370 @@ async function api(path, options = {}) {
     data = {};
   }
 
+
   if (!response.ok) {
+
     let error = data.error;
 
-    if (error && typeof error === "object") {
+    if (
+      error &&
+      typeof error === "object"
+    ) {
       error = error.message;
     }
 
     throw new Error(
-      error || "Something went wrong. Please try again."
+      error ||
+      "Something went wrong. Please try again."
     );
   }
+
 
   return data;
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    SIGN IN
---------------------------------------------------------- */
+========================================================= */
 
-signInForm.addEventListener("submit", async event => {
+signInForm.addEventListener(
+  "submit",
+  async event => {
 
-  event.preventDefault();
-  clearMessage();
+    event.preventDefault();
 
-  const identifier = loginIdentifier.value.trim();
-  const password = loginPassword.value;
-  const passcode = testerPasscode.value.trim();
+    clearMessage();
 
-  if (!identifier || !password) {
-    showMessage("Enter your username/email and password.");
-    return;
-  }
 
-  const button = document.getElementById("signInBtn");
+    const identifier =
+      loginIdentifier.value.trim();
 
-  button.disabled = true;
-  button.textContent = "Signing in...";
+    const password =
+      loginPassword.value;
 
-  try {
 
-    const data = await api("/api/login", {
-      method: "POST",
+    if (!identifier || !password) {
 
-      body: JSON.stringify({
-        identifier,
-        password,
-        passcode
-      })
-    });
-
-    if (data.token) {
-      localStorage.setItem("ojoola_token", data.token);
-    }
-
-    if (data.user) {
-      localStorage.setItem(
-        "ojoola_user",
-        JSON.stringify(data.user)
+      showMessage(
+        "Enter your username/email and password."
       );
+
+      return;
     }
 
-    showMessage("Signed in successfully.", "success");
 
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 350);
+    const button =
+      document.getElementById(
+        "signInBtn"
+      );
 
-  } catch (error) {
 
-    showMessage(error.message);
+    button.disabled = true;
+    button.textContent = "Signing in...";
 
-  } finally {
 
-    button.disabled = false;
-    button.textContent = "Sign in";
+    try {
+
+      const data =
+        await api(
+          "/api/login",
+          {
+            method: "POST",
+
+            body: JSON.stringify({
+              identifier,
+              password
+            })
+          }
+        );
+
+
+      /*
+        THIS IS THE IMPORTANT PART.
+
+        Save the token as ojoola_session,
+        because ojoola-core.js reads that key.
+      */
+      if (data.token) {
+        saveSession(data.token);
+      }
+
+
+      if (data.user) {
+
+        localStorage.setItem(
+          "ojoola_user",
+          JSON.stringify(data.user)
+        );
+      }
+
+
+      showMessage(
+        "Signed in successfully.",
+        "success"
+      );
+
+
+      setTimeout(() => {
+
+        const params =
+          new URLSearchParams(
+            window.location.search
+          );
+
+        const next =
+          params.get("next") ||
+          "index.html";
+
+        window.location.replace(
+          next
+        );
+
+      }, 350);
+
+    } catch (error) {
+
+      showMessage(
+        error.message
+      );
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent = "Sign in";
+    }
   }
-});
+);
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    CREATE ACCOUNT
---------------------------------------------------------- */
+========================================================= */
 
-createForm.addEventListener("submit", async event => {
+createForm.addEventListener(
+  "submit",
+  async event => {
 
-  event.preventDefault();
-  clearMessage();
+    event.preventDefault();
 
-  const first = firstName.value.trim();
-  const user = username.value.trim();
-  const mail = email.value.trim();
-  const password = createPassword.value;
+    clearMessage();
 
-  if (!first || !user || !mail || !password) {
-    showMessage("Please complete all fields.");
-    return;
-  }
 
-  if (!/^[A-Za-z0-9_]{3,20}$/.test(user)) {
-    showMessage(
-      "Username must be 3–20 letters, numbers or underscores."
-    );
-    return;
-  }
+    const first =
+      firstName.value.trim();
 
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
-    showMessage("Enter a valid email address.");
-    return;
-  }
+    const user =
+      username.value.trim();
 
-  if (password.length < 8) {
-    showMessage("Password must be at least 8 characters.");
-    return;
-  }
+    const mail =
+      email.value.trim();
 
-  const button = document.getElementById("createBtn");
+    const password =
+      createPassword.value;
 
-  button.disabled = true;
-  button.textContent = "Creating account...";
 
-  try {
+    if (
+      !first ||
+      !user ||
+      !mail ||
+      !password
+    ) {
 
-    const data = await api("/api/signup", {
-      method: "POST",
-
-      body: JSON.stringify({
-        firstName: first,
-        username: user,
-        email: mail,
-        password
-      })
-    });
-
-    if (data.token) {
-      localStorage.setItem("ojoola_token", data.token);
-    }
-
-    if (data.user) {
-      localStorage.setItem(
-        "ojoola_user",
-        JSON.stringify(data.user)
+      showMessage(
+        "Please complete all fields."
       );
+
+      return;
     }
 
-    showMessage(
-      "Account created successfully.",
-      "success"
-    );
 
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 350);
+    if (
+      !/^[A-Za-z0-9_]{3,20}$/.test(user)
+    ) {
 
-  } catch (error) {
+      showMessage(
+        "Username must be 3–20 letters, numbers or underscores."
+      );
 
-    showMessage(error.message);
+      return;
+    }
 
-  } finally {
 
-    button.disabled = false;
-    button.textContent = "Create account";
+    if (
+      !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)
+    ) {
+
+      showMessage(
+        "Enter a valid email address."
+      );
+
+      return;
+    }
+
+
+    if (password.length < 8) {
+
+      showMessage(
+        "Password must be at least 8 characters."
+      );
+
+      return;
+    }
+
+
+    const button =
+      document.getElementById(
+        "createBtn"
+      );
+
+
+    button.disabled = true;
+    button.textContent =
+      "Creating account...";
+
+
+    try {
+
+      const data =
+        await api(
+          "/api/signup",
+          {
+            method: "POST",
+
+            body: JSON.stringify({
+              firstName: first,
+              username: user,
+              email: mail,
+              password
+            })
+          }
+        );
+
+
+      /*
+        Save the new account's session
+        using the key expected by core.
+      */
+      if (data.token) {
+        saveSession(data.token);
+      }
+
+
+      if (data.user) {
+
+        localStorage.setItem(
+          "ojoola_user",
+          JSON.stringify(data.user)
+        );
+      }
+
+
+      showMessage(
+        "Account created successfully.",
+        "success"
+      );
+
+
+      setTimeout(() => {
+
+        window.location.replace(
+          "index.html"
+        );
+
+      }, 350);
+
+    } catch (error) {
+
+      showMessage(
+        error.message
+      );
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent =
+        "Create account";
+    }
   }
-});
+);
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    FORGOT PASSWORD
---------------------------------------------------------- */
+========================================================= */
 
-forgotForm.addEventListener("submit", async event => {
+forgotForm.addEventListener(
+  "submit",
+  async event => {
 
-  event.preventDefault();
-  clearMessage();
+    event.preventDefault();
 
-  const mail = resetEmail.value.trim();
+    clearMessage();
 
-  if (!mail) {
-    showMessage("Enter your registered email address.");
-    return;
+
+    const mail =
+      resetEmail.value.trim();
+
+
+    if (!mail) {
+
+      showMessage(
+        "Enter your registered email address."
+      );
+
+      return;
+    }
+
+
+    const button =
+      document.getElementById(
+        "resetBtn"
+      );
+
+
+    button.disabled = true;
+    button.textContent = "Sending...";
+
+
+    try {
+
+      await api(
+        "/api/forgot-password",
+        {
+          method: "POST",
+
+          body: JSON.stringify({
+            email: mail
+          })
+        }
+      );
+
+
+      showMessage(
+        "If an account exists for that email, a password-reset link has been sent.",
+        "success"
+      );
+
+    } catch (error) {
+
+      showMessage(
+        error.message
+      );
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent =
+        "Send reset link";
+    }
   }
-
-  const button = document.getElementById("resetBtn");
-
-  button.disabled = true;
-  button.textContent = "Sending...";
-
-  try {
-
-    await api("/api/forgot-password", {
-      method: "POST",
-
-      body: JSON.stringify({
-        email: mail
-      })
-    });
-
-    /*
-      Keep the message generic so the page does not reveal
-      whether an email address belongs to an account.
-    */
-    showMessage(
-      "If an account exists for that email, a password-reset link has been sent.",
-      "success"
-    );
-
-  } catch (error) {
-
-    showMessage(error.message);
-
-  } finally {
-
-    button.disabled = false;
-    button.textContent = "Send reset link";
-  }
-});
+);
 
 
-/* ---------------------------------------------------------
-   OPTIONAL TESTER PASSCODE DISPLAY
----------------------------------------------------------
-
-   The login API already accepts a tester passcode.
-   This field can be revealed by the application if needed.
-
-   It stays hidden by default so ordinary users see
-   a clean sign-in screen.
---------------------------------------------------------- */
-
-window.OJOOLA_SHOW_TESTER_PASSCODE = function(show = true) {
-  passcodeField.style.display = show ? "block" : "none";
-};
-
-
-/* ---------------------------------------------------------
-   INITIAL STATE
---------------------------------------------------------- */
+/* =========================================================
+   START ON SIGN IN
+========================================================= */
 
 showSignIn();
 
