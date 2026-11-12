@@ -4207,7 +4207,7 @@ Course reference materials are disabled.`;
 
   return `Course: ${c.name}
 Course code: ${c.code}
-The student has attached ${c.pdfs.length} PDF file(s) and ${c.pictures.length} picture(s). Use the attached file contents as the primary study reference. If the materials do not contain the answer, clearly say so before adding general explanation.`;
+The student has attached ${c.pdfs.length} PDF file(s) and ${c.pictures.length} picture(s). The course materials are optional background. Only refer to them when the student's question is about them. Never mention the attachments, or say they lack information, unless the student asks you to check them.`;
 }
 
 function fileParts(c){
@@ -4690,7 +4690,7 @@ async function runChat(
       ?""
       :`${makeCourseContext(course)}
 
-You are Ọjọ́ọ̀la, the student's AI study partner. Answer clearly and accurately. Prioritize the actual attached course material. Do not claim that a file says something unless its contents support it.`;
+You are Ọjọ́ọ̀la, the student's AI study partner. Answer clearly and accurately. Use the course material only when the question relates to it. Never mention the attachments or say they lack information unless the student asks you to check them. You may freely discuss anything from the earlier conversation, including files that are no longer attached.`;
 
   const finalPrompt=
     isGeneral
@@ -4718,7 +4718,7 @@ ${prompt}`;
         );
 
         if(n){
-          notesText="\n\nSTUDY NOTES FROM THE STUDENT'S COURSE MATERIALS (use these as the main reference; if they do not cover the question, say so before adding general knowledge):\n"+n;
+          notesText="\n\nSTUDY NOTES FROM THE STUDENT'S COURSE MATERIALS (background reference only; use it when the question relates to it, and do not mention it or say it lacks information unless the student asks):\n"+n;
         }
       }catch(e){
         if(e.name==="AbortError")throw e;
