@@ -1,1018 +1,1100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#2563EB">
-<link rel="icon" href="icons/favicon.ico">
-<title>Sign in – Ọjọ́ọ̀la</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <title>Ojoola AI Study Partner</title>
 
-<style>
-:root{
-  --bg:#f5f7fb;
-  --card:#fff;
-  --line:#dce3ee;
-  --text:#172033;
-  --muted:#64748b;
-  --blue:#2563eb;
-  --err:#b91c1c;
-  --errbg:#fee2e2;
-  --shadow:0 10px 30px rgba(15,23,42,.07);
-}
+  <script>window.OJOOLA_NO_GATE=1;</script>
+  <script src="ojoola-core.js"></script>
 
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#0b1220;
-    --card:#121c2e;
-    --line:#334155;
-    --text:#e8edf7;
-    --muted:#94a3b8;
-    --err:#fecdd3;
-    --errbg:#451c27;
-    --shadow:0 12px 35px rgba(0,0,0,.22);
-  }
-}
+  <style>
+    :root {
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --blue-light: #3b82f6;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #dbe3ef;
+      --bg: #f5f8fc;
+      --card: #ffffff;
+      --danger: #dc2626;
+      --success: #15803d;
+      --radius: 18px;
+    }
 
-*{
-  box-sizing:border-box;
-}
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-html,body{
-  margin:0;
-  min-height:100%;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
-}
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(59,130,246,.10), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px 16px;
+    }
 
-body{
-  min-height:100svh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:max(22px,env(safe-area-inset-top))
-          20px
-          max(22px,env(safe-area-inset-bottom));
-}
+    .page {
+      width: 100%;
+      max-width: 430px;
+    }
 
-button,input{
-  font-family:inherit;
-}
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(219,227,239,.9);
+      border-radius: var(--radius);
+      padding: 30px 24px 25px;
+      box-shadow:
+        0 18px 50px rgba(15, 23, 42, .08),
+        0 3px 12px rgba(37, 99, 235, .05);
+    }
 
-button{
-  -webkit-tap-highlight-color:transparent;
-}
+    .brand {
+      text-align: center;
+      margin-bottom: 22px;
+    }
 
-.box{
-  width:100%;
-  max-width:400px;
-}
+    .logo {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 12px;
+      border-radius: 18px;
+    }
 
-.brand{
-  text-align:center;
-  margin-bottom:22px;
-}
+    .brand h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.2;
+      font-weight: 750;
+      letter-spacing: -.3px;
+    }
 
-.brand img{
-  width:72px;
-  height:72px;
-  border-radius:22px;
-  display:block;
-  margin:0 auto;
-  box-shadow:0 5px 18px rgba(37,99,235,.15);
-}
+    .brand p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
 
-.brand h1{
-  margin:12px 0 4px;
-  font-size:30px;
-  letter-spacing:-.8px;
-}
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #eef3f9;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 23px;
+    }
 
-.brand p{
-  margin:0;
-  color:var(--muted);
-  font-size:14px;
-}
+    .tab {
+      border: 0;
+      background: transparent;
+      color: #64748b;
+      padding: 11px 8px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
 
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:20px;
-  box-shadow:var(--shadow);
-}
+    .tab.active {
+      background: #fff;
+      color: var(--blue);
+      box-shadow: 0 2px 8px rgba(15,23,42,.08);
+    }
 
-.tabs{
-  display:flex;
-  gap:6px;
-  background:var(--bg);
-  border-radius:14px;
-  padding:4px;
-  margin-bottom:16px;
-}
+    .form {
+      display: none;
+    }
 
-.tabs button{
-  flex:1;
-  border:0;
-  background:none;
-  color:var(--muted);
-  padding:10px;
-  border-radius:11px;
-  font:inherit;
-  font-weight:700;
-  cursor:pointer;
-  transition:.18s ease;
-}
+    .form.active {
+      display: block;
+    }
 
-.tabs button[aria-selected=true]{
-  background:var(--card);
-  color:var(--blue);
-  box-shadow:0 1px 4px rgba(0,0,0,.12);
-}
+    .field {
+      margin-bottom: 16px;
+    }
 
-label{
-  display:block;
-  font-size:13px;
-  font-weight:700;
-  margin:12px 0 5px;
-}
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 650;
+      color: #334155;
+      margin-bottom: 7px;
+    }
 
-.field{
-  position:relative;
-}
+    .input-wrap {
+      position: relative;
+    }
 
-input{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:13px;
-  padding:12px 44px 12px 13px;
-  background:var(--card);
-  color:var(--text);
-  font:inherit;
-  outline:none;
-  transition:border-color .18s ease,box-shadow .18s ease;
-}
+    input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+      transition:
+        border-color .16s ease,
+        box-shadow .16s ease,
+        background .16s ease;
+    }
 
-input:not([type="password"]){
-  padding-right:13px;
-}
+    input.password-input {
+      padding-right: 50px;
+    }
 
-input:focus-visible{
-  border-color:var(--blue);
-  box-shadow:0 0 0 3px rgba(37,99,235,.18);
-}
+    input::placeholder {
+      color: #94a3b8;
+    }
 
-.password-toggle{
-  position:absolute;
-  right:8px;
-  top:50%;
-  transform:translateY(-50%);
-  width:36px;
-  height:36px;
-  border:0;
-  background:transparent;
-  color:var(--muted);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0;
-  cursor:pointer;
-  border-radius:10px;
-  font-size:18px;
-  user-select:none;
-  -webkit-user-select:none;
-  -webkit-touch-callout:none;
-}
+    input:focus {
+      border-color: var(--blue-light);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+      background: #fff;
+    }
 
-.password-toggle:active{
-  background:rgba(37,99,235,.08);
-}
+    .password-eye {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border: 0;
+      background: transparent;
+      color: #64748b;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-.password-toggle:focus-visible{
-  outline:2px solid rgba(37,99,235,.35);
-  outline-offset:1px;
-}
+    .password-eye:hover {
+      background: #f1f5f9;
+      color: var(--blue);
+    }
 
-.hint{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:4px;
-}
+    .password-eye:active {
+      background: #e8eef8;
+    }
 
-.forgot{
-  display:block;
-  width:max-content;
-  margin:10px 0 0 auto;
-  border:0;
-  background:none;
-  color:var(--blue);
-  padding:3px 0;
-  font-size:12px;
-  font-weight:700;
-  cursor:pointer;
-}
+    .password-eye svg {
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+    }
 
-.forgot:hover{
-  text-decoration:underline;
-}
+    .forgot-row {
+      text-align: right;
+      margin-top: -7px;
+      margin-bottom: 17px;
+    }
 
-.go{
-  width:100%;
-  margin-top:18px;
-  border:0;
-  border-radius:13px;
-  background:var(--blue);
-  color:#fff;
-  padding:13px;
-  font:inherit;
-  font-weight:800;
-  cursor:pointer;
-  transition:transform .12s ease,opacity .18s ease,box-shadow .18s ease;
-  box-shadow:0 5px 14px rgba(37,99,235,.18);
-}
+    .forgot-link {
+      border: 0;
+      padding: 3px 0;
+      background: transparent;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
 
-.go:active{
-  transform:translateY(1px);
-}
+    .forgot-link:hover {
+      color: var(--blue-dark);
+      text-decoration: underline;
+    }
 
-.go:disabled{
-  opacity:.6;
-  cursor:default;
-  box-shadow:none;
-}
+    .btn {
+      width: 100%;
+      min-height: 49px;
+      border-radius: 11px;
+      border: 0;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        transform .14s ease,
+        box-shadow .18s ease,
+        filter .18s ease;
+    }
 
-.back{
-  width:100%;
-  margin-top:10px;
-  border:1px solid var(--line);
-  border-radius:13px;
-  background:transparent;
-  color:var(--text);
-  padding:12px;
-  font:inherit;
-  font-weight:700;
-  cursor:pointer;
-}
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+      box-shadow:
+        0 7px 20px rgba(37,99,235,.27),
+        inset 0 1px 0 rgba(255,255,255,.18);
+    }
 
-.msg{
-  display:none;
-  margin-top:14px;
-  padding:10px 12px;
-  border-radius:12px;
-  background:var(--errbg);
-  color:var(--err);
-  font-size:13px;
-  line-height:1.45;
-}
+    .btn-primary:hover {
+      filter: brightness(1.045);
+      box-shadow:
+        0 9px 25px rgba(37,99,235,.34),
+        inset 0 1px 0 rgba(255,255,255,.18);
+    }
 
-.success{
-  background:rgba(34,197,94,.12);
-  color:#15803d;
-}
+    .btn-primary:active {
+      transform: translateY(1px);
+      box-shadow:
+        0 4px 13px rgba(37,99,235,.24);
+    }
 
-@media(prefers-color-scheme:dark){
-  .success{
-    color:#86efac;
-  }
-}
+    .btn-secondary {
+      background: #eef4ff;
+      color: var(--blue);
+      border: 1px solid #d8e5ff;
+    }
 
-.hidden{
-  display:none!important;
-}
+    .btn-secondary:hover {
+      background: #e6efff;
+    }
 
-.reset-title{
-  margin:2px 0 6px;
-  font-size:20px;
-  font-weight:800;
-}
+    .message {
+      display: none;
+      margin: 0 0 16px;
+      padding: 11px 13px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
 
-.reset-text{
-  margin:0 0 12px;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.5;
-}
-</style>
+    .message.show {
+      display: block;
+    }
+
+    .message.error {
+      color: #991b1b;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .message.success {
+      color: #166534;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 0;
+      background: transparent;
+      width: 100%;
+    }
+
+    .tester-note {
+      display: none;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .footer {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 11px;
+      margin-top: 17px;
+    }
+
+    @media (max-width: 420px) {
+      body {
+        padding: 14px;
+      }
+
+      .card {
+        padding: 25px 19px 22px;
+        border-radius: 16px;
+      }
+
+      .logo {
+        width: 66px;
+        height: 66px;
+      }
+
+      .brand h1 {
+        font-size: 21px;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card: #111827;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --border: #263449;
+      }
+
+      .card {
+        border-color: #263449;
+        box-shadow: 0 18px 50px rgba(0,0,0,.25);
+      }
+
+      .tabs {
+        background: #1e293b;
+      }
+
+      .tab.active {
+        background: #111827;
+      }
+
+      input {
+        background: #0f172a;
+        color: #f1f5f9;
+        border-color: #334155;
+      }
+
+      input:focus {
+        background: #0f172a;
+      }
+
+      .password-eye:hover {
+        background: #1e293b;
+      }
+
+      .btn-secondary {
+        background: #172554;
+        border-color: #1e3a8a;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<script>window.OJOOLA_NO_GATE=1;</script>
-<script src="ojoola-core.js"></script>
-
-<div class="box">
-
-  <div class="brand">
-    <img src="icons/icon-192.png" alt="">
-    <h1>Ọjọ́ọ̀la</h1>
-    <p>Your AI Study Partner</p>
-  </div>
+<div class="page">
 
   <div class="card">
 
-    <!-- LOGIN / SIGN UP TABS -->
-    <div class="tabs" role="tablist">
-      <button
-        role="tab"
-        id="tabIn"
-        aria-selected="true"
-        onclick="show('in')">
+    <div class="brand">
+      <img class="logo" src="icons/icon-192.png" alt="Ojoola">
+      <h1>Ojoola AI Study Partner</h1>
+      <p>Learn smarter with your personal AI study partner.</p>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" id="signInTab" type="button">
         Sign in
       </button>
 
-      <button
-        role="tab"
-        id="tabUp"
-        aria-selected="false"
-        onclick="show('up')">
+      <button class="tab" id="createTab" type="button">
         Create account
       </button>
     </div>
 
+    <!-- MESSAGE -->
+    <div id="message" class="message"></div>
 
     <!-- SIGN IN -->
-    <form id="formIn" onsubmit="return submitIn(event)">
-
-      <label for="inId">Username or email</label>
-
-      <input
-        id="inId"
-        autocomplete="username"
-        autocapitalize="none"
-        required
-      >
-
-      <label for="inPw">Password</label>
+    <form id="signInForm" class="form active">
 
       <div class="field">
+        <label for="loginIdentifier">Username or email</label>
         <input
-          id="inPw"
-          type="password"
-          autocomplete="current-password"
+          id="loginIdentifier"
+          type="text"
+          autocomplete="username"
+          placeholder="Enter your username or email"
           required
         >
+      </div>
 
+      <div class="field">
+        <label for="loginPassword">Password</label>
+
+        <div class="input-wrap">
+          <input
+            id="loginPassword"
+            class="password-input"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            required
+          >
+
+          <button
+            type="button"
+            class="password-eye"
+            aria-label="Show password"
+            data-target="loginPassword"
+          ></button>
+        </div>
+      </div>
+
+      <div class="forgot-row">
         <button
           type="button"
-          class="password-toggle"
-          aria-label="Show password"
-          data-password="inPw">
-          👁
+          class="forgot-link"
+          id="forgotLink"
+        >
+          Forgot password?
         </button>
       </div>
 
-      <div id="passcodeRow" class="hidden">
+      <!-- TESTER PASSCODE -->
+      <div class="field" id="passcodeField" style="display:none;">
+        <label for="testerPasscode">Tester passcode</label>
 
-        <label for="inCode">Tester passcode</label>
-
-        <input
-          id="inCode"
-          autocomplete="off"
-          autocapitalize="characters"
-          placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
-        >
-
-        <div class="hint">
-          The owner gave you this passcode personally.
+        <div class="input-wrap">
+          <input
+            id="testerPasscode"
+            type="text"
+            autocomplete="one-time-code"
+            placeholder="Enter your tester passcode"
+          >
         </div>
 
+        <div class="tester-note">
+          Tester accounts require their individual passcode.
+        </div>
       </div>
 
-      <button class="forgot" type="button" onclick="showReset()">
-        Forgot password?
-      </button>
-
-      <button class="go" id="goIn">
+      <button class="btn btn-primary" type="submit" id="signInBtn">
         Sign in
       </button>
 
     </form>
 
-
     <!-- CREATE ACCOUNT -->
-    <form id="formUp" class="hidden" onsubmit="return submitUp(event)">
-
-      <label for="upFirst">First name</label>
-
-      <input
-        id="upFirst"
-        autocomplete="given-name"
-        required
-      >
-
-      <label for="upUser">Username</label>
-
-      <input
-        id="upUser"
-        autocomplete="username"
-        autocapitalize="none"
-        pattern="[A-Za-z0-9_]{3,20}"
-        required
-      >
-
-      <div class="hint">
-        3–20 letters, numbers or underscores.
-      </div>
-
-      <label for="upEmail">Email</label>
-
-      <input
-        id="upEmail"
-        type="email"
-        autocomplete="email"
-        required
-      >
-
-      <label for="upPw">Password</label>
+    <form id="createForm" class="form">
 
       <div class="field">
+        <label for="firstName">First name</label>
+
         <input
-          id="upPw"
-          type="password"
-          autocomplete="new-password"
-          minlength="8"
+          id="firstName"
+          type="text"
+          autocomplete="given-name"
+          placeholder="Enter your first name"
+          maxlength="40"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label for="username">Username</label>
+
+        <input
+          id="username"
+          type="text"
+          autocomplete="username"
+          placeholder="Choose a username"
+          maxlength="20"
           required
         >
 
-        <button
-          type="button"
-          class="password-toggle"
-          aria-label="Show password"
-          data-password="upPw">
-          👁
-        </button>
+        <div class="hint">
+          3–20 letters, numbers or underscores.
+        </div>
       </div>
 
-      <div class="hint">
-        At least 8 characters.
+      <div class="field">
+        <label for="email">Email address</label>
+
+        <input
+          id="email"
+          type="email"
+          autocomplete="email"
+          placeholder="Enter your email"
+          required
+        >
       </div>
 
-      <button class="go" id="goUp">
+      <div class="field">
+        <label for="createPassword">Password</label>
+
+        <div class="input-wrap">
+          <input
+            id="createPassword"
+            class="password-input"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Create a password"
+            minlength="8"
+            required
+          >
+
+          <button
+            type="button"
+            class="password-eye"
+            aria-label="Show password"
+            data-target="createPassword"
+          ></button>
+        </div>
+
+        <div class="hint">
+          Password must be at least 8 characters.
+        </div>
+      </div>
+
+      <button class="btn btn-primary" type="submit" id="createBtn">
         Create account
       </button>
 
     </form>
 
-
     <!-- FORGOT PASSWORD -->
-    <form
-      id="formReset"
-      class="hidden"
-      onsubmit="return submitReset(event)"
-    >
+    <form id="forgotForm" class="form">
 
-      <div class="reset-title">
-        Reset password
+      <div class="field">
+        <label for="resetEmail">Registered email</label>
+
+        <input
+          id="resetEmail"
+          type="email"
+          autocomplete="email"
+          placeholder="Enter the email on your account"
+          required
+        >
       </div>
 
-      <p class="reset-text">
-        Enter the email address connected to your Ọjọ́ọ̀la account.
-      </p>
+      <div class="hint" style="margin-bottom:17px;">
+        If the email belongs to an account, a password-reset link will be sent to it.
+      </div>
 
-      <label for="resetEmail">
-        Email
-      </label>
-
-      <input
-        id="resetEmail"
-        type="email"
-        autocomplete="email"
-        required
-      >
-
-      <button
-        class="go"
-        id="goReset"
-      >
+      <button class="btn btn-primary" type="submit" id="resetBtn">
         Send reset link
       </button>
 
       <button
         type="button"
-        class="back"
-        onclick="show('in')"
+        class="back-link"
+        id="backToSignIn"
       >
         Back to sign in
       </button>
 
     </form>
 
-
-    <!-- RESET PASSWORD FORM -->
-    <form
-      id="formNewPassword"
-      class="hidden"
-      onsubmit="return submitNewPassword(event)"
-    >
-
-      <div class="reset-title">
-        Create new password
-      </div>
-
-      <p class="reset-text">
-        Enter and confirm your new password.
-      </p>
-
-      <label for="newPw">
-        New password
-      </label>
-
-      <div class="field">
-        <input
-          id="newPw"
-          type="password"
-          autocomplete="new-password"
-          minlength="8"
-          required
-        >
-
-        <button
-          type="button"
-          class="password-toggle"
-          aria-label="Show password"
-          data-password="newPw">
-          👁
-        </button>
-      </div>
-
-      <label for="confirmPw">
-        Confirm password
-      </label>
-
-      <div class="field">
-        <input
-          id="confirmPw"
-          type="password"
-          autocomplete="new-password"
-          minlength="8"
-          required
-        >
-
-        <button
-          type="button"
-          class="password-toggle"
-          aria-label="Show password"
-          data-password="confirmPw">
-          👁
-        </button>
-      </div>
-
-      <button
-        class="go"
-        id="goNewPassword"
-      >
-        Update password
-      </button>
-
-    </form>
-
-
-    <div id="msg" class="msg" role="alert"></div>
+    <div class="footer">
+      Ojoola AI Study Partner
+    </div>
 
   </div>
+
 </div>
 
-
 <script>
+"use strict";
 
-const $=id=>document.getElementById(id);
+/* ---------------------------------------------------------
+   ELEMENTS
+--------------------------------------------------------- */
 
-const next=()=>{
-  const n=new URLSearchParams(location.search).get("next")||"index.html";
-  return /^[\w\-.]+\.html$/.test(n)?n:"index.html";
-};
+const signInTab = document.getElementById("signInTab");
+const createTab = document.getElementById("createTab");
+
+const signInForm = document.getElementById("signInForm");
+const createForm = document.getElementById("createForm");
+const forgotForm = document.getElementById("forgotForm");
+
+const message = document.getElementById("message");
+
+const forgotLink = document.getElementById("forgotLink");
+const backToSignIn = document.getElementById("backToSignIn");
+
+const passcodeField = document.getElementById("passcodeField");
+
+const loginIdentifier = document.getElementById("loginIdentifier");
+const loginPassword = document.getElementById("loginPassword");
+const testerPasscode = document.getElementById("testerPasscode");
+
+const firstName = document.getElementById("firstName");
+const username = document.getElementById("username");
+const email = document.getElementById("email");
+const createPassword = document.getElementById("createPassword");
+
+const resetEmail = document.getElementById("resetEmail");
 
 
-/* EXISTING SESSION CHECK — UNCHANGED */
-if(OjoolaCore.token())location.replace(next());
+/* ---------------------------------------------------------
+   MESSAGE
+--------------------------------------------------------- */
 
+function showMessage(text, type = "error") {
+  message.textContent = text;
+  message.className = "message show " + type;
+}
 
-/* SHOW SIGN IN / SIGN UP / RESET */
-function show(w){
-
-  const up=w==="up";
-
-  $("formIn").classList.toggle("hidden",w!=="in");
-  $("formUp").classList.toggle("hidden",w!=="up");
-  $("formReset").classList.add("hidden");
-  $("formNewPassword").classList.add("hidden");
-
-  $("tabIn").setAttribute("aria-selected",w==="in");
-  $("tabUp").setAttribute("aria-selected",w==="up");
-
-  err("");
+function clearMessage() {
+  message.textContent = "";
+  message.className = "message";
 }
 
 
-/* SHOW FORGOT PASSWORD */
-function showReset(){
+/* ---------------------------------------------------------
+   TAB / FORM SWITCHING
+--------------------------------------------------------- */
 
-  $("formIn").classList.add("hidden");
-  $("formUp").classList.add("hidden");
-  $("formReset").classList.remove("hidden");
-  $("formNewPassword").classList.add("hidden");
+function hideForms() {
+  signInForm.classList.remove("active");
+  createForm.classList.remove("active");
+  forgotForm.classList.remove("active");
 
-  $("tabIn").setAttribute("aria-selected","false");
-  $("tabUp").setAttribute("aria-selected","false");
-
-  err("");
+  signInTab.classList.remove("active");
+  createTab.classList.remove("active");
 }
 
+function showSignIn() {
+  hideForms();
 
-/* ERROR / STATUS MESSAGE */
-function err(t,success=false){
+  signInTab.classList.add("active");
+  signInForm.classList.add("active");
 
-  const m=$("msg");
-
-  m.textContent=t;
-
-  m.classList.toggle("success",success);
-
-  m.style.display=t?"block":"none";
+  clearMessage();
 }
 
+function showCreate() {
+  hideForms();
 
-/* EXISTING API CALL FUNCTION — PRESERVED */
-async function call(path,body,btn,label){
+  createTab.classList.add("active");
+  createForm.classList.add("active");
 
-  btn.disabled=true;
-  btn.textContent="Please wait…";
-  err("");
-
-  try{
-
-    const r=await fetch(
-      OjoolaCore.api+path,
-      {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify(body)
-      }
-    );
-
-    const d=await r.json().catch(()=>({}));
-
-    if(!r.ok){
-
-      err(
-        d.error||"Something went wrong. Try again."
-      );
-
-      return null;
-    }
-
-    return d;
-
-  }catch(_){
-
-    err(
-      "Can’t reach the server. Check your connection."
-    );
-
-    return null;
-
-  }finally{
-
-    btn.disabled=false;
-    btn.textContent=label;
-
-  }
+  clearMessage();
 }
 
+function showForgot() {
+  hideForms();
 
-/* EXISTING SIGN IN — PRESERVED */
-async function submitIn(e){
+  forgotForm.classList.add("active");
 
-  e.preventDefault();
+  clearMessage();
+}
 
-  const d=await call(
-    "/api/login",
-    {
-      identifier:$("inId").value,
-      password:$("inPw").value,
-      passcode:$("inCode").value
-    },
-    $("goIn"),
-    "Sign in"
+signInTab.addEventListener("click", showSignIn);
+createTab.addEventListener("click", showCreate);
+
+forgotLink.addEventListener("click", showForgot);
+
+backToSignIn.addEventListener("click", showSignIn);
+
+
+/* ---------------------------------------------------------
+   PASSWORD EYE ICON
+   TAP = TOGGLE
+   HOLD = REVEAL WHILE HELD
+--------------------------------------------------------- */
+
+function eyeOpenSVG() {
+  return `
+    <svg viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+  `;
+}
+
+function eyeClosedSVG() {
+  return `
+    <svg viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M3 3l18 18"></path>
+      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+      <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c6.5 0 10 8 10 8a17.5 17.5 0 0 1-3.2 4.5"></path>
+      <path d="M6.6 6.6C3.7 8.6 2 12 2 12s3.5 8 10 8a10.9 10.9 0 0 0 4.2-.9"></path>
+    </svg>
+  `;
+}
+
+function setPasswordVisible(input, button, visible) {
+  input.type = visible ? "text" : "password";
+  button.innerHTML = visible ? eyeOpenSVG() : eyeClosedSVG();
+  button.setAttribute(
+    "aria-label",
+    visible ? "Hide password" : "Show password"
   );
-
-  if(d&&d.token){
-
-    OjoolaCore.setSession(d.token);
-
-    location.replace(next());
-
-  }else if(
-    $("msg").textContent
-      .toLowerCase()
-      .includes("passcode")
-  ){
-
-    $("passcodeRow")
-      .classList
-      .remove("hidden");
-
-  }
-
-  return false;
 }
 
+document.querySelectorAll(".password-eye").forEach(button => {
 
-/* EXISTING ACCOUNT CREATION — PRESERVED */
-async function submitUp(e){
+  const input = document.getElementById(button.dataset.target);
 
-  e.preventDefault();
+  let holdTimer = null;
+  let holdUsed = false;
+  let pointerDown = false;
 
-  const d=await call(
-    "/api/signup",
-    {
-      firstName:$("upFirst").value,
-      username:$("upUser").value,
-      email:$("upEmail").value,
-      password:$("upPw").value
-    },
-    $("goUp"),
-    "Create account"
-  );
+  setPasswordVisible(input, button, false);
 
-  if(d&&d.token){
+  button.addEventListener("pointerdown", event => {
+    event.preventDefault();
 
-    OjoolaCore.setSession(d.token);
-
-    location.replace(next());
-
-  }
-
-  return false;
-}
-
-
-/* FORGOT PASSWORD */
-async function submitReset(e){
-
-  e.preventDefault();
-
-  const email=$("resetEmail").value.trim();
-
-  const d=await call(
-    "/api/forgot-password",
-    {
-      email:email
-    },
-    $("goReset"),
-    "Send reset link"
-  );
-
-  if(d){
-
-    err(
-      d.message||
-      "If an account exists for this email, a password reset link has been sent.",
-      true
-    );
-
-  }
-
-  return false;
-}
-
-
-/*
-  PASSWORD RESET FROM EMAIL LINK
-
-  Expected reset URL format:
-
-  reset-password.html?token=...
-
-  OR, if this page is reused:
-
-  signin.html?resetToken=...
-*/
-async function submitNewPassword(e){
-
-  e.preventDefault();
-
-  const password=$("newPw").value;
-  const confirm=$("confirmPw").value;
-
-  if(password!==confirm){
-
-    err("Passwords do not match.");
-
-    return false;
-  }
-
-  if(password.length<8){
-
-    err("Password must be at least 8 characters.");
-
-    return false;
-  }
-
-  const params=new URLSearchParams(location.search);
-
-  const token=
-    params.get("resetToken")||
-    params.get("token");
-
-  if(!token){
-
-    err("This password reset link is invalid or has expired.");
-
-    return false;
-  }
-
-  const d=await call(
-    "/api/reset-password",
-    {
-      token:token,
-      password:password
-    },
-    $("goNewPassword"),
-    "Update password"
-  );
-
-  if(d){
-
-    err(
-      d.message||
-      "Your password has been updated. You can now sign in.",
-      true
-    );
-
-    setTimeout(()=>{
-      history.replaceState(
-        {},
-        "",
-        location.pathname
-      );
-
-      show("in");
-    },1200);
-
-  }
-
-  return false;
-}
-
-
-/*
-  PASSWORD EYE CONTROL
-
-  TAP:
-  - toggles visibility.
-
-  HOLD:
-  - reveals while pressed.
-  - hides again when released.
-
-  This is attached to all password eye buttons.
-*/
-document
-.querySelectorAll(".password-toggle")
-.forEach(btn=>{
-
-  const inputId=btn.dataset.password;
-  const input=$(inputId);
-
-  let holdTimer=null;
-  let holding=false;
-
-  function showPassword(){
-
-    input.type="text";
-
-    btn.setAttribute(
-      "aria-label",
-      "Hide password"
-    );
-
-    btn.textContent="🙈";
-  }
-
-  function hidePassword(){
-
-    input.type="password";
-
-    btn.setAttribute(
-      "aria-label",
-      "Show password"
-    );
-
-    btn.textContent="👁";
-  }
-
-  function togglePassword(){
-
-    if(input.type==="password"){
-      showPassword();
-    }else{
-      hidePassword();
-    }
-
-  }
-
-  btn.addEventListener("click",e=>{
+    pointerDown = true;
+    holdUsed = false;
 
     /*
-      If the button was used for a hold,
-      don't perform another toggle when
-      the click event fires afterward.
+      Short delay distinguishes a normal tap
+      from a long press.
     */
-    if(holding){
+    holdTimer = setTimeout(() => {
+      if (!pointerDown) return;
 
-      holding=false;
+      holdUsed = true;
+      setPasswordVisible(input, button, true);
+    }, 350);
+  });
+
+  button.addEventListener("pointerup", event => {
+    event.preventDefault();
+
+    pointerDown = false;
+
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+
+    /*
+      If it was a long press, restore the password
+      when the finger is released.
+    */
+    if (holdUsed) {
+      setPasswordVisible(input, button, false);
       return;
     }
 
-    togglePassword();
-
+    /*
+      Normal short tap toggles visibility.
+    */
+    setPasswordVisible(
+      input,
+      button,
+      input.type === "password"
+    );
   });
 
-  btn.addEventListener("pointerdown",()=>{
+  button.addEventListener("pointercancel", () => {
+    pointerDown = false;
 
-    holding=false;
-
-    holdTimer=setTimeout(()=>{
-
-      holding=true;
-      showPassword();
-
-    },450);
-
-  });
-
-  btn.addEventListener("pointerup",()=>{
-
-    clearTimeout(holdTimer);
-
-    if(holding){
-
-      hidePassword();
-
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
     }
 
-  });
-
-  btn.addEventListener("pointercancel",()=>{
-
-    clearTimeout(holdTimer);
-
-    if(holding){
-
-      hidePassword();
-
+    if (holdUsed) {
+      setPasswordVisible(input, button, false);
     }
 
-    holding=false;
-
+    holdUsed = false;
   });
 
-  btn.addEventListener("pointerleave",()=>{
+  button.addEventListener("pointerleave", () => {
+    if (!pointerDown) return;
 
-    clearTimeout(holdTimer);
-
-    if(holding){
-
-      hidePassword();
-      holding=false;
-
-    }
-
+    /*
+      Don't immediately hide on normal pointer movement.
+      The pointerup/cancel event handles the final state.
+    */
   });
-
 });
 
 
-/*
-  DETECT A PASSWORD RESET TOKEN.
+/* ---------------------------------------------------------
+   API HELPER
+--------------------------------------------------------- */
 
-  If the reset link opens this page directly,
-  show the new-password form instead of sign-in.
-*/
-(function(){
+async function api(path, options = {}) {
 
-  const params=new URLSearchParams(location.search);
+  const response = await fetch(path, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    },
+    ...options
+  });
 
-  const token=
-    params.get("resetToken")||
-    params.get("token");
+  let data = {};
 
-  if(token){
-
-    $("formIn").classList.add("hidden");
-    $("formUp").classList.add("hidden");
-    $("formReset").classList.add("hidden");
-    $("formNewPassword").classList.remove("hidden");
-
-    $("tabIn").setAttribute("aria-selected","false");
-    $("tabUp").setAttribute("aria-selected","false");
-
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = {};
   }
 
-})();
+  if (!response.ok) {
+    let error = data.error;
+
+    if (error && typeof error === "object") {
+      error = error.message;
+    }
+
+    throw new Error(
+      error || "Something went wrong. Please try again."
+    );
+  }
+
+  return data;
+}
+
+
+/* ---------------------------------------------------------
+   SIGN IN
+--------------------------------------------------------- */
+
+signInForm.addEventListener("submit", async event => {
+
+  event.preventDefault();
+  clearMessage();
+
+  const identifier = loginIdentifier.value.trim();
+  const password = loginPassword.value;
+  const passcode = testerPasscode.value.trim();
+
+  if (!identifier || !password) {
+    showMessage("Enter your username/email and password.");
+    return;
+  }
+
+  const button = document.getElementById("signInBtn");
+
+  button.disabled = true;
+  button.textContent = "Signing in...";
+
+  try {
+
+    const data = await api("/api/login", {
+      method: "POST",
+
+      body: JSON.stringify({
+        identifier,
+        password,
+        passcode
+      })
+    });
+
+    if (data.token) {
+      localStorage.setItem("ojoola_token", data.token);
+    }
+
+    if (data.user) {
+      localStorage.setItem(
+        "ojoola_user",
+        JSON.stringify(data.user)
+      );
+    }
+
+    showMessage("Signed in successfully.", "success");
+
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 350);
+
+  } catch (error) {
+
+    showMessage(error.message);
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "Sign in";
+  }
+});
+
+
+/* ---------------------------------------------------------
+   CREATE ACCOUNT
+--------------------------------------------------------- */
+
+createForm.addEventListener("submit", async event => {
+
+  event.preventDefault();
+  clearMessage();
+
+  const first = firstName.value.trim();
+  const user = username.value.trim();
+  const mail = email.value.trim();
+  const password = createPassword.value;
+
+  if (!first || !user || !mail || !password) {
+    showMessage("Please complete all fields.");
+    return;
+  }
+
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(user)) {
+    showMessage(
+      "Username must be 3–20 letters, numbers or underscores."
+    );
+    return;
+  }
+
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
+    showMessage("Enter a valid email address.");
+    return;
+  }
+
+  if (password.length < 8) {
+    showMessage("Password must be at least 8 characters.");
+    return;
+  }
+
+  const button = document.getElementById("createBtn");
+
+  button.disabled = true;
+  button.textContent = "Creating account...";
+
+  try {
+
+    const data = await api("/api/signup", {
+      method: "POST",
+
+      body: JSON.stringify({
+        firstName: first,
+        username: user,
+        email: mail,
+        password
+      })
+    });
+
+    if (data.token) {
+      localStorage.setItem("ojoola_token", data.token);
+    }
+
+    if (data.user) {
+      localStorage.setItem(
+        "ojoola_user",
+        JSON.stringify(data.user)
+      );
+    }
+
+    showMessage(
+      "Account created successfully.",
+      "success"
+    );
+
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 350);
+
+  } catch (error) {
+
+    showMessage(error.message);
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "Create account";
+  }
+});
+
+
+/* ---------------------------------------------------------
+   FORGOT PASSWORD
+--------------------------------------------------------- */
+
+forgotForm.addEventListener("submit", async event => {
+
+  event.preventDefault();
+  clearMessage();
+
+  const mail = resetEmail.value.trim();
+
+  if (!mail) {
+    showMessage("Enter your registered email address.");
+    return;
+  }
+
+  const button = document.getElementById("resetBtn");
+
+  button.disabled = true;
+  button.textContent = "Sending...";
+
+  try {
+
+    await api("/api/forgot-password", {
+      method: "POST",
+
+      body: JSON.stringify({
+        email: mail
+      })
+    });
+
+    /*
+      Keep the message generic so the page does not reveal
+      whether an email address belongs to an account.
+    */
+    showMessage(
+      "If an account exists for that email, a password-reset link has been sent.",
+      "success"
+    );
+
+  } catch (error) {
+
+    showMessage(error.message);
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "Send reset link";
+  }
+});
+
+
+/* ---------------------------------------------------------
+   OPTIONAL TESTER PASSCODE DISPLAY
+---------------------------------------------------------
+
+   The login API already accepts a tester passcode.
+   This field can be revealed by the application if needed.
+
+   It stays hidden by default so ordinary users see
+   a clean sign-in screen.
+--------------------------------------------------------- */
+
+window.OJOOLA_SHOW_TESTER_PASSCODE = function(show = true) {
+  passcodeField.style.display = show ? "block" : "none";
+};
+
+
+/* ---------------------------------------------------------
+   INITIAL STATE
+--------------------------------------------------------- */
+
+showSignIn();
 
 </script>
 
