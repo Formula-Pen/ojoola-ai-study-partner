@@ -6,6 +6,8 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#1d4ed8">
 <link rel="icon" href="icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Owner dashboard – Ọjọ́ọ̀la</title>
 <style>
 :root{--bg:#eef3fc;--card:#fff;--line:#d9e2f1;--text:#14213d;--muted:#5b6b86;--blue:#2563eb;--blue2:#1d4ed8;--soft:#eaf0ff;
@@ -23,6 +25,9 @@ input:focus-visible{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235
 .top{background:linear-gradient(160deg,#1e3a8a,#1d4ed8 55%,#3b82f6);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 18px;border-radius:0 0 26px 26px}
 .topRow{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:auto}
 .top h1{margin:0;font-size:20px}
+.brandRow{display:flex;align-items:center;gap:12px}
+.mark{width:46px;height:46px;border-radius:14px;background:#fff;object-fit:cover;box-shadow:0 4px 14px rgba(8,20,70,.35)}
+.bigMark{display:block;width:104px;height:104px;margin:0 auto 14px;border-radius:30px;background:#fff;object-fit:cover;box-shadow:0 14px 34px rgba(15,35,90,.28)}
 .top small{opacity:.8;font-size:12px}
 .ghost{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:11px;padding:8px 12px;font-size:13px;font-weight:700}
 .wrap{max-width:760px;margin:auto;padding:16px 16px 0}
@@ -85,10 +90,11 @@ label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
 
 <!-- OWNER LOGIN -->
 <section id="loginView" class="login hidden">
-  <div class="card">
+  <div class="card" style="text-align:center">
+    <img class="bigMark" src="icons/icon-512.png" onerror="this.onerror=null;this.src='icons/icon-192.png'" alt="Ọjọ́ọ̀la icon">
     <h2>Owner sign in</h2>
     <p style="margin:0;color:var(--muted);font-size:14px">Ọjọ́ọ̀la dashboard</p>
-    <form id="loginForm">
+    <form id="loginForm" style="text-align:left">
       <label for="ou">Owner username</label>
       <input id="ou" type="text" autocomplete="username" autocapitalize="none" required>
       <label for="op">Owner password</label>
@@ -103,7 +109,10 @@ label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
 <section id="dashView" class="hidden">
   <header class="top">
     <div class="topRow">
-      <div><h1>Owner dashboard</h1><small>Ọjọ́ọ̀la accounts &amp; activity</small></div>
+      <div class="brandRow">
+        <img class="mark" src="icons/icon-192.png" alt="Ọjọ́ọ̀la icon">
+        <div><h1>Owner dashboard</h1><small>Ọjọ́ọ̀la accounts &amp; activity</small></div>
+      </div>
       <div style="display:flex;gap:8px">
         <button class="ghost" id="refreshBtn">Refresh</button>
         <button class="ghost" id="outBtn">Sign out</button>
