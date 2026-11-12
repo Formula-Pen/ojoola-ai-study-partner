@@ -5,7 +5,7 @@
   "use strict";
 
   /* >>> SET THIS to your deployed Worker address <<< */
-  const API = "https://ojoola.babatundexwale.workers.dev";
+  const API = "https://ojoola-api.babatundexwale.workers.dev";
 
   const KEY = "ojoola_session";
   const token = () => localStorage.getItem(KEY) || "";
