@@ -70,7 +70,14 @@
 
   /* 4. Refresh account + permissions */
   fetch(API + "/api/me", { headers: { Authorization: "Bearer " + token() } })
-    .then(r => r.ok ? r.json() : null)
+    .then(r => {
+      if (r.status === 403) {                       // suspended or revoked by the owner
+        r.json().then(d => sessionStorage.setItem("ojoola_notice", d.error || "Your account is not active. Contact the owner.")).catch(() => {})
+          .finally(() => { localStorage.removeItem(KEY); location.replace("login.html"); });
+        return null;
+      }
+      return r.ok ? r.json() : null;
+    })
     .then(me => { if (me) { core.me = me; applyUI(); } })
     .catch(() => {});
 
