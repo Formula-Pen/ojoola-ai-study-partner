@@ -1,4 +1,4 @@
-const CACHE_NAME = "ojooola-v3";
+const CACHE_NAME = "ojooola-v4";
 
 const APP_SHELL = [
   "./",
@@ -55,6 +55,7 @@ self.addEventListener("fetch", event => {
     request.mode === "navigate" ||
     url.pathname.endsWith("/index.html") ||
     url.pathname.endsWith("/manifest.json") ||
+    url.pathname.endsWith("/ojoola-core.js") ||
     url.pathname.endsWith("/service-worker.js")
   ){
     event.respondWith(
