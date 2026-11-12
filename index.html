@@ -4295,7 +4295,7 @@ async function callGemini(
     try{
 
       const result=
-        await generateOneModel(
+        await streamOneModel(onChunk,
           model,
           contents,
           key,
@@ -4667,10 +4667,29 @@ ${prompt}`;
 
   try{
 
-    const attachments=
-      isGeneral
-        ?[]
-        :fileParts(course);
+        let notesText="";
+    let attachments=[];
+
+    if(!isGeneral){
+      try{
+        const n=await getCourseNotes(
+          course,
+          s=>{
+            if(token===requestToken){
+              $(statusId).textContent=s;
+            }
+          },
+          controller.signal
+        );
+
+        if(n){
+          notesText="\n\nSTUDY NOTES FROM THE STUDENT'S COURSE MATERIALS (use these as the main reference; if they do not cover the question, say so before adding general knowledge):\n"+n;
+        }
+      }catch(e){
+        if(e.name==="AbortError")throw e;
+        attachments=fileParts(course);
+      }
+    }
 
     const attachmentSize=
       attachments.reduce(
@@ -4695,7 +4714,7 @@ ${prompt}`;
 
     await callGemini(
 
-      finalPrompt,
+      finalPrompt+notesText,
 
       chat.slice(0,-2),
 
@@ -5966,6 +5985,122 @@ function stopCourseLive(updateStatus = true) {
     liveSetStatus("Conversation ended.");
   }
 }
+
+/* STREAMING (answer appears as it is written) */
+async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
+  const controller=new AbortController();
+  let timer=setTimeout(()=>controller.abort("timeout"),30000);
+  const fwd=()=>controller.abort("user");
+  if(signal.aborted)controller.abort("user");
+  else signal.addEventListener("abort",fwd,{once:true});
+
+  try{
+    onStatus?.("Sending your question…");
+
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`;
+
+    const response=await fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-goog-api-key":key},
+      body:JSON.stringify({
+        contents,
+        generationConfig:{temperature:.7,maxOutputTokens:4096}
+      }),
+      signal:controller.signal
+    });
+
+    if(!response.ok){
+      let detail="";
+      try{
+        const j=await response.json();
+        detail=j.error?.message||JSON.stringify(j);
+      }catch(_){detail="HTTP "+response.status}
+      const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
+      err.status=response.status;
+      throw err;
+    }
+
+    onStatus?.("Receiving answer…");
+
+    const reader=response.body.getReader();
+    const decoder=new TextDecoder();
+    let buffer="",full="",finish="",lastPush=0;
+
+    const handle=line=>{
+      if(!line.startsWith("data:"))return;
+      const raw=line.slice(5).trim();
+      if(!raw)return;
+      let j;
+      try{j=JSON.parse(raw)}catch(_){return}
+      const cand=j.candidates?.[0];
+      const t=(cand?.content?.parts||[]).map(p=>p.text||"").join("");
+      if(t)full+=t;
+      if(cand?.finishReason)finish=cand.finishReason;
+    };
+
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+
+      clearTimeout(timer);
+      timer=setTimeout(()=>controller.abort("timeout"),30000);
+
+      buffer+=decoder.decode(value,{stream:true});
+      const lines=buffer.split("\n");
+      buffer=lines.pop();
+      lines.forEach(handle);
+
+      const now=Date.now();
+      if(full&&now-lastPush>120){
+        lastPush=now;
+        onChunk?.(full);
+      }
+    }
+
+    if(buffer)handle(buffer);
+
+    if(finish==="SAFETY"){
+      throw new Error("Gemini stopped this answer because its safety filters were triggered. Try rephrasing the question.");
+    }
+
+    if(!full.trim()){
+      throw new Error(
+        finish
+          ?`Gemini returned no text (${finish}).`
+          :"Gemini returned an empty response."
+      );
+    }
+
+    return full;
+
+  }catch(e){
+    if(e.name==="AbortError"){
+      if(signal.aborted){
+        throw new DOMException("Stopped","AbortError");
+      }
+      const err=new Error("Gemini took too long to respond. Check your connection and try again.");
+      err.status=408;
+      throw err;
+    }
+    throw e;
+
+  }finally{
+    clearTimeout(timer);
+    signal.removeEventListener("abort",fwd);
+  }
+}
+
+
+/* SAVED NOTES FOR EACH PDF / PICTURE (read once, reused) */
+async function getCourseNotes(c,onStatus,signal){
+  if(!c||!c.ref)return"";
+
+  const store=
+    safeJSON(localStorage.getItem("ojoola_file_notes"),{})||{};
+
+  const files=[
+    ...(c.pdfs||[]).map(f=>({f,mime:"application/pdf"})),
+    ...(c.pic
 
 </script>
 
