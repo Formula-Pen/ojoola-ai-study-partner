@@ -1,4 +1,4 @@
-const CACHE_NAME = "ojooola-v2";
+const CACHE_NAME = "ojooola-v3";
 
 const APP_SHELL = [
   "./",
