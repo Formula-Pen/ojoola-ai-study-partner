@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="ojoola-core.js"></script>
+<script src="ojoola-core.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2563EB">
@@ -1499,23 +1499,26 @@ body.dark .welcome{
 
     <div class="card">
 
-      <h3>AI Account</h3>
+      <h3>Gemini API Key</h3>
 
       <p class="muted">
-        Ọjọ́ọ̀la now connects to Gemini through its secure backend.
-        Your Gemini API key is not stored in this app.
+        Your key is stored locally on this device.
+        For a public app, use a secure backend instead
+        of exposing a shared key in browser code.
       </p>
+
+      <input
+        id="apiKeyInput"
+        type="password"
+        placeholder="Paste Gemini API key"
+        autocomplete="off">
+
+      <br><br>
 
       <button
         class="primary"
-        onclick="signInToOjoola()">
-        Sign In
-      </button>
-
-      <button
-        class="secondary"
-        onclick="signOutOjoola()">
-        Sign Out
+        onclick="saveApiKey()">
+        Save API Key
       </button>
 
     </div>
@@ -2277,8 +2280,10 @@ function openSettings(){
     .classList
     .remove("hidden");
 
-  const keyBox=$("apiKeyInput");
-  if(keyBox) keyBox.value="";
+  $("apiKeyInput").value=
+    localStorage.getItem(
+      "ojoola_gemini_key"
+    )||"";
 }
 
 function closeSettings(){
@@ -2288,21 +2293,30 @@ function closeSettings(){
 }
 
 function saveApiKey(){
-  alert("Gemini API keys are no longer entered on this device. Ọjọ́ọ̀la now uses the secure backend.");
-}
 
-async function signOutOjoola(){
-  const token=getSessionToken();
-  try{
-    if(token){
-      await fetch(`${OJOOLA_API_BASE}/api/logout`,{
-        method:"POST",
-        headers:{"Authorization":"Bearer "+token}
-      });
-    }
-  }catch(_){}
-  clearSession();
-  alert("You have been signed out of Ọjọ́ọ̀la.");
+  const k=
+    $("apiKeyInput")
+      .value
+      .trim();
+
+  if(k){
+    localStorage.setItem(
+      "ojoola_gemini_key",
+      k
+    );
+  }else{
+    localStorage.removeItem(
+      "ojoola_gemini_key"
+    );
+  }
+
+  alert(
+    k
+      ?"API key saved on this device."
+      :"API key removed."
+  );
+
+  $("apiKeyInput").value="";
 }
 
 function clearAllData(){
@@ -4151,98 +4165,6 @@ const GEMINI_MODELS=[
   "gemini-3.8-flash"
 ];
 
-const OJOOLA_API_BASE = "https://ojoola.babatundexwale.workers.dev";
-const OJOOLA_SESSION_KEY = "ojoola_session_token";
-
-function getSessionToken(){
-  return localStorage.getItem(OJOOLA_SESSION_KEY) || "";
-}
-
-function clearSession(){
-  localStorage.removeItem(OJOOLA_SESSION_KEY);
-  localStorage.removeItem("ojoola_session_user");
-}
-
-async function signInToOjoola(){
-  return new Promise(resolve => {
-    const old = document.getElementById("ojoolaLoginModal");
-    if(old) old.remove();
-
-    const modal = document.createElement("div");
-    modal.id = "ojoolaLoginModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-      <div class="modalBox">
-        <div class="flex between">
-          <h2>Sign in to Ọjọ́ọ̀la</h2>
-          <button class="iconBtn" id="ojoolaLoginClose">✕</button>
-        </div>
-        <p class="muted">Sign in to use Ọjọ́ọ̀la AI securely. Your Gemini API key is handled by the secure backend.</p>
-        <input id="ojoolaLoginIdentifier" type="text" placeholder="Username or email" autocomplete="username">
-        <br><br>
-        <input id="ojoolaLoginPassword" type="password" placeholder="Password" autocomplete="current-password">
-        <br><br>
-        <input id="ojoolaLoginPasscode" type="text" placeholder="Tester passcode (if required)" autocomplete="off">
-        <br><br>
-        <button class="primary" id="ojoolaLoginBtn">Sign in</button>
-        <div id="ojoolaLoginStatus" class="muted" style="margin-top:10px"></div>
-      </div>`;
-
-    document.body.appendChild(modal);
-    modal.classList.remove("hidden");
-
-    const close = () => { modal.remove(); resolve(false); };
-    document.getElementById("ojoolaLoginClose").onclick = close;
-    modal.onclick = e => { if(e.target === modal) close(); };
-
-    document.getElementById("ojoolaLoginBtn").onclick = async () => {
-      const identifier = document.getElementById("ojoolaLoginIdentifier").value.trim();
-      const password = document.getElementById("ojoolaLoginPassword").value;
-      const passcode = document.getElementById("ojoolaLoginPasscode").value.trim();
-      const status = document.getElementById("ojoolaLoginStatus");
-      const btn = document.getElementById("ojoolaLoginBtn");
-
-      if(!identifier || !password){
-        status.textContent = "Enter your username/email and password.";
-        return;
-      }
-
-      btn.disabled = true;
-      status.textContent = "Signing in securely…";
-
-      try{
-        const r = await fetch(`${OJOOLA_API_BASE}/api/login`, {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({identifier,password,passcode})
-        });
-
-        const data = await r.json().catch(() => ({}));
-
-        if(!r.ok || !data.token){
-          throw new Error(data.error?.message || data.error || "Sign-in failed.");
-        }
-
-        localStorage.setItem(OJOOLA_SESSION_KEY, data.token);
-        if(data.user) localStorage.setItem("ojoola_session_user", JSON.stringify(data.user));
-
-        modal.remove();
-        resolve(true);
-      }catch(e){
-        status.textContent = e.message || "Sign-in failed.";
-        btn.disabled = false;
-      }
-    };
-  });
-}
-
-async function ensureOjoolaSession(){
-  const token = getSessionToken();
-  if(token) return true;
-
-  return await signInToOjoola();
-}
-
 function getApiKey(){
 
   return localStorage.getItem(
@@ -4360,8 +4282,14 @@ async function callGemini(
   signal
 ){
 
-  if(!(await ensureOjoolaSession())){
-    throw new Error("Sign-in cancelled.");
+  const key=
+    getApiKey();
+
+  if(!key){
+
+    throw new Error(
+      "No Gemini API key saved. Open Settings and add your API key."
+    );
   }
 
   const contents=[
@@ -4406,6 +4334,7 @@ async function callGemini(
         await streamOneModel(onChunk,
           model,
           contents,
+          key,
           onStatus,
           signal
         );
@@ -4979,6 +4908,17 @@ async function sendGeneral(){
 
   if(!prompt)return;
 
+  if(!getApiKey()){
+
+    openSettings();
+
+    alert(
+      "Please add your Gemini API key in Settings first."
+    );
+
+    return;
+  }
+
   if(activeController){
 
     alert(
@@ -5009,6 +4949,17 @@ async function sendCourseChat(){
       .trim();
 
   if(!prompt)return;
+
+  if(!getApiKey()){
+
+    openSettings();
+
+    alert(
+      "Please add your Gemini API key in Settings first."
+    );
+
+    return;
+  }
 
   if(activeController){
 
@@ -6108,7 +6059,7 @@ function stopCourseLive(updateStatus = true) {
 }
 
 /* STREAMING (answer appears as it is written) */
-async function streamOneModel(onChunk,model,contents,onStatus,signal){
+async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
   const controller=new AbortController();
   let timer=setTimeout(()=>controller.abort("timeout"),30000);
   const fwd=()=>controller.abort("user");
@@ -6118,19 +6069,11 @@ async function streamOneModel(onChunk,model,contents,onStatus,signal){
   try{
     onStatus?.("Sending your question…");
 
-    const url=`${OJOOLA_API_BASE}/api/gemini?model=${encodeURIComponent(model)}&stream=1`;
-
-    const sessionToken = getSessionToken();
-    if(!sessionToken){
-      throw new Error("Your Ọjọ́ọ̀la session has expired. Please sign in again.");
-    }
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`;
 
     const response=await fetch(url,{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+sessionToken
-      },
+      headers:{"Content-Type":"application/json","x-goog-api-key":key},
       body:JSON.stringify({
         contents,
         generationConfig:{temperature:.7,maxOutputTokens:4096}
