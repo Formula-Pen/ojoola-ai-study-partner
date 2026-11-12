@@ -5035,6 +5035,42 @@ $("courseInput")
 );
 
 
+function autoGrow(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,window.innerHeight*0.5)+"px";}
+["generalInput","courseInput"].forEach(id=>{const el=$(id);el.addEventListener("input",()=>autoGrow(el));});
+
+(function(){
+  const desc=Object.getOwnPropertyDescriptor(Node.prototype,"textContent");
+  ["generalStatus","courseStatus"].forEach(id=>{
+    const el=$(id);
+    let log=[],t0=Date.now(),last=Date.now();
+    const stamp=()=>"["+Math.round((Date.now()-t0)/1000)+"s] ";
+    const show=()=>desc.set.call(el,log.join("\n"));
+    Object.defineProperty(el,"textContent",{
+      configurable:true,
+      get(){return desc.get.call(el);},
+      set(v){
+        v=String(v);
+        if(v.indexOf("Preparing")===0){log=[];t0=Date.now();}
+        if(log.length&&log[log.length-1].endsWith(v))return;
+        log.push(stamp()+v);
+        if(log.length>8)log.shift();
+        last=Date.now();
+        show();
+      }
+    });
+    setInterval(()=>{
+      if(el.classList.contains("hidden")||!log.length)return;
+      if(log[log.length-1].includes("stopped"))return;
+      if(Date.now()-last>9000){
+        log.push(stamp()+"Still working… long answers can take a little while. Please hang on.");
+        if(log.length>8)log.shift();
+        last=Date.now();
+        show();
+      }
+    },3000);
+  });
+})();
+
 /* DOWN BUTTONS */
 
 const generalDownBtn=
