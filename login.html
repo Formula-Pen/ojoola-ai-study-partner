@@ -6,36 +6,302 @@
 <meta name="theme-color" content="#2563EB">
 <link rel="icon" href="icons/favicon.ico">
 <title>Sign in – Ọjọ́ọ̀la</title>
+
 <style>
-:root{--bg:#f5f7fb;--card:#fff;--line:#dce3ee;--text:#172033;--muted:#64748b;--blue:#2563eb;--err:#b91c1c;--errbg:#fee2e2}
-@media(prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#121c2e;--line:#334155;--text:#e8edf7;--muted:#94a3b8;--err:#fecdd3;--errbg:#451c27}}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
-body{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:max(22px,env(safe-area-inset-top)) 20px max(22px,env(safe-area-inset-bottom))}
-.box{width:100%;max-width:400px}
-.brand{text-align:center;margin-bottom:22px}
-.brand img{width:72px;height:72px;border-radius:22px}
-.brand h1{margin:12px 0 4px;font-size:30px;letter-spacing:-.8px}
-.brand p{margin:0;color:var(--muted);font-size:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px}
-.tabs{display:flex;gap:6px;background:var(--bg);border-radius:14px;padding:4px;margin-bottom:16px}
-.tabs button{flex:1;border:0;background:none;color:var(--muted);padding:10px;border-radius:11px;font:inherit;font-weight:700;cursor:pointer}
-.tabs button[aria-selected=true]{background:var(--card);color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.12)}
-label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}
-input{width:100%;border:1px solid var(--line);border-radius:13px;padding:12px 13px;background:var(--card);color:var(--text);font:inherit;outline:none}
-input:focus-visible{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.18)}
-.hint{font-size:12px;color:var(--muted);margin-top:4px}
-.go{width:100%;margin-top:18px;border:0;border-radius:13px;background:var(--blue);color:#fff;padding:13px;font:inherit;font-weight:800;cursor:pointer}
-.go:disabled{opacity:.6}
-.msg{display:none;margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--errbg);color:var(--err);font-size:13px;line-height:1.45}
-.hidden{display:none!important}
+:root{
+  --bg:#f5f7fb;
+  --card:#fff;
+  --line:#dce3ee;
+  --text:#172033;
+  --muted:#64748b;
+  --blue:#2563eb;
+  --err:#b91c1c;
+  --errbg:#fee2e2;
+  --shadow:0 10px 30px rgba(15,23,42,.07);
+}
+
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1220;
+    --card:#121c2e;
+    --line:#334155;
+    --text:#e8edf7;
+    --muted:#94a3b8;
+    --err:#fecdd3;
+    --errbg:#451c27;
+    --shadow:0 12px 35px rgba(0,0,0,.22);
+  }
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+  min-height:100svh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:max(22px,env(safe-area-inset-top))
+          20px
+          max(22px,env(safe-area-inset-bottom));
+}
+
+button,input{
+  font-family:inherit;
+}
+
+button{
+  -webkit-tap-highlight-color:transparent;
+}
+
+.box{
+  width:100%;
+  max-width:400px;
+}
+
+.brand{
+  text-align:center;
+  margin-bottom:22px;
+}
+
+.brand img{
+  width:72px;
+  height:72px;
+  border-radius:22px;
+  display:block;
+  margin:0 auto;
+  box-shadow:0 5px 18px rgba(37,99,235,.15);
+}
+
+.brand h1{
+  margin:12px 0 4px;
+  font-size:30px;
+  letter-spacing:-.8px;
+}
+
+.brand p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:20px;
+  box-shadow:var(--shadow);
+}
+
+.tabs{
+  display:flex;
+  gap:6px;
+  background:var(--bg);
+  border-radius:14px;
+  padding:4px;
+  margin-bottom:16px;
+}
+
+.tabs button{
+  flex:1;
+  border:0;
+  background:none;
+  color:var(--muted);
+  padding:10px;
+  border-radius:11px;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.tabs button[aria-selected=true]{
+  background:var(--card);
+  color:var(--blue);
+  box-shadow:0 1px 4px rgba(0,0,0,.12);
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin:12px 0 5px;
+}
+
+.field{
+  position:relative;
+}
+
+input{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:12px 44px 12px 13px;
+  background:var(--card);
+  color:var(--text);
+  font:inherit;
+  outline:none;
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+
+input:not([type="password"]){
+  padding-right:13px;
+}
+
+input:focus-visible{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(37,99,235,.18);
+}
+
+.password-toggle{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  width:36px;
+  height:36px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  cursor:pointer;
+  border-radius:10px;
+  font-size:18px;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+.password-toggle:active{
+  background:rgba(37,99,235,.08);
+}
+
+.password-toggle:focus-visible{
+  outline:2px solid rgba(37,99,235,.35);
+  outline-offset:1px;
+}
+
+.hint{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.forgot{
+  display:block;
+  width:max-content;
+  margin:10px 0 0 auto;
+  border:0;
+  background:none;
+  color:var(--blue);
+  padding:3px 0;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.forgot:hover{
+  text-decoration:underline;
+}
+
+.go{
+  width:100%;
+  margin-top:18px;
+  border:0;
+  border-radius:13px;
+  background:var(--blue);
+  color:#fff;
+  padding:13px;
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+  transition:transform .12s ease,opacity .18s ease,box-shadow .18s ease;
+  box-shadow:0 5px 14px rgba(37,99,235,.18);
+}
+
+.go:active{
+  transform:translateY(1px);
+}
+
+.go:disabled{
+  opacity:.6;
+  cursor:default;
+  box-shadow:none;
+}
+
+.back{
+  width:100%;
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:transparent;
+  color:var(--text);
+  padding:12px;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.msg{
+  display:none;
+  margin-top:14px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:var(--errbg);
+  color:var(--err);
+  font-size:13px;
+  line-height:1.45;
+}
+
+.success{
+  background:rgba(34,197,94,.12);
+  color:#15803d;
+}
+
+@media(prefers-color-scheme:dark){
+  .success{
+    color:#86efac;
+  }
+}
+
+.hidden{
+  display:none!important;
+}
+
+.reset-title{
+  margin:2px 0 6px;
+  font-size:20px;
+  font-weight:800;
+}
+
+.reset-text{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+}
 </style>
 </head>
+
 <body>
+
 <script>window.OJOOLA_NO_GATE=1;</script>
 <script src="ojoola-core.js"></script>
 
 <div class="box">
+
   <div class="brand">
     <img src="icons/icon-192.png" alt="">
     <h1>Ọjọ́ọ̀la</h1>
@@ -43,81 +309,712 @@ input:focus-visible{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235
   </div>
 
   <div class="card">
+
+    <!-- LOGIN / SIGN UP TABS -->
     <div class="tabs" role="tablist">
-      <button role="tab" id="tabIn" aria-selected="true" onclick="show('in')">Sign in</button>
-      <button role="tab" id="tabUp" aria-selected="false" onclick="show('up')">Create account</button>
+      <button
+        role="tab"
+        id="tabIn"
+        aria-selected="true"
+        onclick="show('in')">
+        Sign in
+      </button>
+
+      <button
+        role="tab"
+        id="tabUp"
+        aria-selected="false"
+        onclick="show('up')">
+        Create account
+      </button>
     </div>
 
+
+    <!-- SIGN IN -->
     <form id="formIn" onsubmit="return submitIn(event)">
+
       <label for="inId">Username or email</label>
-      <input id="inId" autocomplete="username" autocapitalize="none" required>
+
+      <input
+        id="inId"
+        autocomplete="username"
+        autocapitalize="none"
+        required
+      >
+
       <label for="inPw">Password</label>
-      <input id="inPw" type="password" autocomplete="current-password" required>
-      <div id="passcodeRow" class="hidden">
-        <label for="inCode">Tester passcode</label>
-        <input id="inCode" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX">
-        <div class="hint">The owner gave you this passcode personally.</div>
+
+      <div class="field">
+        <input
+          id="inPw"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button
+          type="button"
+          class="password-toggle"
+          aria-label="Show password"
+          data-password="inPw">
+          👁
+        </button>
       </div>
-      <button class="go" id="goIn">Sign in</button>
+
+      <div id="passcodeRow" class="hidden">
+
+        <label for="inCode">Tester passcode</label>
+
+        <input
+          id="inCode"
+          autocomplete="off"
+          autocapitalize="characters"
+          placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
+        >
+
+        <div class="hint">
+          The owner gave you this passcode personally.
+        </div>
+
+      </div>
+
+      <button class="forgot" type="button" onclick="showReset()">
+        Forgot password?
+      </button>
+
+      <button class="go" id="goIn">
+        Sign in
+      </button>
+
     </form>
 
+
+    <!-- CREATE ACCOUNT -->
     <form id="formUp" class="hidden" onsubmit="return submitUp(event)">
+
       <label for="upFirst">First name</label>
-      <input id="upFirst" autocomplete="given-name" required>
+
+      <input
+        id="upFirst"
+        autocomplete="given-name"
+        required
+      >
+
       <label for="upUser">Username</label>
-      <input id="upUser" autocomplete="username" autocapitalize="none" pattern="[A-Za-z0-9_]{3,20}" required>
-      <div class="hint">3–20 letters, numbers or underscores.</div>
+
+      <input
+        id="upUser"
+        autocomplete="username"
+        autocapitalize="none"
+        pattern="[A-Za-z0-9_]{3,20}"
+        required
+      >
+
+      <div class="hint">
+        3–20 letters, numbers or underscores.
+      </div>
+
       <label for="upEmail">Email</label>
-      <input id="upEmail" type="email" autocomplete="email" required>
+
+      <input
+        id="upEmail"
+        type="email"
+        autocomplete="email"
+        required
+      >
+
       <label for="upPw">Password</label>
-      <input id="upPw" type="password" autocomplete="new-password" minlength="8" required>
-      <div class="hint">At least 8 characters.</div>
-      <button class="go" id="goUp">Create account</button>
+
+      <div class="field">
+        <input
+          id="upPw"
+          type="password"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        >
+
+        <button
+          type="button"
+          class="password-toggle"
+          aria-label="Show password"
+          data-password="upPw">
+          👁
+        </button>
+      </div>
+
+      <div class="hint">
+        At least 8 characters.
+      </div>
+
+      <button class="go" id="goUp">
+        Create account
+      </button>
+
     </form>
+
+
+    <!-- FORGOT PASSWORD -->
+    <form
+      id="formReset"
+      class="hidden"
+      onsubmit="return submitReset(event)"
+    >
+
+      <div class="reset-title">
+        Reset password
+      </div>
+
+      <p class="reset-text">
+        Enter the email address connected to your Ọjọ́ọ̀la account.
+      </p>
+
+      <label for="resetEmail">
+        Email
+      </label>
+
+      <input
+        id="resetEmail"
+        type="email"
+        autocomplete="email"
+        required
+      >
+
+      <button
+        class="go"
+        id="goReset"
+      >
+        Send reset link
+      </button>
+
+      <button
+        type="button"
+        class="back"
+        onclick="show('in')"
+      >
+        Back to sign in
+      </button>
+
+    </form>
+
+
+    <!-- RESET PASSWORD FORM -->
+    <form
+      id="formNewPassword"
+      class="hidden"
+      onsubmit="return submitNewPassword(event)"
+    >
+
+      <div class="reset-title">
+        Create new password
+      </div>
+
+      <p class="reset-text">
+        Enter and confirm your new password.
+      </p>
+
+      <label for="newPw">
+        New password
+      </label>
+
+      <div class="field">
+        <input
+          id="newPw"
+          type="password"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        >
+
+        <button
+          type="button"
+          class="password-toggle"
+          aria-label="Show password"
+          data-password="newPw">
+          👁
+        </button>
+      </div>
+
+      <label for="confirmPw">
+        Confirm password
+      </label>
+
+      <div class="field">
+        <input
+          id="confirmPw"
+          type="password"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        >
+
+        <button
+          type="button"
+          class="password-toggle"
+          aria-label="Show password"
+          data-password="confirmPw">
+          👁
+        </button>
+      </div>
+
+      <button
+        class="go"
+        id="goNewPassword"
+      >
+        Update password
+      </button>
+
+    </form>
+
 
     <div id="msg" class="msg" role="alert"></div>
+
   </div>
 </div>
 
+
 <script>
+
 const $=id=>document.getElementById(id);
-const next=()=>{const n=new URLSearchParams(location.search).get("next")||"index.html";return /^[\w\-.]+\.html$/.test(n)?n:"index.html"};
+
+const next=()=>{
+  const n=new URLSearchParams(location.search).get("next")||"index.html";
+  return /^[\w\-.]+\.html$/.test(n)?n:"index.html";
+};
+
+
+/* EXISTING SESSION CHECK — UNCHANGED */
 if(OjoolaCore.token())location.replace(next());
 
+
+/* SHOW SIGN IN / SIGN UP / RESET */
 function show(w){
+
   const up=w==="up";
-  $("formIn").classList.toggle("hidden",up);
-  $("formUp").classList.toggle("hidden",!up);
-  $("tabIn").setAttribute("aria-selected",!up);
-  $("tabUp").setAttribute("aria-selected",up);
+
+  $("formIn").classList.toggle("hidden",w!=="in");
+  $("formUp").classList.toggle("hidden",w!=="up");
+  $("formReset").classList.add("hidden");
+  $("formNewPassword").classList.add("hidden");
+
+  $("tabIn").setAttribute("aria-selected",w==="in");
+  $("tabUp").setAttribute("aria-selected",w==="up");
+
   err("");
 }
-function err(t){const m=$("msg");m.textContent=t;m.style.display=t?"block":"none"}
 
+
+/* SHOW FORGOT PASSWORD */
+function showReset(){
+
+  $("formIn").classList.add("hidden");
+  $("formUp").classList.add("hidden");
+  $("formReset").classList.remove("hidden");
+  $("formNewPassword").classList.add("hidden");
+
+  $("tabIn").setAttribute("aria-selected","false");
+  $("tabUp").setAttribute("aria-selected","false");
+
+  err("");
+}
+
+
+/* ERROR / STATUS MESSAGE */
+function err(t,success=false){
+
+  const m=$("msg");
+
+  m.textContent=t;
+
+  m.classList.toggle("success",success);
+
+  m.style.display=t?"block":"none";
+}
+
+
+/* EXISTING API CALL FUNCTION — PRESERVED */
 async function call(path,body,btn,label){
-  btn.disabled=true;btn.textContent="Please wait…";err("");
+
+  btn.disabled=true;
+  btn.textContent="Please wait…";
+  err("");
+
   try{
-    const r=await fetch(OjoolaCore.api+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+
+    const r=await fetch(
+      OjoolaCore.api+path,
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify(body)
+      }
+    );
+
     const d=await r.json().catch(()=>({}));
-    if(!r.ok){err(d.error||"Something went wrong. Try again.");return null}
+
+    if(!r.ok){
+
+      err(
+        d.error||"Something went wrong. Try again."
+      );
+
+      return null;
+    }
+
     return d;
-  }catch(_){err("Can’t reach the server. Check your connection.");return null}
-  finally{btn.disabled=false;btn.textContent=label}
+
+  }catch(_){
+
+    err(
+      "Can’t reach the server. Check your connection."
+    );
+
+    return null;
+
+  }finally{
+
+    btn.disabled=false;
+    btn.textContent=label;
+
+  }
 }
 
+
+/* EXISTING SIGN IN — PRESERVED */
 async function submitIn(e){
+
   e.preventDefault();
-  const d=await call("/api/login",{identifier:$("inId").value,password:$("inPw").value,passcode:$("inCode").value},$("goIn"),"Sign in");
-  if(d&&d.token){OjoolaCore.setSession(d.token);location.replace(next())}
-  else if($("msg").textContent.toLowerCase().includes("passcode"))$("passcodeRow").classList.remove("hidden");
+
+  const d=await call(
+    "/api/login",
+    {
+      identifier:$("inId").value,
+      password:$("inPw").value,
+      passcode:$("inCode").value
+    },
+    $("goIn"),
+    "Sign in"
+  );
+
+  if(d&&d.token){
+
+    OjoolaCore.setSession(d.token);
+
+    location.replace(next());
+
+  }else if(
+    $("msg").textContent
+      .toLowerCase()
+      .includes("passcode")
+  ){
+
+    $("passcodeRow")
+      .classList
+      .remove("hidden");
+
+  }
+
   return false;
 }
+
+
+/* EXISTING ACCOUNT CREATION — PRESERVED */
 async function submitUp(e){
+
   e.preventDefault();
-  const d=await call("/api/signup",{firstName:$("upFirst").value,username:$("upUser").value,email:$("upEmail").value,password:$("upPw").value},$("goUp"),"Create account");
-  if(d&&d.token){OjoolaCore.setSession(d.token);location.replace(next())}
+
+  const d=await call(
+    "/api/signup",
+    {
+      firstName:$("upFirst").value,
+      username:$("upUser").value,
+      email:$("upEmail").value,
+      password:$("upPw").value
+    },
+    $("goUp"),
+    "Create account"
+  );
+
+  if(d&&d.token){
+
+    OjoolaCore.setSession(d.token);
+
+    location.replace(next());
+
+  }
+
   return false;
 }
+
+
+/* FORGOT PASSWORD */
+async function submitReset(e){
+
+  e.preventDefault();
+
+  const email=$("resetEmail").value.trim();
+
+  const d=await call(
+    "/api/forgot-password",
+    {
+      email:email
+    },
+    $("goReset"),
+    "Send reset link"
+  );
+
+  if(d){
+
+    err(
+      d.message||
+      "If an account exists for this email, a password reset link has been sent.",
+      true
+    );
+
+  }
+
+  return false;
+}
+
+
+/*
+  PASSWORD RESET FROM EMAIL LINK
+
+  Expected reset URL format:
+
+  reset-password.html?token=...
+
+  OR, if this page is reused:
+
+  signin.html?resetToken=...
+*/
+async function submitNewPassword(e){
+
+  e.preventDefault();
+
+  const password=$("newPw").value;
+  const confirm=$("confirmPw").value;
+
+  if(password!==confirm){
+
+    err("Passwords do not match.");
+
+    return false;
+  }
+
+  if(password.length<8){
+
+    err("Password must be at least 8 characters.");
+
+    return false;
+  }
+
+  const params=new URLSearchParams(location.search);
+
+  const token=
+    params.get("resetToken")||
+    params.get("token");
+
+  if(!token){
+
+    err("This password reset link is invalid or has expired.");
+
+    return false;
+  }
+
+  const d=await call(
+    "/api/reset-password",
+    {
+      token:token,
+      password:password
+    },
+    $("goNewPassword"),
+    "Update password"
+  );
+
+  if(d){
+
+    err(
+      d.message||
+      "Your password has been updated. You can now sign in.",
+      true
+    );
+
+    setTimeout(()=>{
+      history.replaceState(
+        {},
+        "",
+        location.pathname
+      );
+
+      show("in");
+    },1200);
+
+  }
+
+  return false;
+}
+
+
+/*
+  PASSWORD EYE CONTROL
+
+  TAP:
+  - toggles visibility.
+
+  HOLD:
+  - reveals while pressed.
+  - hides again when released.
+
+  This is attached to all password eye buttons.
+*/
+document
+.querySelectorAll(".password-toggle")
+.forEach(btn=>{
+
+  const inputId=btn.dataset.password;
+  const input=$(inputId);
+
+  let holdTimer=null;
+  let holding=false;
+
+  function showPassword(){
+
+    input.type="text";
+
+    btn.setAttribute(
+      "aria-label",
+      "Hide password"
+    );
+
+    btn.textContent="🙈";
+  }
+
+  function hidePassword(){
+
+    input.type="password";
+
+    btn.setAttribute(
+      "aria-label",
+      "Show password"
+    );
+
+    btn.textContent="👁";
+  }
+
+  function togglePassword(){
+
+    if(input.type==="password"){
+      showPassword();
+    }else{
+      hidePassword();
+    }
+
+  }
+
+  btn.addEventListener("click",e=>{
+
+    /*
+      If the button was used for a hold,
+      don't perform another toggle when
+      the click event fires afterward.
+    */
+    if(holding){
+
+      holding=false;
+      return;
+    }
+
+    togglePassword();
+
+  });
+
+  btn.addEventListener("pointerdown",()=>{
+
+    holding=false;
+
+    holdTimer=setTimeout(()=>{
+
+      holding=true;
+      showPassword();
+
+    },450);
+
+  });
+
+  btn.addEventListener("pointerup",()=>{
+
+    clearTimeout(holdTimer);
+
+    if(holding){
+
+      hidePassword();
+
+    }
+
+  });
+
+  btn.addEventListener("pointercancel",()=>{
+
+    clearTimeout(holdTimer);
+
+    if(holding){
+
+      hidePassword();
+
+    }
+
+    holding=false;
+
+  });
+
+  btn.addEventListener("pointerleave",()=>{
+
+    clearTimeout(holdTimer);
+
+    if(holding){
+
+      hidePassword();
+      holding=false;
+
+    }
+
+  });
+
+});
+
+
+/*
+  DETECT A PASSWORD RESET TOKEN.
+
+  If the reset link opens this page directly,
+  show the new-password form instead of sign-in.
+*/
+(function(){
+
+  const params=new URLSearchParams(location.search);
+
+  const token=
+    params.get("resetToken")||
+    params.get("token");
+
+  if(token){
+
+    $("formIn").classList.add("hidden");
+    $("formUp").classList.add("hidden");
+    $("formReset").classList.add("hidden");
+    $("formNewPassword").classList.remove("hidden");
+
+    $("tabIn").setAttribute("aria-selected","false");
+    $("tabUp").setAttribute("aria-selected","false");
+
+  }
+
+})();
+
 </script>
+
 </body>
 </html>
