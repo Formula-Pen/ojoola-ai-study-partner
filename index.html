@@ -6100,7 +6100,7 @@ async function getCourseNotes(c,onStatus,signal){
 
   const files=[
     ...(c.pdfs||[]).map(f=>({f,mime:"application/pdf"})),
-    ...(c.pic
+    ...(c.tures||[]).map(f=>({f,mime:"image/jpeg"}))].filter(x=>x.f&&x.f.id&&x.f.data);for(const {f,mime} of files){if(store[f.id])continue;onStatus?.("Reading "+(f.name||"file")+" (first time only)…");const notes=await callGemini("Study this file carefully. Write detailed study notes capturing all key definitions, concepts, formulas, examples, steps, tables and diagrams. Mention page numbers or headings where you can. Be accurate and do not add outside information.",[],[{inline_data:{mime_type:f.mimeType||mime,data:f.data}}],null,onStatus,signal);store[f.id]=notes;try{localStorage.setItem("ojoola_file_notes",JSON.stringify(store));}catch(_){}}return files.filter(x=>store[x.f.id]).map(x=>"=== "+(x.f.name||"File")+" ==="+String.fromCharCode(10)+store[x.f.id]).join(String.fromCharCode(10)+String.fromCharCode(10));}
 
 </script>
 
