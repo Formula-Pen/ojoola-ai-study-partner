@@ -6,11 +6,16 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
+    "headers": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "**/*.@(html|js|json)",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" }
+        ]
       }
+    ],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
     ]
   }
 }
