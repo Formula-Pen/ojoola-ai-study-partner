@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+< lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -248,5 +248,10 @@ async function submitIn(e){
 })();
   
 </script>
-<script src="login-extra.js"></script> </body>
+<script>
+async function submitUp(e){e.preventDefault();const d=await call("/api/signup",{firstName:$("upFirst").value,username:$("upUser").value,email:$("upEmail").value,password:$("upPw").value,invite:sessionStorage.getItem("ojoola_invite")||""},$("goUp"),"Create account");if(d&&d.token){OjoolaCore.setSession(d.token);const inv=sessionStorage.getItem("ojoola_invite");if(inv){try{await fetch(OjoolaCore.api+"/api/invite/claim",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+d.token},body:JSON.stringify({code:inv})})}catch(_){}sessionStorage.removeItem("ojoola_invite")}location.replace(next())}return false}
+async function submitForgot(e){e.preventDefault();const d=await call("/api/forgot",{identifier:$("fgId").value},$("goForgot"),"Notify the owner");if(d)note(d.message||"The owner has been notified.","ok");return false}
+async function submitReset(e){e.preventDefault();const d=await call("/api/reset",{identifier:$("rsId").value,code:$("rsCode").value,newPassword:$("rsPw").value},$("goReset"),"Save new password");if(d){view("in");note("Password changed. You can sign in now.","ok")}return false}
+</script>
+</body>
 </html>
