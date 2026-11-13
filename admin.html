@@ -8,7 +8,7 @@
 <link rel="icon" href="icons/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<title>Owner dashboard – Ọjọ́ọ̀la</title>
+<title>Admin Dashboard – Ọjọ́ọ̀la</title>
 <style>
 :root{--bg:#eef3fc;--card:#fff;--line:#d9e2f1;--text:#14213d;--muted:#5b6b86;--blue:#2563eb;--blue2:#1d4ed8;--soft:#eaf0ff;
 --ok:#166534;--okbg:#dcfce7;--warn:#92400e;--warnbg:#fef3c7;--err:#b91c1c;--errbg:#fee2e2}
@@ -88,16 +88,16 @@ label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
 </head>
 <body>
 
-<!-- OWNER LOGIN -->
+<!-- ADMIN LOGIN -->
 <section id="loginView" class="login hidden">
   <div class="card" style="text-align:center">
     <img class="bigMark" src="icons/icon-512.png" onerror="this.onerror=null;this.src='icons/icon-192.png'" alt="Ọjọ́ọ̀la icon">
-    <h2>Owner sign in</h2>
+    <h2>Admin sign in</h2>
     <p style="margin:0;color:var(--muted);font-size:14px">Ọjọ́ọ̀la dashboard</p>
     <form id="loginForm" style="text-align:left">
-      <label for="ou">Owner username</label>
+      <label for="ou">Admin username</label>
       <input id="ou" type="text" autocomplete="username" autocapitalize="none" required>
-      <label for="op">Owner password</label>
+      <label for="op">Admin password</label>
       <input id="op" type="password" autocomplete="current-password" required>
       <button class="primary" id="loginBtn">Sign in</button>
     </form>
@@ -111,7 +111,7 @@ label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
     <div class="topRow">
       <div class="brandRow">
         <img class="mark" src="icons/icon-192.png" alt="Ọjọ́ọ̀la icon">
-        <div><h1>Owner dashboard</h1><small>Ọjọ́ọ̀la accounts &amp; activity</small></div>
+        <div><h1>Admin Dashboard</h1><small>Ọjọ́ọ̀la accounts &amp; activity</small></div>
       </div>
       <div style="display:flex;gap:8px">
         <button class="ghost" id="refreshBtn">Refresh</button>
