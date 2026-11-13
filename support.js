@@ -123,7 +123,7 @@
   }
 
   function renderThread(list) {
-    const sig = list.map(m => m.id).join(",");
+    const sig = list.map(m => m.id + (m.edited ? "e" : "") + (m.deleted ? "d" : "")).join(",");
     const b0 = document.getElementById("ojSMsgs");
     if (sig === lastSig && b0.childElementCount) return;
     lastSig = sig;
@@ -149,9 +149,9 @@
       t.textContent = m.audioSecs ? "" : m.text; if (m.audioSecs) { el.classList.add("vn"); t.appendChild(playerFor(m)); }
       el.appendChild(t);
       const s = document.createElement("small");
-      s.textContent = ago(m.ts) + " · tap to reply";
+      s.textContent = ago(m.ts) + (m.edited ? " · edited" : "") + (m.deleted ? "" : " · tap for options");
       el.appendChild(s);
-      el.onclick = () => setReply(m);
+      if (m.deleted) { el.style.opacity = ".6"; el.style.fontStyle = "italic"; } else el.onclick = () => msgMenu(m, el);
       box.appendChild(el);
     });
     if (stick || near) box.scrollTop = box.scrollHeight;
@@ -322,6 +322,64 @@ document.addEventListener("click", e => {
   if (e.target.closest && e.target.closest("#ojSMic")) startRec();
 });
 
+/* ---- edit / delete ---- */
+let editingId = null;
+
+function msgMenu(m, el) {
+  const had = el.querySelector(".ojSAct");
+  document.querySelectorAll(".ojSAct").forEach(x => x.remove());
+  if (had) return;
+  const row = document.createElement("div");
+  row.className = "ojSAct";
+  const add = (label, fn) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.onclick = e => { e.stopPropagation(); row.remove(); fn(); };
+    row.appendChild(b);
+  };
+  add("↩ Reply", () => setReply(m));
+  if (m.sender === "user" && !m.audioSecs) add("✎ Edit", () => startEdit(m));
+  if (m.sender === "user") add("🗑 Delete", () => delMsg(m));
+  el.appendChild(row);
+}
+
+function startEdit(m) {
+  editingId = m.id;
+  clearReply();
+  const inp = document.getElementById("ojSInput");
+  inp.value = m.text;
+  inp.focus();
+  const r = document.getElementById("ojSReply");
+  r.textContent = "";
+  const t = document.createElement("span");
+  t.textContent = "Editing your message";
+  const x = document.createElement("button");
+  x.textContent = "✕";
+  x.onclick = () => cancelEdit(false);
+  r.appendChild(t); r.appendChild(x);
+  r.classList.remove("ojHide");
+}
+
+function cancelEdit(keep) {
+  editingId = null;
+  const r = document.getElementById("ojSReply");
+  if (r) r.classList.add("ojHide");
+  if (!keep) {
+    const i = document.getElementById("ojSInput");
+    if (i) { i.value = ""; i.style.height = "auto"; }
+  }
+}
+
+async function delMsg(m) {
+  if (!confirm("Delete this message?")) return;
+  try {
+    await call("/api/support/delete", { id: m.id });
+    lastSig = "";
+    await loadThread();
+  } catch (e) { toast(e.message); }
+}
+
 async function loadThread() {
     try { const d = await call("/api/support/thread"); renderThread(d.messages || []); }
     catch (e) { toast(e.message); }
@@ -334,7 +392,7 @@ async function loadThread() {
     const btn = document.getElementById("ojSSend");
     btn.disabled = true;
     try {
-      await call("/api/support/send", { text, replyTo });
+      if (editingId) { await call("/api/support/edit", { id: editingId, text }); cancelEdit(true); } else await call("/api/support/send", { text, replyTo });
       inp.value = ""; inp.style.height = "auto";
       clearReply(); stick = true;
       await loadThread();
@@ -350,7 +408,7 @@ async function loadThread() {
     loadThread();
     threadTimer = setInterval(loadThread, 6000);
   }
-  function closePanel() { if (rec) stopRec(true); if (curAudio) curAudio.pause();
+  function closePanel() { cancelEdit(false); if (rec) stopRec(true); if (curAudio) curAudio.pause();
     panelOpen = false;
     panel.classList.add("ojHide");
     clearInterval(threadTimer); threadTimer = null;
@@ -396,7 +454,7 @@ async function loadThread() {
 ".ojVP .ojVPlay{width:34px;padding:0;font-size:14px}",
 ".ojVP input{flex:1;min-width:50px;width:auto;padding:0;border:0;background:transparent;box-shadow:none;accent-color:#60a5fa}",
 ".ojVP span{font-size:10px;opacity:.85;min-width:64px;text-align:center}",
-".ojSMsg.vn{min-width:min(300px,80vw)}"
+".ojSMsg.vn{min-width:min(300px,80vw)}", ".ojSAct{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}", ".ojSAct button{width:auto;height:auto;border:0;border-radius:10px;padding:6px 10px;font-size:12px;background:rgba(128,128,128,.3);color:inherit}"
     ].join("\n");
     document.head.appendChild(css);
 
