@@ -218,29 +218,14 @@ async function call(path,body,btn,label){
 async function submitIn(e){
   e.preventDefault();
   const d=await call("/api/login",{identifier:$("inId").value,password:$("inPw").value,passcode:$("inCode").value},$("goIn"),"Sign in");
-  if(d&&d.token){OjoolaCore.setSession(d.token);location.replace(next())}
-  else if($("msg").textContent.toLowerCase().includes("passcode"))$("passcodeRow").classList.remove("hidden");
+  if(d&&d.token){OjoolaCore.setSession(d.token);location.replace(next());return false}
+  const first=$("msg").textContent;
+  if(first.toLowerCase().includes("passcode")){$("passcodeRow").classList.remove("hidden");return false}
+  const o=await call("/api/admin/login",{username:$("inId").value,password:$("inPw").value},$("goIn"),"Sign in");
+  if(o&&o.token){localStorage.setItem("ojoola_admin_session",o.token);OjoolaCore.setSession(o.token);location.replace(next())}
+  else note(first);
   return false;
-}
-async function submitUp(e){
-  e.preventDefault();
-  const d=await call("/api/signup",{firstName:$("upFirst").value,username:$("upUser").value,email:$("upEmail").value,password:$("upPw").value},$("goUp"),"Create account");
-  if(d&&d.token){OjoolaCore.setSession(d.token);location.replace(next())}
-  return false;
-}
-async function submitForgot(e){
-  e.preventDefault();
-  const id=$("fgId").value;
-  const d=await call("/api/forgot",{identifier:id},$("goForgot"),"Notify the owner");
-  if(d){$("rsId").value=id;note(d.message,"ok")}
-  return false;
-}
-async function submitReset(e){
-  e.preventDefault();
-  const id=$("rsId").value;
-  const d=await call("/api/reset",{identifier:id,code:$("rsCode").value,newPassword:$("rsPw").value},$("goReset"),"Save new password");
-  if(d){$("inId").value=id;$("inPw").value="";view("in");note("Password changed. Sign in with your new password.","ok")}
-  return false;
+
 }
 </script>
 </body>
