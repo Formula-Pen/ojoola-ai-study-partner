@@ -304,6 +304,7 @@ $("tAct").onclick=()=>{$("tAct").classList.add("on");$("tUsers").classList.remov
   catch(_){signOut()}
 })();
 </script>
-<script src="admin-messages.js"></script> <script>(function(){const t=document.getElementById("refreshBtn");if(!t)return;const b=document.createElement("button");b.className="ghost";b.textContent="Invite link";t.parentNode.insertBefore(b,t);b.onclick=async()=>{b.disabled=true;try{const d=await api("/api/invite/create",{});const link=new URL("login.html?invite="+d.code,location.href).href;showCode("Invite link","One-time link, valid for 7 days. Copy it and send it to one student only.",link)}catch(e){toast(e.message)}b.disabled=false}})();</script> 
+<script src="admin-messages.js"></script>
+<script>(function(){var t=document.getElementById("refreshBtn");if(!t)return;var b=document.createElement("button");b.className="ghost";b.textContent="Invite link";t.parentNode.insertBefore(b,t);b.onclick=async function(){b.disabled=true;try{var d=await api("/api/invite/create",{});var link=new URL("login.html?invite="+d.code,location.href).href;showCode("Invite link","One-time link, valid for 7 days. Send it to one student only.",link)}catch(e){toast(e.message)}b.disabled=false}})();</script>
 </body>
 </html>
