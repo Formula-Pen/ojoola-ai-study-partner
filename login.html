@@ -182,7 +182,7 @@ input:focus-visible{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235
 <script>
 const $=id=>document.getElementById(id);
 const next=()=>{const n=new URLSearchParams(location.search).get("next")||"index.html";return /^[\w\-.]+\.html$/.test(n)?n:"index.html"};
-if(OjoolaCore.token())location.replace(next());
+if(OjoolaCore.token()&&localStorage.getItem("ojoola_uid"))location.replace(next());
 
 const VIEWS={in:"formIn",up:"formUp",forgot:"formForgot",reset:"formReset"};
 function view(w){
@@ -215,28 +215,64 @@ async function call(path,body,btn,label){
 
 (function(){const n=sessionStorage.getItem("ojoola_notice");if(n){sessionStorage.removeItem("ojoola_notice");note(n)}})();
 
+async function claimInvite(token){
+  const inv=sessionStorage.getItem("ojoola_invite");
+  if(!inv)return;
+  try{
+    await fetch(OjoolaCore.api+"/api/invite/claim",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({code:inv})});
+  }catch(_){}
+  sessionStorage.removeItem("ojoola_invite");
+}
+
 async function submitIn(e){
   e.preventDefault();
   const d=await call("/api/login",{identifier:$("inId").value,password:$("inPw").value,passcode:$("inCode").value},$("goIn"),"Sign in");
-    if(d&&d.token){
-    OjoolaCore.setSession(d.token);
-    const inv=sessionStorage.getItem("ojoola_invite");
-    if(inv){
-      try{await fetch(OjoolaCore.api+"/api/invite/claim",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+d.token},body:JSON.stringify({code:inv})})}catch(_){}
-      sessionStorage.removeItem("ojoola_invite");
-    }
+  if(d&&d.token){
+    OjoolaCore.setSession(d.token,d.user&&d.user.id);
+    await claimInvite(d.token);
     location.replace(next());
-    }
+    return false;
+  }
   const first=$("msg").textContent;
   if(first.toLowerCase().includes("passcode")){$("passcodeRow").classList.remove("hidden");return false}
   const o=await call("/api/admin/login",{username:$("inId").value,password:$("inPw").value},$("goIn"),"Sign in");
-  if(o&&o.token){localStorage.setItem("ojoola_admin_session",o.token);OjoolaCore.setSession(o.token);location.replace(next())}
-  else note(first);
+  if(o&&o.token){
+    localStorage.setItem("ojoola_admin_session",o.token);
+    OjoolaCore.setSession(o.token,"owner");
+    location.replace(next());
+  }else note(first);
   return false;
-
 }
 
-  (async function(){
+async function submitUp(e){
+  e.preventDefault();
+  const d=await call("/api/signup",{firstName:$("upFirst").value,username:$("upUser").value,email:$("upEmail").value,password:$("upPw").value,invite:sessionStorage.getItem("ojoola_invite")||""},$("goUp"),"Create account");
+  if(d&&d.token){
+    OjoolaCore.setSession(d.token,d.user&&d.user.id);
+    await claimInvite(d.token);
+    location.replace(next());
+  }
+  return false;
+}
+
+async function submitForgot(e){
+  e.preventDefault();
+  const id=$("fgId").value;
+  const d=await call("/api/forgot",{identifier:id},$("goForgot"),"Notify the owner");
+  if(d){$("rsId").value=id;note(d.message||"The owner has been notified.","ok")}
+  return false;
+}
+
+async function submitReset(e){
+  e.preventDefault();
+  const id=$("rsId").value;
+  const d=await call("/api/reset",{identifier:id,code:$("rsCode").value,newPassword:$("rsPw").value},$("goReset"),"Save new password");
+  if(d){$("inId").value=id;$("inPw").value="";view("in");note("Password changed. Sign in with your new password.","ok")}
+  return false;
+}
+
+/* invite link: login.html?invite=CODE */
+(async function(){
   const inv=new URLSearchParams(location.search).get("invite");
   if(!inv)return;
   try{
@@ -246,12 +282,6 @@ async function submitIn(e){
     else note("This invite link is invalid or has expired.");
   }catch(_){}
 })();
-  
-</script>
-<script>
-async function submitUp(e){e.preventDefault();const d=await call("/api/signup",{firstName:$("upFirst").value,username:$("upUser").value,email:$("upEmail").value,password:$("upPw").value,invite:sessionStorage.getItem("ojoola_invite")||""},$("goUp"),"Create account");if(d&&d.token){OjoolaCore.setSession(d.token);const inv=sessionStorage.getItem("ojoola_invite");if(inv){try{await fetch(OjoolaCore.api+"/api/invite/claim",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+d.token},body:JSON.stringify({code:inv})})}catch(_){}sessionStorage.removeItem("ojoola_invite")}location.replace(next())}return false}
-async function submitForgot(e){e.preventDefault();const d=await call("/api/forgot",{identifier:$("fgId").value},$("goForgot"),"Notify the owner");if(d)note(d.message||"The owner has been notified.","ok");return false}
-async function submitReset(e){e.preventDefault();const d=await call("/api/reset",{identifier:$("rsId").value,code:$("rsCode").value,newPassword:$("rsPw").value},$("goReset"),"Save new password");if(d){view("in");note("Password changed. You can sign in now.","ok")}return false}
 </script>
 </body>
 </html>
