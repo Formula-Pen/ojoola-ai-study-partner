@@ -1,4 +1,4 @@
-/* Ojoola Core — account gate + secure-backend bridge.
+/* Ojoola Core: account gate + secure-backend bridge.
    Load as the FIRST script in index.html's <head>:  <script src="ojoola-core.js"></script>
    It needs no other changes to the existing app. */
 (function () {
@@ -8,12 +8,16 @@
   const API = "https://ojoola-api.babatundexwale.workers.dev";
 
   const KEY = "ojoola_session";
+  const UID_KEY = "ojoola_uid";
   const token = () => localStorage.getItem(KEY) || "";
   const core = (window.OjoolaCore = {
     api: API,
     me: null,
     token,
-    setSession(t) { localStorage.setItem(KEY, t); },
+    setSession(t, uid) {
+      localStorage.setItem(KEY, t);
+      if (uid !== undefined && uid !== null) localStorage.setItem(UID_KEY, String(uid));
+    },
     can(p) { return !core.me || !core.me.perms || core.me.perms[p] !== false; },
     track(event) {
       if (!token()) return;
@@ -27,6 +31,7 @@
     async logout() {
       try { await fetch(API + "/api/logout", { method: "POST", headers: { Authorization: "Bearer " + token() } }); } catch (_) {}
       localStorage.removeItem(KEY);
+      localStorage.removeItem(UID_KEY);
       location.replace("login.html");
     }
   });
@@ -38,6 +43,16 @@
     location.replace("login.html?next=" + encodeURIComponent(location.pathname.split("/").pop() || "index.html"));
     return;
   }
+
+  /* 1b. Every account gets its own courses, attachments, chats and notes on this phone.
+         A session from before this update has no account id saved, so sign in once more. */
+  const uid = localStorage.getItem(UID_KEY);
+  if (!uid) {
+    localStorage.removeItem(KEY);
+    location.replace("login.html");
+    return;
+  }
+  scopeStorage(uid);
 
   /* 2. The Gemini key no longer lives in the browser. Remove any old copy and
         give the existing app a harmless placeholder so its "is a key saved?" checks pass. */
@@ -81,8 +96,83 @@
     .then(me => { if (me) { core.me = me; applyUI(); loadSupport(); } })
     .catch(() => {});
 
+  /* Keep each account's data separate on a shared phone */
+  function scopeStorage(id) {
+    const pre = "ojoola_acct_" + id + "__";
+    const DATA = ["ojoola_courses", "ojoola_general_chat", "ojoola_file_notes", "ojoola_live_notes"];
+    const isData = k => DATA.indexOf(String(k)) > -1;
+    const P = Storage.prototype;
+    const lenGet = Object.getOwnPropertyDescriptor(P, "length").get;
+    const raw = { get: P.getItem, set: P.setItem, del: P.removeItem, key: P.key, clear: P.clear };
+
+    P.getItem = function (k) {
+      return this === localStorage && isData(k) ? raw.get.call(this, pre + k) : raw.get.call(this, k);
+    };
+    P.setItem = function (k, v) {
+      return this === localStorage && isData(k) ? raw.set.call(this, pre + k, v) : raw.set.call(this, k, v);
+    };
+    P.removeItem = function (k) {
+      return this === localStorage && isData(k) ? raw.del.call(this, pre + k) : raw.del.call(this, k);
+    };
+
+    /* the app scans every stored key to recover old data, so show it only this account's keys */
+    const visible = () => {
+      const out = [];
+      const n = lenGet.call(localStorage);
+      for (let i = 0; i < n; i++) {
+        const k = raw.key.call(localStorage, i);
+        if (k === null) continue;
+        if (k.indexOf(pre) === 0) out.push(k.slice(pre.length));
+        else if (k.indexOf("ojoola_acct_") === 0) continue;   // another account
+        else if (isData(k)) continue;                          // old shared copy
+        else out.push(k);
+      }
+      return out;
+    };
+    P.key = function (i) {
+      if (this !== localStorage) return raw.key.call(this, i);
+      const v = visible()[i];
+      return v === undefined ? null : v;
+    };
+    Object.defineProperty(P, "length", {
+      configurable: true,
+      get() { return this === localStorage ? visible().length : lenGet.call(this); }
+    });
+
+    /* "Clear local app data" only clears this account */
+    P.clear = function () {
+      if (this !== localStorage) return raw.clear.call(this);
+      const del = [];
+      const n = lenGet.call(this);
+      for (let i = 0; i < n; i++) {
+        const k = raw.key.call(this, i);
+        if (k !== null && k.indexOf(pre) === 0) del.push(k);
+      }
+      del.forEach(k => raw.del.call(this, k));
+    };
+
+    /* attachments live in IndexedDB, so give each account its own database */
+    if (window.IDBFactory) {
+      const F = IDBFactory.prototype;
+      const oOpen = F.open, oDel = F.deleteDatabase;
+      const scoped = name => (name === "ojoola_files" ? "ojoola_files_acct_" + id : name);
+      F.open = function (name, ver) {
+        return ver === undefined ? oOpen.call(this, scoped(name)) : oOpen.call(this, scoped(name), ver);
+      };
+      F.deleteDatabase = function (name) { return oDel.call(this, scoped(name)); };
+    }
+  }
+
+  /* Load the Contact the Admin chat once the account is known */
+  function loadSupport() {
+    if (document.getElementById("ojoolaSupportJs")) return;
+    const s = document.createElement("script");
+    s.id = "ojoolaSupportJs"; s.src = "support.js";
+    document.head.appendChild(s);
+  }
+
   /* 5. UI: remove API-key area, add account card, hide features the account lacks */
-  function loadSupport() {     if (document.getElementById("ojoolaSupportJs")) return;     const s = document.createElement("script");     s.id = "ojoolaSupportJs"; s.src = "support.js";     document.head.appendChild(s);   }    function applyUI() {
+  function applyUI() {
     const keyInput = document.getElementById("apiKeyInput");
     if (keyInput) {
       const card = keyInput.closest(".card");
@@ -102,7 +192,7 @@
       first ? box.insertBefore(c, first) : box.appendChild(c);
     }
 
-        if (core.me && core.me.role === "admin" && box && !document.getElementById("ojoolaOwner")) {
+    if (core.me && core.me.role === "admin" && box && !document.getElementById("ojoolaOwner")) {
       const o = document.createElement("div");
       o.id = "ojoolaOwner"; o.className = "card"; o.style.marginBottom = "14px";
       o.innerHTML = '<h3>Owner</h3><button class="primary" onclick="location.href=\'admin.html\'">Open owner dashboard</button>';
@@ -110,7 +200,7 @@
       acc ? acc.after(o) : box.appendChild(o);
     }
 
-        if (core.me && core.me.role === "admin" && !document.getElementById("ownerView")) {
+    if (core.me && core.me.role === "admin" && !document.getElementById("ownerView")) {
       const main = document.querySelector("main");
       const navInner = document.querySelector("#bottomNav .navInner");
       if (main && navInner) {
@@ -133,7 +223,6 @@
       }
     }
 
-    
     const hide = (el) => { if (el) el.style.display = "none"; };
     if (!core.can("live")) document.querySelectorAll('button[onclick="proceedToLiveConversation()"]').forEach(hide);
     if (!core.can("pdf")) {
