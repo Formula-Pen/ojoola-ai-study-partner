@@ -101,6 +101,16 @@
       const first = box.querySelector(".card");
       first ? box.insertBefore(c, first) : box.appendChild(c);
     }
+
+        if (core.me && core.me.role === "admin" && box && !document.getElementById("ojoolaOwner")) {
+      const o = document.createElement("div");
+      o.id = "ojoolaOwner"; o.className = "card"; o.style.marginBottom = "14px";
+      o.innerHTML = '<h3>Owner</h3><button class="primary" onclick="location.href=\'admin.html\'">Open owner dashboard</button>';
+      const acc = document.getElementById("ojoolaAccount");
+      acc ? acc.after(o) : box.appendChild(o);
+    }
+
+    
     const hide = (el) => { if (el) el.style.display = "none"; };
     if (!core.can("live")) document.querySelectorAll('button[onclick="proceedToLiveConversation()"]').forEach(hide);
     if (!core.can("pdf")) {
