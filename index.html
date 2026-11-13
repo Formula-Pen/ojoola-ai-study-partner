@@ -1755,7 +1755,7 @@ function reportAppError(message,source="",line="",column="",stack=""){
     ].filter(Boolean).join("\n");
 
     $("appErrorDetails").textContent=lastAppError;
-    $("appErrorPanel").classList.remove("hidden");
+    console.error(lastAppError);
   }catch(_){}
 }
 
@@ -4248,6 +4248,53 @@ function fileParts(c){
   return parts;
 }
 
+function friendlyStatus(s){
+  if(/Trying backup|unavailable|Connecting to/i.test(s))return "Hold on, I'm working on it. Just a few more seconds…";
+  return s;
+}
+
+function friendlyLive(t){
+  t=String(t||"");
+  if(/connection error/i.test(t))return "I couldn't connect. Please check your internet and try again.";
+  if(/^session ended: /i.test(t))return "The voice session ended. You can start another conversation.";
+  return t.replace(/Gemini/g,"the AI");
+}
+
+function plainError(e){
+  const m=String((e&&e.message)||e||"");
+  const mm=m.match(/Gemini API (\d{3})/);
+  const s=Number(e&&e.status)||(mm?Number(mm[1]):0);
+  if(/daily ai limit/i.test(m))return "You've reached today's AI limit. Please try again tomorrow.";
+  if(/not enabled for your account/i.test(m))return m.replace(/^Gemini API \d+:\s*/,"");
+  if(s===401||/session expired|please sign in|no longer exists/i.test(m))return "Please sign in again to continue.";
+  if(s===413||/too large|too big/i.test(m))return "That file is too big to send in one go. Try a smaller PDF or picture.";
+  if(/safety/i.test(m))return "I couldn't answer that one. Try asking it a different way.";
+  if(s===408||/took too long|timed out|timeout/i.test(m))return "This is taking longer than usual. Please check your connection and try again.";
+  if([429,500,502,503,504].includes(s))return "I'm a bit busy right now. Please wait a few seconds and try again.";
+  if(/failed to fetch|network|load failed/i.test(m))return "I can't reach the internet right now. Please check your connection and try again.";
+  if(/empty response|returned no text/i.test(m))return "I couldn't come up with an answer that time. Please try again.";
+  return "Something went wrong on my side. Please try again in a moment.";
+}
+
+function plainErrorObj(e){
+  if(e&&e.name==="AbortError")return e;
+  const err=new Error(plainError(e));
+  err.status=e&&e.status;
+  return err;
+}
+
+function plainLiveError(e){
+  const m=String((e&&e.message)||e||"");
+  const n=String((e&&e.name)||"");
+  if(n==="NotAllowedError"||/permission/i.test(m))return new Error("Please allow microphone access so we can talk.");
+  if(n==="NotFoundError")return new Error("I couldn't find a microphone on this device.");
+  if(/https/i.test(m))return new Error("Voice conversation needs a secure connection. Please open the app from its normal web address.");
+  if(/does not support microphone/i.test(m))return new Error(m);
+  if(/not enabled/i.test(m))return new Error("Live conversation isn't turned on for your account yet.");
+  if(/sign in|expired/i.test(m))return new Error("Please sign in again.");
+  return new Error("I couldn't start the voice conversation. Please check your internet and try again.");
+}
+
 function isRetryableGeminiError(e){
 
   return !!e&&(
@@ -4388,7 +4435,7 @@ async function callGemini(
     }
   }
 
-  throw lastError||
+  throw plainErrorObj(lastError)||
     new Error(
       "All Gemini models failed."
     );
@@ -5044,12 +5091,12 @@ function autoGrow(el){el.style.height="auto";el.style.height=Math.min(el.scrollH
     const el=$(id);
     let log=[],t0=Date.now(),last=Date.now();
     const stamp=()=>"["+Math.round((Date.now()-t0)/1000)+"s] ";
-    const show=()=>desc.set.call(el,log.join("\n"));
+    const show=()=>desc.set.call(el,log[log.length-1].replace(/^\[\d+s\]\s*/,""));
     Object.defineProperty(el,"textContent",{
       configurable:true,
       get(){return desc.get.call(el);},
       set(v){
-        v=String(v);
+        v=friendlyStatus(String(v));
         if(v.indexOf("Preparing")===0){log=[];t0=Date.now();}
         if(log.length&&log[log.length-1].endsWith(v))return;
         log.push(stamp()+v);
@@ -5257,7 +5304,7 @@ const LIVE_MODEL = "models/gemini-3.1-flash-live-preview";
 
 function liveSetStatus(text) {
   const el = $("liveStatus");
-  if (el) el.textContent = text;
+  if (el) el.textContent = friendlyLive(text);
 }
 
 
@@ -5946,7 +5993,7 @@ ${history || "No previous messages."}
     };
 
   } catch (err) {
-    console.error("Unable to start Gemini Live:", err);
+    console.error("Unable to start Gemini Live:", err); err = plainLiveError(err);
 
     stopCourseLive(false);
 
