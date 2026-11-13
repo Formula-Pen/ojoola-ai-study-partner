@@ -2950,7 +2950,7 @@ function addCoursePictures(files){
   $("coursePictureInput").value="";
 }
 
-function renderCourseFiles(){
+function renderCourseFiles(){setTimeout(()=>{try{startReading(courses[currentCourseIndex]);}catch(_){}},800);
 
   const c=
     courses[currentCourseIndex];
@@ -4707,7 +4707,7 @@ ${prompt}`;
 
     if(!isGeneral){
       try{
-        const n=await getCourseNotes(
+        const n=await getReadyNotes(
           course,
           s=>{
             if(token===requestToken){
@@ -6161,6 +6161,107 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
   }
 }
 
+
+/* BACKGROUND PDF READER: reads big PDFs a few pages at a time while chat keeps working */
+const PAGES_PER_PART=8;
+const readerState={running:false,lastFail:0};
+
+function loadPdfLib(){
+  if(window.PDFLib)return Promise.resolve(window.PDFLib);
+  return new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
+    s.onload=()=>res(window.PDFLib);
+    s.onerror=()=>rej(new Error("PDF helper could not load"));
+    document.head.appendChild(s);
+  });
+}
+
+function getNoteStore(){
+  return safeJSON(localStorage.getItem("ojoola_file_notes"),{})||{};
+}
+
+function noteEntry(store,id){
+  const e=store[id];
+  if(typeof e==="string")return{parts:[e],total:1,done:true};
+  return e&&typeof e==="object"?e:null;
+}
+
+async function readOneFile(f,signal){
+  let e=noteEntry(getNoteStore(),f.id);
+  if(e&&e.done)return;
+  let lib=null,src=null,pages=0;
+  try{lib=await loadPdfLib();}catch(_){}
+  if(lib){
+    try{
+      src=await lib.PDFDocument.load(liveBase64ToBytes(f.data),{ignoreEncryption:true});
+      pages=src.getPageCount();
+    }catch(_){src=null;}
+  }
+  if(!src&&f.data.length>14*1024*1024)throw new Error("PDF helper unavailable");
+  const total=src?Math.max(1,Math.ceil(pages/PAGES_PER_PART)):1;
+  if(!e||e.total!==total)e={parts:[],total,done:false};
+  for(let k=e.parts.length;k<total;k++){
+    if(signal.aborted)return;
+    let data=f.data,label="the whole file";
+    if(src){
+      const a=k*PAGES_PER_PART,b=Math.min(pages,a+PAGES_PER_PART);
+      const doc=await lib.PDFDocument.create();
+      const copied=await doc.copyPages(src,Array.from({length:b-a},(_,i)=>a+i));
+      copied.forEach(p=>doc.addPage(p));
+      data=liveBytesToBase64(await doc.save());
+      label="pages "+(a+1)+" to "+b;
+    }
+    const text=await callGemini(
+      "Study this part of the file ("+label+") carefully. Write detailed study notes capturing all key definitions, concepts, formulas, examples, steps, tables and diagrams. Mention page numbers or headings where you can. Be accurate and do not add outside information.",
+      [],
+      [{inline_data:{mime_type:"application/pdf",data}}],
+      null,null,signal
+    );
+    e.parts.push("["+label+"]\n"+text);
+    e.done=e.parts.length>=total;
+    const st=getNoteStore();
+    st[f.id]=e;
+    try{localStorage.setItem("ojoola_file_notes",JSON.stringify(st));}catch(_){}
+  }
+}
+
+function startReading(c){
+  if(!c||!c.ref||readerState.running)return;
+  if(Date.now()-readerState.lastFail<60000)return;
+  const todo=(c.pdfs||[]).filter(f=>f&&f.id&&f.data&&!(noteEntry(getNoteStore(),f.id)||{}).done);
+  if(!todo.length)return;
+  readerState.running=true;
+  (async()=>{
+    try{
+      for(const f of todo)await readOneFile(f,new AbortController().signal);
+    }catch(e){
+      readerState.lastFail=Date.now();
+      console.warn("Reading paused:",e);
+    }finally{
+      readerState.running=false;
+    }
+  })();
+}
+
+async function getReadyNotes(c,onStatus,signal){
+  if(!c||!c.ref)return"";
+  startReading(c);
+  const store=getNoteStore();
+  const out=[];
+  let pending=0;
+  for(const f of (c.pdfs||[])){
+    if(!f||!f.id)continue;
+    const e=noteEntry(store,f.id);
+    if(e&&e.parts&&e.parts.length){
+      out.push("=== "+(f.name||"File")+" ===\n"+e.parts.join("\n\n")+(e.done?"":"\n[Only part of this file has been read so far: "+e.parts.length+" of "+e.total+" sections.]"));
+    }
+    if(!e||!e.done)pending++;
+  }
+  if(pending)onStatus?.("I'm still reading your PDF in the background. You can keep chatting.");
+  if(!out.length&&pending)return"(The student's PDF is still being read in the background and no notes are ready yet. If the student asks about its content, kindly say you are still reading it and will be ready in a moment.)";
+  return out.join("\n\n");
+}
 
 /* SAVED NOTES FOR EACH PDF / PICTURE (read once, reused) */
 async function getCourseNotes(c,onStatus,signal){
