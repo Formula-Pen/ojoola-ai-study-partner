@@ -96,7 +96,7 @@
           const t = (s.threads || []).find(x => x.unread);
           notify("New message", (t && t.name ? t.name + ": " : "") + (t ? t.lastText : "You have a new message"));
         } else if (!panelOpen) {
-          notify("Owner replied", "You have a new message from the owner");
+          notify("Admin replied", "You have a new message from the admin");
         }
       }
       lastUnread = n;
@@ -129,7 +129,7 @@
     if (!list.length) {
       const e = document.createElement("div");
       e.className = "ojSEmpty";
-      e.textContent = "No messages yet. Write to the owner and replies will appear here.";
+      e.textContent = "No messages yet. Write to the admin and replies will appear here..";
       box.appendChild(e);
     }
     list.forEach(m => {
@@ -138,7 +138,7 @@
       if (m.replyText) {
         const q = document.createElement("div");
         q.className = "ojSQ";
-        q.textContent = (m.replySender === "admin" ? "Owner" : "You") + ": " + m.replyText;
+        q.textContent = (m.replySender === "admin" ? "Admin" : "You") + ": " + m.replyText;
         el.appendChild(q);
       }
       const t = document.createElement("div");
@@ -220,7 +220,7 @@
 
     fab = document.createElement("button");
     fab.className = "ojSFab";
-    fab.setAttribute("aria-label", "Message the owner");
+    fab.setAttribute("aria-label", "Message the admin");
     fab.innerHTML = '💬<span class="ojSBadge">0</span>';
     fab.onclick = openPanel;
     document.body.appendChild(fab);
@@ -229,7 +229,7 @@
     panel.className = "ojS ojHide";
     panel.innerHTML =
       '<div class="ojSBox">' +
-      '<div class="ojSHead"><b>Message the owner</b><span><button id="ojSBell" title="Turn on alerts">🔔</button><button id="ojSClose" title="Close">✕</button></span></div>' +
+      '<div class="ojSHead"><b>Message the admin</b><span><button id="ojSBell" title="Turn on alerts">🔔</button><button id="ojSClose" title="Close">✕</button></span></div>' +
       '<div id="ojSMsgs" class="ojSMsgs"></div>' +
       '<div id="ojSReply" class="ojSReply ojHide"></div>' +
       '<div class="ojSBar"><textarea id="ojSInput" rows="1" placeholder="Write a message…"></textarea><button id="ojSSend">➤</button></div>' +
