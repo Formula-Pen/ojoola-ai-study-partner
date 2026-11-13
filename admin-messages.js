@@ -25,7 +25,7 @@
     ".mReplyTo button{border:0;background:none;color:inherit}",
     ".mBar{display:flex;gap:8px;align-items:flex-end}",
     ".mBar textarea{flex:1;border:1.5px solid var(--line);border-radius:13px;padding:12px;background:var(--card);color:var(--text);font:inherit;resize:none;max-height:40vh}",
-".mm.vn{min-width:min(300px,80vw)}",
+".mm.vn{min-width:min(300px,80vw)}", ".mAct{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}", ".mAct button{width:auto;height:auto;border:0;border-radius:10px;padding:6px 10px;font-size:12px;background:rgba(128,128,128,.3);color:inherit;margin:0}",
 ".mVP{display:flex;align-items:center;gap:4px;min-width:0}",
 ".mVP .vb{width:auto;height:30px;flex:0 0 auto;padding:0 7px;border:0;border-radius:10px;background:rgba(128,128,128,.25);color:inherit;font-size:11px;margin:0}",
 ".mVP .vplay{width:34px;padding:0;font-size:14px}",
@@ -314,8 +314,66 @@ document.addEventListener("click", e => {
   if (e.target.closest && e.target.closest("#mMic")) startRec();
 });
 
+/* ---- edit / delete ---- */
+let editingId = null;
+
+function msgMenu(m, el) {
+  const had = el.querySelector(".mAct");
+  document.querySelectorAll(".mAct").forEach(x => x.remove());
+  if (had) return;
+  const row = document.createElement("div");
+  row.className = "mAct";
+  const add = (label, fn) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.onclick = e => { e.stopPropagation(); row.remove(); fn(); };
+    row.appendChild(b);
+  };
+  add("↩ Reply", () => setReply(m));
+  if (m.sender === "admin" && !m.audioSecs) add("✎ Edit", () => startEdit(m));
+  add("🗑 Delete", () => delMsg(m));
+  el.appendChild(row);
+}
+
+function startEdit(m) {
+  editingId = m.id;
+  clearReply();
+  const inp = document.getElementById("mInput");
+  inp.value = m.text;
+  inp.focus();
+  const r = document.getElementById("mReplyTo");
+  r.textContent = "";
+  const t = document.createElement("span");
+  t.textContent = "Editing your message";
+  const x = document.createElement("button");
+  x.textContent = "✕";
+  x.onclick = () => cancelEdit(false);
+  r.appendChild(t); r.appendChild(x);
+  r.classList.remove("hidden");
+}
+
+function cancelEdit(keep) {
+  editingId = null;
+  const r = document.getElementById("mReplyTo");
+  if (r) r.classList.add("hidden");
+  if (!keep) {
+    const i = document.getElementById("mInput");
+    if (i) { i.value = ""; i.style.height = "auto"; }
+  }
+}
+
+async function delMsg(m) {
+  if (!confirm("Delete this message for both sides?")) return;
+  try {
+    await api("/api/support/delete", { id: m.id });
+    lastSig = "";
+    await refreshThread();
+  } catch (e) { toast(e.message); }
+}
+
 function renderThread(d) {
-    const sig = (d.messages || []).map(m => m.id).join(",") + "|" + (cur ? cur.id : "");
+    const sig = (d.messages || []).map(m => m.id + (m.edited ? "e" : "") + (m.deleted ? "d" : "")).join(",") + "|" + (cur ? cur.id : "");
     if (sig === lastSig && document.getElementById("mMsgs").childElementCount) return;
     lastSig = sig;
     const box = document.getElementById("mMsgs");
@@ -336,9 +394,9 @@ function renderThread(d) {
       t.textContent = m.audioSecs ? "" : m.text; if (m.audioSecs) { el.classList.add("vn"); t.appendChild(playerFor(m)); }
       el.appendChild(t);
       const s = document.createElement("small");
-      s.textContent = when(m.ts) + " · tap to reply";
+      s.textContent = when(m.ts) + (m.edited ? " · edited" : "") + (m.deleted ? "" : " · tap for options");
       el.appendChild(s);
-      el.onclick = () => setReply(m);
+      if (m.deleted) { el.style.opacity = ".6"; el.style.fontStyle = "italic"; } else el.onclick = () => msgMenu(m, el);
       box.appendChild(el);
     });
     if (stick || near) box.scrollTop = box.scrollHeight;
@@ -359,7 +417,7 @@ function renderThread(d) {
     stick = true;
     refreshThread().then(loadList);
   }
-  document.getElementById("mBack").onclick = () => { if (rec) stopRec(true); if (curAudio) curAudio.pause(); showBar(true);
+  document.getElementById("mBack").onclick = () => { cancelEdit(false); if (rec) stopRec(true); if (curAudio) curAudio.pause(); showBar(true);
     cur = null;
     document.getElementById("mThread").classList.add("hidden");
     document.getElementById("mList").classList.remove("hidden");
@@ -396,7 +454,7 @@ function renderThread(d) {
     const btn = document.getElementById("mSend");
     btn.disabled = true;
     try {
-      await api("/api/support/send", { user: cur.id, text, replyTo });
+      if (editingId) { await api("/api/support/edit", { id: editingId, text }); cancelEdit(true); } else await api("/api/support/send", { user: cur.id, text, replyTo });
       inp.value = ""; inp.style.height = "auto";
       clearReply(); stick = true;
       await refreshThread();
