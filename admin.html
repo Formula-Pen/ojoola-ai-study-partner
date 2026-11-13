@@ -172,7 +172,7 @@ $("loginForm").onsubmit=async e=>{
   b.disabled=true;b.textContent="Please wait…";m.classList.add("hidden");
   try{
     const d=await api("/api/admin/login",{username:$("ou").value,password:$("op").value});
-    localStorage.setItem(KEY,d.token);localStorage.setItem("ojoola_session",d.token);$("op").value="";await start();
+    localStorage.setItem(KEY,d.token);localStorage.setItem("ojoola_session",d.token);localStorage.setItem("ojoola_uid","owner");$("op").value="";await start();
   }catch(err){m.textContent=err.message;m.classList.remove("hidden")}
   finally{b.disabled=false;b.textContent="Sign in"}
 };
