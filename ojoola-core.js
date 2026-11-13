@@ -78,11 +78,11 @@
       }
       return r.ok ? r.json() : null;
     })
-    .then(me => { if (me) { core.me = me; applyUI(); } })
+    .then(me => { if (me) { core.me = me; applyUI(); loadSupport(); } })
     .catch(() => {});
 
   /* 5. UI: remove API-key area, add account card, hide features the account lacks */
-  function applyUI() {
+  function loadSupport() {     if (document.getElementById("ojoolaSupportJs")) return;     const s = document.createElement("script");     s.id = "ojoolaSupportJs"; s.src = "support.js";     document.head.appendChild(s);   }    function applyUI() {
     const keyInput = document.getElementById("apiKeyInput");
     if (keyInput) {
       const card = keyInput.closest(".card");
