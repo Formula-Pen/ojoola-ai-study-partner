@@ -873,6 +873,25 @@ body.dark .welcome{
   .welcomeFeatures{gap:6px}
 }
 
+/* General chat: keep the message box always visible */
+#generalView .chatShell{
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - 225px);
+  height:calc(100dvh - 225px);
+  min-height:420px
+}
+#generalView .chatArea{
+  flex:1 1 auto;
+  height:auto;
+  min-height:0
+}
+#generalView .searchArea,
+#generalView .status,
+#generalView .chatInputWrap{
+  flex:0 0 auto
+}
+
 /* Live Conversation */
 .liveActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .liveActions button{flex:1;min-width:130px}
