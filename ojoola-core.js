@@ -110,6 +110,29 @@
       acc ? acc.after(o) : box.appendChild(o);
     }
 
+        if (core.me && core.me.role === "admin" && !document.getElementById("ownerView")) {
+      const main = document.querySelector("main");
+      const navInner = document.querySelector("#bottomNav .navInner");
+      if (main && navInner) {
+        const sec = document.createElement("section");
+        sec.id = "ownerView"; sec.className = "wrap hidden";
+        sec.innerHTML = '<iframe src="admin.html" title="Owner dashboard" style="width:100%;height:calc(100vh - 170px);min-height:420px;border:0;border-radius:18px"></iframe>';
+        main.appendChild(sec);
+        const btn = document.createElement("button");
+        btn.id = "navOwner"; btn.innerHTML = "🛡<br>Admin";
+        btn.onclick = () => {
+          ["homeView","generalView","courseInfoView","courseChatView","courseLiveView"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
+          sec.classList.remove("hidden");
+          document.querySelectorAll("#bottomNav button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          window.scrollTo(0, 0);
+        };
+        navInner.appendChild(btn);
+        const sp = window.setPage;
+        if (typeof sp === "function") window.setPage = function () { sec.classList.add("hidden"); btn.classList.remove("active"); return sp.apply(this, arguments); };
+      }
+    }
+
     
     const hide = (el) => { if (el) el.style.display = "none"; };
     if (!core.can("live")) document.querySelectorAll('button[onclick="proceedToLiveConversation()"]').forEach(hide);
