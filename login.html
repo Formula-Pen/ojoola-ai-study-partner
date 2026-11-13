@@ -218,7 +218,15 @@ async function call(path,body,btn,label){
 async function submitIn(e){
   e.preventDefault();
   const d=await call("/api/login",{identifier:$("inId").value,password:$("inPw").value,passcode:$("inCode").value},$("goIn"),"Sign in");
-  if(d&&d.token){OjoolaCore.setSession(d.token);location.replace(next());return false}
+    if(d&&d.token){
+    OjoolaCore.setSession(d.token);
+    const inv=sessionStorage.getItem("ojoola_invite");
+    if(inv){
+      try{await fetch(OjoolaCore.api+"/api/invite/claim",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+d.token},body:JSON.stringify({code:inv})})}catch(_){}
+      sessionStorage.removeItem("ojoola_invite");
+    }
+    location.replace(next());
+    }
   const first=$("msg").textContent;
   if(first.toLowerCase().includes("passcode")){$("passcodeRow").classList.remove("hidden");return false}
   const o=await call("/api/admin/login",{username:$("inId").value,password:$("inPw").value},$("goIn"),"Sign in");
@@ -227,6 +235,18 @@ async function submitIn(e){
   return false;
 
 }
+
+  (async function(){
+  const inv=new URLSearchParams(location.search).get("invite");
+  if(!inv)return;
+  try{
+    const r=await fetch(OjoolaCore.api+"/api/invite/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:inv})});
+    const d=await r.json().catch(()=>({}));
+    if(d.ok){sessionStorage.setItem("ojoola_invite",inv);view("up");note("You were invited. Create your account to join.","ok")}
+    else note("This invite link is invalid or has expired.");
+  }catch(_){}
+})();
+  
 </script>
 </body>
 </html>
