@@ -2924,11 +2924,11 @@ function addCoursePictures(files){
       return;
     }
 
-    if(file.size>8*1024*1024){
+    if(file.size>10*1024*1024){
 
       alert(
         file.name+
-        " is larger than 8 MB. Please choose a smaller image."
+        " is larger than 10 MB. Please choose a smaller image."
       );
 
       return;
@@ -2969,7 +2969,7 @@ function addCoursePictures(files){
   $("coursePictureInput").value="";
 }
 
-function renderCourseFiles(){setTimeout(()=>{try{startReading(courses[currentCourseIndex]);}catch(_){}},800);
+function renderCourseFiles(){setTimeout(()=>{try{startReading(courses[currentCourseIndex]);shrinkPictures(courses[currentCourseIndex]);}catch(_){}},800);
 
   const c=
     courses[currentCourseIndex];
@@ -5667,12 +5667,12 @@ async function startCourseLive() {
 
         const cached = store[c.id];
 
-        if (cached && cached.key === noteKey && cached.notes) {
+        if (false && cached) {
           materialNotes = cached.notes;
         } else {
-          liveSetStatus("Reading your course materials (first time only)…");
+          liveSetStatus("Getting your course notes ready…");
 
-          materialNotes = await callGemini(
+          materialNotes = await liveNotes(c,
             "Study every attached PDF and picture carefully. Write detailed study notes that capture all key definitions, concepts, formulas, examples, steps, tables and diagrams. Organise the notes by file, and mention page numbers or section headings where you can. Be thorough and accurate. Do not add outside information.",
             [],
             fileParts(c),
@@ -6327,6 +6327,69 @@ async function getReadyNotes(c,onStatus,signal){
   if(pending)onStatus?.("I'm still reading your PDF in the background. You can keep chatting.");
   if(!out.length&&pending)return"(The student's PDF is still being read in the background and no notes are ready yet. If the student asks about its content, kindly say you are still reading it and will be ready in a moment.)";
   return out.join("\n\n");
+}
+
+/* SHRINK BIG PICTURES (so 10 MB photos don't slow every question) */
+let shrinking=false;
+async function shrinkPictures(c){
+  if(!c||shrinking)return;
+  const todo=(c.pictures||[]).filter(f=>f&&f.id&&f.data&&!f.shrunk&&f.data.length>500000);
+  if(!todo.length)return;
+  shrinking=true;
+  try{
+    for(const f of todo){
+      try{
+        const img=await new Promise((res,rej)=>{
+          const i=new Image();
+          i.onload=()=>res(i);
+          i.onerror=rej;
+          i.src="data:"+(f.mimeType||"image/jpeg")+";base64,"+f.data;
+        });
+        const sc=Math.min(1,1600/Math.max(img.width,img.height));
+        const cv=document.createElement("canvas");
+        cv.width=Math.max(1,Math.round(img.width*sc));
+        cv.height=Math.max(1,Math.round(img.height*sc));
+        const cx=cv.getContext("2d");
+        cx.fillStyle="#fff";
+        cx.fillRect(0,0,cv.width,cv.height);
+        cx.drawImage(img,0,0,cv.width,cv.height);
+        const out=cv.toDataURL("image/jpeg",.82).split(",")[1]||"";
+        if(out&&out.length<f.data.length){
+          f.data=out;
+          f.mimeType="image/jpeg";
+          f.size=Math.round(out.length*0.75);
+          await idbPut(f.id,f.data);
+          idbDone.add(f.id);
+        }
+        f.shrunk=true;
+      }catch(_){f.shrunk=true;}
+    }
+    saveCourses();
+  }finally{shrinking=false;}
+}
+
+/* NOTES FOR LIVE VOICE (never sends whole big files) */
+async function liveNotes(c){
+  let text=await getReadyNotes(c,s=>liveSetStatus(s),new AbortController().signal);
+  const pics=(c.pictures||[]).filter(f=>f&&f.id&&f.data);
+  if(c.ref&&pics.length){
+    const key="pics:"+pics.map(f=>f.id).join("|");
+    const st=getNoteStore();
+    if(typeof st[key]!=="string"){
+      try{
+        const n=await callGemini(
+          "Study every attached picture carefully. Write detailed study notes of everything shown: text, formulas, diagrams and tables. Organise the notes by picture. Do not add outside information.",
+          [],
+          pics.slice(0,6).map(f=>({inline_data:{mime_type:f.mimeType||"image/jpeg",data:f.data}})),
+          null,null,new AbortController().signal
+        );
+        st[key]=n;
+        try{localStorage.setItem("ojoola_file_notes",JSON.stringify(st));}catch(_){}
+      }catch(_){}
+    }
+    if(typeof st[key]==="string")text+=(text?"\n\n":"")+"=== Pictures ===\n"+st[key];
+  }
+  return text;
 }
 
 /* SAVED NOTES FOR EACH PDF / PICTURE (read once, reused) */
