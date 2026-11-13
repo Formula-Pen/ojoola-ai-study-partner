@@ -1328,7 +1328,7 @@ body.dark .welcome{
   <div class="card livePanel">
     <div class="liveOrb" id="liveOrb">🎙</div>
     <div class="liveStatus" id="liveStatus">Ready to start a voice conversation.</div>
-    <div class="liveControls">
+    <select id="liveVoiceSel" onchange="localStorage.setItem('ojoola_voice',this.value)" style="width:100%;padding:12px;border-radius:13px"><option value="Aoede">Aoede (female, breezy)</option><option value="Kore">Kore (female, firm)</option><option value="Puck">Puck (male, upbeat)</option><option value="Charon">Charon (male, calm)</option></select> <div class="liveControls">
       <button class="primary" id="liveStartBtn" onclick="startCourseLive()">Start conversation</button>
       <button class="secondary" id="liveStopBtn" onclick="stopCourseLive()" disabled>End</button>
     </div>
@@ -2027,7 +2027,7 @@ function proceedToLiveConversation(){
   if(currentCourseIndex===null)return;
   const c=courses[currentCourseIndex];
   if(!c)return;
-  $("liveCourseTitle").textContent=c.name;
+  $("liveCourseTitle").textContent=c.name;$("liveVoiceSel").value=localStorage.getItem("ojoola_voice")||"Aoede";
   $("liveCourseSubtitle").textContent=c.code+" · Live Conversation";
   renderLiveTranscript();
   setPage("courseLive");
@@ -5691,7 +5691,7 @@ ${history || "No previous messages."}
             speechConfig: {
               voiceConfig: {
                 prebuiltVoiceConfig: {
-                  voiceName: "Aoede"
+                  voiceName: localStorage.getItem("ojoola_voice") || "Aoede"
                 }
               }
             }
