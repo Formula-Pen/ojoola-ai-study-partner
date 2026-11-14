@@ -5312,6 +5312,13 @@ function ojClean(t){
   return String(t||"").replace(/\s*—\s*/g,", ").replace(/\s–\s/g,", ");
 }
 
+function ojCap(t){
+  t=String(t||"");
+  t=t.replace(/(^\s*|[.!?]\s+|\n\s*)([a-z])/g,(m,a,c)=>a+c.toUpperCase());
+  t=t.replace(/\bi\b(?=(\s|'|,|\.|\?|!|$))/g,"I");
+  return t;
+}
+
 function ojMic(inputId,sendId){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const input=$(inputId),send=$(sendId);
@@ -5336,7 +5343,7 @@ function ojMic(inputId,sendId){
     rec.onresult=e=>{
       let t="";
       for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;
-      input.value=base+t;
+      input.value=ojCap(base+t);
       input.dispatchEvent(new Event("input"));
     };
     rec.onerror=e=>{
