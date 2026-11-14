@@ -182,7 +182,7 @@
     }
     const box = document.querySelector("#settingsModal .modalBox");
     if (box && !document.getElementById("ojoolaAccount")) {
-      const who = core.me && core.me.firstName ? core.me.firstName + " (@" + core.me.username + ")" : "Owner";
+      const who = core.me && core.me.firstName ? core.me.firstName + " (@" + core.me.username + ")" : "Admin";
       const c = document.createElement("div");
       c.id = "ojoolaAccount"; c.className = "card"; c.style.marginBottom = "14px";
       c.innerHTML = '<h3>Account</h3><p class="muted"></p><button class="secondary">Sign out</button>';
@@ -195,7 +195,7 @@
     if (core.me && core.me.role === "admin" && box && !document.getElementById("ojoolaOwner")) {
       const o = document.createElement("div");
       o.id = "ojoolaOwner"; o.className = "card"; o.style.marginBottom = "14px";
-      o.innerHTML = '<h3>Owner</h3><button class="primary" onclick="location.href=\'admin.html\'">Open owner dashboard</button>';
+      o.innerHTML = '<h3>Admin</h3><button class="primary" onclick="location.href=\'admin.html\'">Open admin dashboard</button>';
       const acc = document.getElementById("ojoolaAccount");
       acc ? acc.after(o) : box.appendChild(o);
     }
