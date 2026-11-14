@@ -4424,7 +4424,7 @@ async function callGemini(
 
     }catch(e){
 
-      lastError=e;
+      lastError=e;if(window.__toolFail){window.__toolFail=false;i--;continue;}
 
       if(
         e.name==="AbortError"||
@@ -5172,7 +5172,7 @@ function splitSpeech(text){const clean=String(text||"").replace(/\x60{3}/g," ").
 });
 
 /* WEB SEARCH + PERSONAL INSTRUCTIONS FOR CHAT */
-function chatExtras(){
+function chatExtras(contents){
   const nm=(window.OjoolaCore&&OjoolaCore.me&&OjoolaCore.me.firstName)||"";
   const o={systemInstruction:{parts:[{text:
     "You are Ọjọ́ọ̀la, a warm and clear AI study partner. "+
@@ -5181,7 +5181,11 @@ function chatExtras(){
     "When a question is about the student's course materials, treat those as the main source and use the web only to add to them. "+
     "Always write your name as Ọjọ́ọ̀la with its Yorùbá tone marks, and keep the tone marks and underdots when you write Yorùbá."
   }]}};
-  if(!window.__noTools)o.tools=[{google_search:{}}];
+  let q=String((((contents&&contents[contents.length-1])||{}).parts||[{}])[0].text||"");
+  const qi=q.lastIndexOf("Student question:\n");if(qi>-1)q=q.slice(qi+18);
+  const qj=q.indexOf("\n\nSTUDY NOTES FROM");if(qj>-1)q=q.slice(0,qj);
+  const wantsWeb=/latest|news|today|tonight|current|currently|recent|recently|right now|update|updated|202\d|price|weather|score|who won|released|breaking|this week|this month|this year|trending/i.test(q);
+  if(wantsWeb&&!window.__noTools)o.tools=[{google_search:{}}];
   return o;
 }
 
@@ -5579,7 +5583,7 @@ async function livePlayAudio(b64) {
   source.connect(courseLive.audioContext.destination);
 
   const start = Math.max(
-    courseLive.audioContext.currentTime,
+    courseLive.audioContext.currentTime + (courseLive.nextPlayTime > courseLive.audioContext.currentTime ? 0 : 0.15),
     courseLive.nextPlayTime
   );
 
@@ -5873,7 +5877,7 @@ ${history || "No previous messages."}
         if (data.setupComplete) {
           courseLive.setup = true;
 
-          liveSetStatus("Listening… Speak naturally.");
+          liveSetStatus("Connected. Ọjọ́ọ̀la is about to greet you…");
 
           $("liveOrb").classList.add("active");
 
@@ -5904,7 +5908,7 @@ ${history || "No previous messages."}
               return;
             }
 
-            const mono = e.inputBuffer.getChannelData(0);
+            if (courseLive.micHold) return;             const mono = e.inputBuffer.getChannelData(0);
 
             const resampled =
               liveResampleTo16k(mono, ctx.sampleRate);
@@ -5926,7 +5930,7 @@ ${history || "No previous messages."}
           silentGain.connect(ctx.destination);
 
           $("liveStopBtn").disabled = false;
-          courseLive.upAt = Date.now();
+          courseLive.upAt = Date.now(); courseLive.micHold = !__resume; setTimeout(() => { courseLive.micHold = false; }, 12000);
           if (!__resume) {
             const nm = (window.OjoolaCore && OjoolaCore.me && OjoolaCore.me.firstName) || "";
             liveSend({ realtimeInput: { text: 'The student has just joined the voice session. Say this short greeting warmly, once, then stop and wait for them to speak: "' + (history ? "Welcome back" : "Welcome") + (nm ? ", " + nm : "") + '. I am Ọjọ́ọ̀la. How can I help you today?"' } });
@@ -6010,7 +6014,7 @@ ${history || "No previous messages."}
 
         /* SAVE COMPLETED CONVERSATION */
 
-        if (sc.turnComplete) {
+        if (sc.turnComplete) {           courseLive.micHold = false;
           if (courseLive.inputText) {
             saveLiveLine("user", courseLive.inputText);
           }
@@ -6219,7 +6223,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
       headers:{"Content-Type":"application/json","x-goog-api-key":key},
       body:JSON.stringify({
         contents,
-        ...(onChunk?chatExtras():{}),generationConfig:{temperature:.7,maxOutputTokens:4096}
+        ...(onChunk?chatExtras(contents):{}),generationConfig:{temperature:.7,maxOutputTokens:4096}
       }),
       signal:controller.signal
     });
@@ -6230,7 +6234,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
         const j=await response.json();
         detail=j.error?.message||JSON.stringify(j);
       }catch(_){detail="HTTP "+response.status}
-      if(response.status===400&&/tool|search|ground/i.test(detail))window.__noTools=true;       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
+      const hadTools=!!onChunk&&!window.__noTools;if(hadTools&&[400,403,429].includes(response.status)&&/tool|search|ground|quota|limit/i.test(detail)){window.__noTools=true;window.__toolFail=true;}       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
       err.status=response.status;
       throw err;
     }
