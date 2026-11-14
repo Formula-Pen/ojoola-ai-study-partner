@@ -5084,7 +5084,8 @@ async function sendGeneral(){
     return;
   }
 
-  input.value="";
+    input.value="";
+  input.style.height="auto";
 
   await runChat(
     "general",
@@ -5126,8 +5127,9 @@ async function sendCourseChat(){
     return;
   }
 
-  $("courseInput")
+    $("courseInput")
     .value="";
+  $("courseInput").style.height="auto";
 
   await runChat(
     "course",
