@@ -42,7 +42,7 @@ label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
 .msg{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:13px;background:var(--errbg);color:var(--err)}
 
 /* stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 6px;text-align:center}
 .stat b{display:block;font-size:22px}
 .stat span{font-size:11px;color:var(--muted)}
@@ -162,7 +162,7 @@ async function api(path,body){
   if(!r.ok)throw new Error(typeof d.error==="string"?d.error:(d.error&&d.error.message)||"Request failed");
   return d;
 }
-function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2200)}
+function isOn(u){return u.lastSeen&&Date.now()-u.lastSeen<120000} function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2200)}
 function when(ts){if(!ts)return"never";const m=Math.floor((Date.now()-ts)/60000);if(m<1)return"just now";if(m<60)return m+" min ago";if(m<1440)return Math.floor(m/60)+" h ago";return new Date(ts).toLocaleDateString([], {day:"numeric",month:"short",year:"numeric"})}
 
 /* ---- auth ---- */
@@ -200,7 +200,7 @@ function render(){
     [users.length,"Users"],
     [users.filter(u=>u.role==="tester").length,"Testers"],
     [users.filter(u=>u.status!=="active").length,"Blocked"],
-    [pr.size,"Reset asks"]
+    [pr.size,"Reset asks"], [users.filter(isOn).length,"Online"]
   ].map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
   renderUsers(pr);renderActivity();
 }
@@ -213,7 +213,7 @@ function renderUsers(pr){
     return `<div class="u" data-id="${u.id}">
       <button class="uHead" data-act="toggle" data-id="${u.id}">
         <div class="av">${esc((u.firstName||"?")[0].toUpperCase())}</div>
-        <div class="nm"><b>${esc(u.firstName)}</b><span>@${esc(u.username)}</span></div>
+        <div class="nm"><b>${isOn(u)?'<span style="color:#16a34a">● </span>':''}${esc(u.firstName)}</b><span>@${esc(u.username)}${isOn(u)?' · online':''}</span></div>
         <div>${pr.has(u.id)?'<span class="tag reset">Reset asked</span>':""}<span class="tag">${esc(u.role)}</span><span class="tag ${esc(u.status)}">${esc(u.status)}</span></div>
       </button>
       ${isOpen?body(u):""}
@@ -293,7 +293,7 @@ $("list").addEventListener("change",async e=>{
   catch(err){toast(err.message);load()}
 });
 
-$("q").oninput=()=>renderUsers(pendingResets());
+setInterval(()=>{if(!$("dashView").classList.contains("hidden"))load().catch(()=>{})},30000); $("q").oninput=()=>renderUsers(pendingResets());
 $("tUsers").onclick=()=>{$("tUsers").classList.add("on");$("tAct").classList.remove("on");$("usersPane").classList.remove("hidden");$("actPane").classList.add("hidden")};
 $("tAct").onclick=()=>{$("tAct").classList.add("on");$("tUsers").classList.remove("on");$("actPane").classList.remove("hidden");$("usersPane").classList.add("hidden")};
 
