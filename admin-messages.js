@@ -71,7 +71,7 @@
     const b = document.getElementById("mBadge");
     b.textContent = n > 99 ? "99+" : String(n);
     b.classList.toggle("hidden", !n);
-    document.title = (n ? "(" + n + ") " : "") + "Owner dashboard – Ọjọ́ọ̀la";
+    document.title = (n ? "(" + n + ") " : "") + "Admin dashboard – Ọjọ́ọ̀la";
   }
 
   function beep() {
@@ -111,7 +111,7 @@
       const name = t.name || "Deleted user";
       b.innerHTML = '<div class="av"></div><div class="nm"><b></b><span></span></div><div class="t"></div>';
       b.querySelector(".av").textContent = name[0].toUpperCase();
-      b.querySelector("b").textContent = name + (t.username ? "  @" + t.username : "");
+      b.querySelector("b").textContent = ((t.lastSeen && Date.now() - t.lastSeen < 120000) ? "● " : "") + name + (t.username ? "  @" + t.username : "");
       b.querySelector("span").textContent = t.lastText || "";
       b.querySelector(".t").innerHTML = (t.unread ? '<span class="mb">' + t.unread + "</span> " : "") + '<span style="font-size:11px;color:var(--muted)">' + when(t.lastTs) + "</span>";
       b.onclick = () => openThread(t.userId, name);
@@ -373,7 +373,7 @@ async function delMsg(m) {
 }
 
 function renderThread(d) {
-    const sig = (d.messages || []).map(m => m.id + (m.edited ? "e" : "") + (m.deleted ? "d" : "")).join(",") + "|" + (cur ? cur.id : "");
+    const sig = (d.messages || []).map(m => m.id + (m.edited ? "e" : "") + (m.deleted ? "d" : "") + (m.readAt ? "r" : m.deliveredAt ? "v" : "")).join(",") + "|" + (cur ? cur.id : "");
     if (sig === lastSig && document.getElementById("mMsgs").childElementCount) return;
     lastSig = sig;
     const box = document.getElementById("mMsgs");
@@ -394,7 +394,7 @@ function renderThread(d) {
       t.textContent = m.audioSecs ? "" : m.text; if (m.audioSecs) { el.classList.add("vn"); t.appendChild(playerFor(m)); }
       el.appendChild(t);
       const s = document.createElement("small");
-      s.textContent = when(m.ts) + (m.edited ? " · edited" : "") + (m.deleted ? "" : " · tap for options");
+      const st = m.readAt ? "✓✓ Seen" : m.deliveredAt ? "✓✓ Delivered" : "✓ Sent"; s.textContent = when(m.ts) + (m.edited ? " · edited" : "") + (m.deleted ? "" : (m.sender === "admin" ? " · " + st : "") + " · tap for options");
       el.appendChild(s);
       if (m.deleted) { el.style.opacity = ".6"; el.style.fontStyle = "italic"; } else el.onclick = () => msgMenu(m, el);
       box.appendChild(el);
@@ -405,7 +405,7 @@ function renderThread(d) {
 
   async function refreshThread() {
     if (!cur) return;
-    try { renderThread(await api("/api/support/thread?user=" + cur.id)); } catch (e) { toast(e.message); }
+    try { const d = await api("/api/support/thread?user=" + cur.id); renderThread(d); const w = document.getElementById("mWho"); if (w && d.who) w.textContent = cur.name + (d.who.online ? "  ● Online" : d.who.lastSeen ? "  · last seen " + when(d.who.lastSeen) : ""); } catch (e) { toast(e.message); }
   }
 
   function openThread(id, name) {
@@ -499,5 +499,8 @@ function renderThread(d) {
     } catch (_) {}
   }
   setInterval(tick, 15000);
+const ping = () => { if (!$("dashView").classList.contains("hidden")) api("/api/here", {}).catch(() => {}); };
+setInterval(ping, 30000);
+setTimeout(ping, 2000);
   setTimeout(tick, 1500);
 })();
