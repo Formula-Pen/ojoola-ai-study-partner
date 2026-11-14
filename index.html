@@ -2158,6 +2158,19 @@ window.addEventListener("popstate",e=>{
 /* SERVICE WORKER */
 
 let deferredInstallPrompt=null;
+if("serviceWorker" in navigator){
+  const hadController=!!navigator.serviceWorker.controller;
+  let shown=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(!hadController||shown)return;
+    shown=true;
+    const b=document.createElement("button");
+    b.textContent="A new version is ready. Tap to update.";
+    b.style.cssText="position:fixed;left:12px;right:12px;bottom:84px;z-index:99998;border:0;border-radius:14px;padding:13px;background:#2563eb;color:#fff;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.3)";
+    b.onclick=()=>location.reload();
+    document.body.appendChild(b);
+  });
+          }
 
 if("serviceWorker" in navigator){
 
@@ -2168,7 +2181,7 @@ if("serviceWorker" in navigator){
 
         const reg=
           await navigator.serviceWorker.register(
-            "./service-worker.js"
+            "./service-worker.js",{updateViaCache:"none"}
           );
 
         await reg.update().catch(()=>{});
