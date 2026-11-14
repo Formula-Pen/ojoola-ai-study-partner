@@ -897,6 +897,11 @@ body.dark .welcome{
 .message.ai .bubble .messageActions{order:-1;margin:0 0 8px}
 .message.ai .bubble .playback{order:-1;margin:0 0 8px}
 
+/* Visible "working on it" bar */
+.status:not(.hidden){display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:#2563eb;padding:10px 15px;background:rgba(37,99,235,.08)}
+.status:not(.hidden)::before{content:"";width:14px;height:14px;flex:0 0 14px;border:2px solid rgba(37,99,235,.25);border-top-color:#2563eb;border-radius:50%;animation:ojspin .9s linear infinite}
+@keyframes ojspin{to{transform:rotate(360deg)}}
+
 /* Live Conversation */
 .liveActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .liveActions button{flex:1;min-width:130px}
@@ -4414,6 +4419,20 @@ async function callGemini(
           signal
         );
 
+      if(if(onChunk&&!contents.__sr&&/^\s*\[\[SEARCH/.test(result)){
+        contents.__sr=true;
+        window.__forceSearch=true;
+        onStatus?.("Searching the web for you…");
+        let sr=await streamOneModel(onChunk,model,contents,key,onStatus,signal);
+        if(/^\s*\[\[SEARCH/.test(sr)||looksUnfinished(sr)||!sr.trim()){
+          contents.push(
+            {role:"model",parts:[{text:sr||"Okay."}]},
+            {role:"user",parts:[{text:"Do not reply [[SEARCH]] and do not mention searching. Answer now in this reply with what you already know, and say briefly that it may not be the very latest."}]}
+          );
+          sr=await streamOneModel(onChunk,model,contents,key,onStatus,signal);
+        }
+        if(sr.trim()){onChunk?.(sr);return sr;}
+      }
       if(onChunk&&!contents.__again&&looksUnfinished(result)){
         contents.__again=true;
         window.__forceSearch=true;
@@ -4423,7 +4442,7 @@ async function callGemini(
           {role:"user",parts:[{text:"Go ahead and search now, using several different keyword searches. Then give me the full answer in this reply. Do not say you will search; just answer with what you find."}]}
         );
         const again=await streamOneModel(onChunk,model,contents,key,onStatus,signal);
-        if(again.trim()){onChunk?.(again);return again;}
+        if(again.trim()&&!looksUnfinished(again)){onChunk?.(again);return again;}         window.__skipOnce=true;         contents.push(           {role:"model",parts:[{text:again||result}]},           {role:"user",parts:[{text:"Live searching is not working at the moment. Answer now, in this reply, with what you already know. Say briefly that it may not be the very latest, and do not mention searching or tools."}]}         );         const third=await streamOneModel(onChunk,model,contents,key,onStatus,signal);         if(third.trim()){onChunk?.(third);return third;}
       }
       if(result.trim()){
 
@@ -4440,7 +4459,7 @@ async function callGemini(
 
     }catch(e){
 
-      lastError=e;if(window.__toolFail){window.__toolFail=false;i--;continue;}
+      lastError=e;if(window.__toolFail&&!contents.__tr){contents.__tr=true;window.__toolFail=false;i--;continue;}window.__toolFail=false;
 
       if(
         e.name==="AbortError"||
@@ -4848,6 +4867,8 @@ ${prompt}`;
           token!==requestToken
         )return;
 
+        if(/^\s*\[{1,2}(S(E(A(R(C(H\]{0,2})?)?)?)?)?)?$/.test(full)||looksUnfinished(full)||(/^\s*\(/.test(full)&&full.length<260&&full.indexOf("\n")<0)){$(statusId).textContent="Searching the web for you…";return;}
+        window.__gotText=true;
         ai.text=full;
 
         if(isGeneral){
@@ -5149,7 +5170,7 @@ function autoGrow(el){el.style.height="auto";el.style.height=Math.min(el.scrollH
       if(el.classList.contains("hidden")||!log.length)return;
       if(log[log.length-1].includes("stopped"))return;
       if(Date.now()-last>9000){
-        log.push(stamp()+"Still working… long answers can take a little while. Please hang on.");
+        log.push(stamp()+"Still working on it. Your answer will appear here the moment it's ready.");
         if(log.length>8)log.shift();
         last=Date.now();
         show();
@@ -5212,7 +5233,7 @@ function autoResumeLive(){
   const view=$("courseLiveView");
   if(!view||view.classList.contains("hidden"))return;
   if(courseLive.upAt&&Date.now()-courseLive.upAt>20000)liveRetries=0;
-  if(liveRetries>=3){
+  if(/quota|billing/i.test(String(courseLive.lastClose||""))){     liveSetStatus("The voice service is busy right now. Please wait a minute, then tap Start conversation.");     return;   }   if(liveRetries>=3){
     const owner=window.OjoolaCore&&OjoolaCore.me&&OjoolaCore.me.role==="admin"&&courseLive.lastClose;
     liveSetStatus("I couldn't reconnect. Tap Start conversation and we'll continue where we left off."+(owner?" ["+courseLive.lastClose+"]":""));
     return;
@@ -5222,6 +5243,63 @@ function autoResumeLive(){
   courseLive.resume=true;
   courseLive.upAt=0;
   startCourseLive();
+}
+
+/* CHAT: SEARCH DECISIONS AND OWNER NOTES */
+function lastQuestion(contents){
+  let q=String((((contents&&contents[contents.length-1])||{}).parts||[{}])[0].text||"");
+  const qi=q.lastIndexOf("Student question:\n");
+  if(qi>-1)q=q.slice(qi+18);
+  const qj=q.indexOf("\n\nSTUDY NOTES FROM");
+  if(qj>-1)q=q.slice(0,qj);
+  return q;
+}
+
+function chatWantsWeb(contents){
+  if(window.__noTools||window.__skipOnce)return false;
+  if(window.__forceSearch)return true;
+  const q=lastQuestion(contents).trim();
+  if(!q)return false;
+  return /\b(latest|news|today|tonight|current|currently|recent|recently|right now|updates?|breaking|this (week|month|year)|20(2[5-9]|3\d)|scores?|who won|weather|price of|trending|happening|ongoing|just now|yesterday)\b/i.test(q);
+}
+
+function noExtras(){
+  window.__hadTools=false;
+  return {};
+}
+
+function chatExtras2(contents){
+  const nm=(window.OjoolaCore&&OjoolaCore.me&&OjoolaCore.me.firstName)||"";
+  const web=chatWantsWeb(contents);
+  window.__skipOnce=false;
+  window.__forceSearch=false;
+  window.__hadTools=web;
+  const base=
+    "You are Ọjọ́ọ̀la, a warm and clear AI study partner. "+
+    (nm?"The student's first name is "+nm+". Use it naturally now and then, not in every reply. ":"")+
+    "Always write your name as Ọjọ́ọ̀la with its Yorùbá tone marks, and keep the tone marks and underdots when you write Yorùbá. "+
+    "Reply only with the final answer. Never write a note about what you are about to do, never write things like 'let me search', and never put remarks in brackets. ";
+  const text=web
+    ?base+"You have a live Google Search tool. Use it yourself, in the same reply, whenever a question involves news, current events, recent events, people, prices, results, schools or anything that may have changed. Search first, then answer fully in that same reply. Use several searches with different keywords taken from the question. For Nigerian or local topics, look at major Nigerian outlets such as Punch, Vanguard, The Guardian Nigeria, Premium Times, Channels TV, TheCable, Daily Trust, Leadership and BBC News Pidgin, and at official or union statements. For international topics, compare several reputable outlets. For what people say on social media, also search with site:x.com and site:facebook.com plus the keywords, treat those posts as unverified, and say so. Name the sources you used. Never claim information is unavailable until you have tried several searches; if you truly find nothing, say which searches you tried. When the question is about the student's course materials, treat those as the main source and use the web only to add to them."
+    :base+"Answer from your own knowledge. If answering well needs current or recent information (news, recent events, the latest on a person, school or product, prices, results, or anything that may have changed since your training), reply with exactly [[SEARCH]] and nothing else, and the app will search for you. Otherwise answer normally. Never promise to search later and never write notes about what you are doing.";
+  const o={systemInstruction:{parts:[{text}]}};
+  if(web)o.tools=[{google_search:{}}];
+  return o;
+}
+
+function ownerNote(t){
+  try{
+    if(!(window.OjoolaCore&&OjoolaCore.me&&OjoolaCore.me.role==="admin"))return;
+    let d=document.getElementById("ownerNote");
+    if(!d){
+      d=document.createElement("div");
+      d.id="ownerNote";
+      d.style.cssText="position:fixed;left:8px;right:8px;top:72px;z-index:99999;background:#14213d;color:#fff;padding:10px 12px;border-radius:12px;font:12px/1.4 monospace;overflow-wrap:anywhere";
+      d.onclick=()=>d.remove();
+      document.body.appendChild(d);
+    }
+    d.textContent="Owner note (tap to close): "+t;
+  }catch(_){}
 }
 
 /* DOWN BUTTONS */
@@ -6230,7 +6308,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
   else signal.addEventListener("abort",fwd,{once:true});
 
   try{
-    onStatus?.(onChunk?"Checking the web and thinking, just a moment…":"Sending your question…");
+    onStatus?.(onChunk?(chatWantsWeb(contents)?"Searching the web for you…":"Thinking…"):"Sending your question…"); if(onChunk){const tk=window.__stageTk=(window.__stageTk||0)+1;window.__gotText=false;if(chatWantsWeb(contents)){[[7000,"Still searching. Reading what I find…"],[16000,"Putting your answer together…"],[30000,"This one is taking a little longer. I'm still on it, and your answer will appear here as soon as it's ready."]].forEach(([ms,m])=>setTimeout(()=>{if(tk===window.__stageTk&&!window.__gotText&&!signal.aborted)onStatus?.(m);},ms));}}
 
     const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`;
 
@@ -6239,7 +6317,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
       headers:{"Content-Type":"application/json","x-goog-api-key":key},
       body:JSON.stringify({
         contents,
-        ...(onChunk?chatExtras(contents):{}),generationConfig:{temperature:.7,maxOutputTokens:4096}
+        ...(onChunk?chatExtras2(contents):noExtras()),generationConfig:{temperature:.7,maxOutputTokens:4096}
       }),
       signal:controller.signal
     });
@@ -6250,7 +6328,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
         const j=await response.json();
         detail=j.error?.message||JSON.stringify(j);
       }catch(_){detail="HTTP "+response.status}
-      const hadTools=!!onChunk&&!window.__noTools&&!window.__skipOnce;if(hadTools&&response.status!==401&&!/daily ai limit|not enabled/i.test(detail)){window.__skipOnce=true;window.__toolFail=true;if(response.status===400&&/tool|search|ground/i.test(detail))window.__noTools=true;}       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
+      const hadTools=!!window.__hadTools;window.__hadTools=false;if(hadTools&&response.status!==401&&!/daily ai limit|not enabled/i.test(detail)){window.__skipOnce=true;window.__toolFail=true;ownerNote("Search problem: "+response.status+" "+detail.slice(0,200));if(response.status===400&&/tool|search|ground/i.test(detail))window.__noTools=true;}       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
       err.status=response.status;
       throw err;
     }
