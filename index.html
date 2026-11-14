@@ -6379,7 +6379,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
       headers:{"Content-Type":"application/json","x-goog-api-key":key},
       body:JSON.stringify({
         contents,
-        ...(onChunk?chatExtras2(contents):noExtras()),generationConfig:{temperature:.7,maxOutputTokens:4096}
+        ...(onChunk?chatExtras2(contents):noExtras()),generationConfig:{temperature:.7,maxOutputTokens:4096,...(onChunk&&/^\s*(hi|hello|hey|yo|good (morning|afternoon|evening|night)|how are you|thanks|thank you|ok|okay|bye)\b[^?]{0,40}$/i.test(lastQuestion(contents).trim())?{thinkingConfig:{thinkingBudget:0}}:{})}
       }),
       signal:controller.signal
     });
