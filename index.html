@@ -4319,6 +4319,11 @@ function plainLiveError(e){
   return new Error("I couldn't start the voice conversation. Please check your internet and try again.");
 }
 
+function looksUnfinished(t){
+  t=String(t||"").trim();
+  return t.length<400&&/(let me|i'll|i will|i am going to|i'm going to|allow me to|give me a moment|one moment|hold on)[^.?!]{0,60}(search|look (it |that |this )?up|check|find|browse|fetch|look into|look for)/i.test(t);
+}
+
 function isRetryableGeminiError(e){
 
   return !!e&&(
@@ -4409,6 +4414,17 @@ async function callGemini(
           signal
         );
 
+      if(onChunk&&!contents.__again&&looksUnfinished(result)){
+        contents.__again=true;
+        window.__forceSearch=true;
+        onStatus?.("Searching the web for you. This can take a few seconds…");
+        contents.push(
+          {role:"model",parts:[{text:result}]},
+          {role:"user",parts:[{text:"Go ahead and search now, using several different keyword searches. Then give me the full answer in this reply. Do not say you will search; just answer with what you find."}]}
+        );
+        const again=await streamOneModel(onChunk,model,contents,key,onStatus,signal);
+        if(again.trim()){onChunk?.(again);return again;}
+      }
       if(result.trim()){
 
         onChunk?.(
@@ -5177,15 +5193,15 @@ function chatExtras(contents){
   const o={systemInstruction:{parts:[{text:
     "You are Ọjọ́ọ̀la, a warm and clear AI study partner. "+
     (nm?"The student's first name is "+nm+". Use it naturally now and then, not in every reply. ":"")+
-    "You can search the web. Do it whenever a question needs current, recent or latest information. "+
+    "You have a live Google Search tool. Use it yourself, in the same reply, whenever a question involves news, current events, recent events, people, prices, results, schools or anything that may have changed. Never say you will search and then stop: search, then answer fully in the same reply. Use several searches with different keywords taken from the question. For Nigerian or local topics, look at major Nigerian outlets such as Punch, Vanguard, The Guardian Nigeria, Premium Times, Channels TV, TheCable, Daily Trust, Leadership, Sahara Reporters and BBC News Pidgin, and at official or union statements. For international topics, compare several reputable outlets. Name the sources you used. For what people are saying on social media, also search with the words site:x.com and site:facebook.com plus the keywords, and look for the official accounts of the organisation or person involved. Treat social media posts as unverified claims, say clearly that they are unconfirmed, and prefer confirmation from news outlets or official statements. Never claim information is unavailable until you have tried several searches, and if you truly find nothing, say which searches you tried. "+
     "When a question is about the student's course materials, treat those as the main source and use the web only to add to them. "+
     "Always write your name as Ọjọ́ọ̀la with its Yorùbá tone marks, and keep the tone marks and underdots when you write Yorùbá."
   }]}};
   let q=String((((contents&&contents[contents.length-1])||{}).parts||[{}])[0].text||"");
   const qi=q.lastIndexOf("Student question:\n");if(qi>-1)q=q.slice(qi+18);
   const qj=q.indexOf("\n\nSTUDY NOTES FROM");if(qj>-1)q=q.slice(0,qj);
-  const wantsWeb=/latest|news|today|tonight|current|currently|recent|recently|right now|update|updated|202\d|price|weather|score|who won|released|breaking|this week|this month|this year|trending/i.test(q);
-  if(wantsWeb&&!window.__noTools)o.tools=[{google_search:{}}];
+  const wantsWeb=!/^\s*(hi|hello|hey|yo|good (morning|afternoon|evening|night)|how are you|thanks|thank you|ok|okay|bye)\b[^?]{0,40}$/i.test(q.trim())||!!window.__forceSearch;window.__forceSearch=false;
+  if(wantsWeb&&!window.__noTools&&!window.__skipOnce)o.tools=[{google_search:{}}];window.__skipOnce=false;
   return o;
 }
 
@@ -5648,7 +5664,7 @@ async function startCourseLive() {
     courseLive.audioContext =
       new (window.AudioContext || window.webkitAudioContext)();
 
-    await courseLive.audioContext.resume();
+    await courseLive.audioContext.resume(); courseLive.nextPlayTime = 0;
 
 
     /* REQUEST GEMINI SESSION TOKEN */
@@ -6187,7 +6203,7 @@ function stopCourseLive(updateStatus = true) {
 
   /* RESET VARIABLES */
 
-  courseLive.stream = null;
+  courseLive.stream = null; courseLive.nextPlayTime = 0; courseLive.playing = [];
   courseLive.processor = null;
   courseLive.micSource = null;
   courseLive.silentGain = null;
@@ -6214,7 +6230,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
   else signal.addEventListener("abort",fwd,{once:true});
 
   try{
-    onStatus?.("Sending your question…");
+    onStatus?.(onChunk?"Checking the web and thinking, just a moment…":"Sending your question…");
 
     const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`;
 
@@ -6234,7 +6250,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
         const j=await response.json();
         detail=j.error?.message||JSON.stringify(j);
       }catch(_){detail="HTTP "+response.status}
-      const hadTools=!!onChunk&&!window.__noTools;if(hadTools&&[400,403,429].includes(response.status)&&/tool|search|ground|quota|limit/i.test(detail)){window.__noTools=true;window.__toolFail=true;}       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
+      const hadTools=!!onChunk&&!window.__noTools&&!window.__skipOnce;if(hadTools&&response.status!==401&&!/daily ai limit|not enabled/i.test(detail)){window.__skipOnce=true;window.__toolFail=true;if(response.status===400&&/tool|search|ground/i.test(detail))window.__noTools=true;}       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
       err.status=response.status;
       throw err;
     }
