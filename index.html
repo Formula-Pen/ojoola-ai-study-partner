@@ -923,6 +923,8 @@ body.dark .welcome{
 .liveLine.ai{background:#f1f5f9;color:#243244}
 .liveStatus{text-align:center;color:var(--muted,#777);font-size:13px}
 .liveControls{display:flex;gap:10px}
+#liveStartBtn.liveOn{background:#16a34a;color:#fff;box-shadow:0 7px 18px rgba(22,163,74,.25)}
+#liveStopBtn.hidden{display:none!important}
 .liveControls button{flex:1}
 
 </style>
@@ -1367,7 +1369,7 @@ body.dark .welcome{
     <div class="liveStatus" id="liveStatus">Ready to start a voice conversation.</div>
     <select id="liveVoiceSel" onchange="localStorage.setItem('ojoola_voice',this.value)" style="width:100%;padding:12px;border-radius:13px"><option value="Aoede">Aoede (female, breezy)</option><option value="Kore">Kore (female, firm)</option><option value="Puck">Puck (male, upbeat)</option><option value="Charon">Charon (male, calm)</option></select> <div class="liveControls">
       <button class="primary" id="liveStartBtn" onclick="startCourseLive()">Start conversation</button>
-      <button class="secondary" id="liveStopBtn" onclick="stopCourseLive()" disabled>End</button>
+      <button class="secondary hidden" id="liveStopBtn" onclick="stopCourseLive()" disabled>End</button>
     </div>
     <div class="muted" style="font-size:13px">Speak naturally. You can interrupt the AI while it is talking. Your voice and the AI's replies are saved in this course's existing conversation.</div>
     <h3 style="margin:4px 0">Live transcript</h3>
@@ -6142,6 +6144,9 @@ ${history || "No previous messages."}
           silentGain.connect(ctx.destination);
 
           $("liveStopBtn").disabled = false;
+          $("liveStopBtn").classList.remove("hidden");
+          $("liveStartBtn").classList.add("liveOn");
+          $("liveStartBtn").textContent = "Conversation in progress";
           courseLive.upAt = Date.now(); courseLive.micHold = !__resume; setTimeout(() => { courseLive.micHold = false; }, 12000);
           if (!__resume) {
             const nm = (window.OjoolaCore && OjoolaCore.me && OjoolaCore.me.firstName) || "";
@@ -6411,6 +6416,9 @@ function stopCourseLive(updateStatus = true) {
 
   $("liveStartBtn").disabled = false;
   $("liveStopBtn").disabled = true;
+  $("liveStopBtn").classList.add("hidden");
+  $("liveStartBtn").classList.remove("liveOn");
+  $("liveStartBtn").textContent = "Start conversation";
 
   if (updateStatus) {
     liveSetStatus("Conversation ended.");
