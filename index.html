@@ -4427,7 +4427,7 @@ async function callGemini(
           signal
         );
 
-      if(if(onChunk&&!contents.__sr&&/^\s*\[\[SEARCH/.test(result)){
+      if(onChunk&&!contents.__sr&&/^\s*\[\[SEARCH/.test(result)){
         contents.__sr=true;
         window.__forceSearch=true;
         onStatus?.("Searching the web for you…");
