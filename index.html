@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
 <script src="ojoola-core.js"></script>
+<script>
+window.addEventListener("error",function(e){
+  var d=document.createElement("div");
+  d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px;font:12px/1.4 monospace;overflow-wrap:anywhere";
+  d.textContent="Page error: "+e.message+" (line "+e.lineno+")";
+  (document.body||document.documentElement).appendChild(d);
+});
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2563EB">
