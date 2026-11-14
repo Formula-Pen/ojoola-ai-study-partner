@@ -89,7 +89,7 @@
 
   async function poll() {
     try {
-      const s = await call("/api/support/summary");
+      if (!document.hidden) call("/api/here", {}).catch(() => {}); const s = await call("/api/support/summary");
       const n = s.unread || 0;
       if (lastUnread !== null && n > lastUnread) {
         if (isAdmin) {
@@ -123,7 +123,7 @@
   }
 
   function renderThread(list) {
-    const sig = list.map(m => m.id + (m.edited ? "e" : "") + (m.deleted ? "d" : "")).join(",");
+    const sig = list.map(m => m.id + (m.edited ? "e" : "") + (m.deleted ? "d" : "") + (m.readAt ? "r" : m.deliveredAt ? "v" : "")).join(",");
     const b0 = document.getElementById("ojSMsgs");
     if (sig === lastSig && b0.childElementCount) return;
     lastSig = sig;
@@ -149,7 +149,7 @@
       t.textContent = m.audioSecs ? "" : m.text; if (m.audioSecs) { el.classList.add("vn"); t.appendChild(playerFor(m)); }
       el.appendChild(t);
       const s = document.createElement("small");
-      s.textContent = ago(m.ts) + (m.edited ? " · edited" : "") + (m.deleted ? "" : " · tap for options");
+      const st = m.readAt ? "✓✓ Seen" : m.deliveredAt ? "✓✓ Delivered" : "✓ Sent"; s.textContent = ago(m.ts) + (m.edited ? " · edited" : "") + (m.deleted ? "" : (m.sender === "user" ? " · " + st : "") + " · tap for options");
       el.appendChild(s);
       if (m.deleted) { el.style.opacity = ".6"; el.style.fontStyle = "italic"; } else el.onclick = () => msgMenu(m, el);
       box.appendChild(el);
@@ -381,7 +381,7 @@ async function delMsg(m) {
 }
 
 async function loadThread() {
-    try { const d = await call("/api/support/thread"); renderThread(d.messages || []); }
+    try { const d = await call("/api/support/thread"); renderThread(d.messages || []); const on = document.getElementById("ojSOn"); if (on) { on.textContent = d.adminOnline ? "● Online" : ""; on.style.color = "#16a34a"; } }
     catch (e) { toast(e.message); }
   }
 
@@ -469,7 +469,7 @@ async function loadThread() {
     panel.className = "ojS ojHide";
     panel.innerHTML =
       '<div class="ojSBox">' +
-      '<div class="ojSHead"><b>Message the admin</b><span><button id="ojSBell" title="Turn on alerts">🔔</button><button id="ojSClose" title="Close">✕</button></span></div>' +
+      '<div class="ojSHead"><b>Message the admin <small id="ojSOn" style="font-weight:400;font-size:11px"></small></b><span><button id="ojSBell" title="Turn on alerts">🔔</button><button id="ojSClose" title="Close">✕</button></span></div>' +
       '<div id="ojSMsgs" class="ojSMsgs"></div>' +
       '<div id="ojSReply" class="ojSReply ojHide"></div>' +
       '<div class="ojSBar"><textarea id="ojSInput" rows="1" placeholder="Write a message…"></textarea><button id="ojSMic" type="button" title="Voice note">🎤</button><button id="ojSSend">➤</button></div>' + '<div id="ojSRec" class="ojSRec ojHide"></div>' +
