@@ -4918,7 +4918,7 @@ ${prompt}`;
 
         if(/^\s*\[{1,2}(S(E(A(R(C(H\]{0,2})?)?)?)?)?)?$/.test(full)||looksUnfinished(full)||(/^\s*\(/.test(full)&&full.length<260&&full.indexOf("\n")<0)){$(statusId).textContent="Searching the web for you…";return;}
         window.__gotText=true;
-        ai.text=full;
+        ai.text=ojClean(full);
 
         if(isGeneral){
           saveGeneral();
@@ -5304,7 +5304,52 @@ function lastQuestion(contents){
   return q;
 }
 
-function ojNow(){   const d=new Date();   let s="";   try{s=d.toLocaleString("en-NG",{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});}catch(_){s=d.toString();}   return "The current date and time on the student's device is "+s+". Always use this for today's date, the day, the month, the year and the time. Never guess them from memory. "; }  function ojFirstName(){
+function ojNow(){   const d=new Date();   let s="";   try{s=d.toLocaleString("en-NG",{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});}catch(_){s=d.toString();}   return "The current date and time on the student's device is "+s+". Always use this for today's date, the day, the month, the year and the time. Never guess them from memory. "; } 
+  
+  const ojStyle="Write in British English only: British spelling (colour, organise, programme, centre, maths, behaviour), British phrasing and British date style such as 14 November 2026. Write like a thoughtful person talking to a friend, not like a machine. Use plain, natural words and a mix of short and medium sentences. Do not use em dashes or en dashes at all, and avoid hyphens unless a word truly needs one. Never open with filler such as Certainly, Absolutely, Great question or Of course. Never close with lines such as I hope this helps or Let me know if you need anything else. Avoid stock phrases such as delve, tapestry, it is important to note, in conclusion, game changer, navigate, landscape, unlock and journey. Do not over-format: use short paragraphs, and only use bullet points, bold text or headings when the student asks for them or the content really needs them. Keep emojis rare. Answer first, then explain only as much as is useful. ";
+
+function ojClean(t){
+  return String(t||"").replace(/\s*—\s*/g,", ").replace(/\s–\s/g,", ");
+}
+
+function ojMic(inputId,sendId){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const input=$(inputId),send=$(sendId);
+  if(!input||!send||!SR||document.getElementById(inputId+"Mic"))return;
+  const b=document.createElement("button");
+  b.id=inputId+"Mic";
+  b.type="button";
+  b.className="sendBtn";
+  b.style.cssText="background:#eaf0ff;color:#2563eb";
+  b.textContent="🎤";
+  b.setAttribute("aria-label","Speak your message");
+  send.parentNode.insertBefore(b,send);
+  let rec=null,on=false,base="";
+  const stop=()=>{on=false;b.textContent="🎤";b.style.background="#eaf0ff";try{rec&&rec.stop();}catch(_){}};
+  b.onclick=()=>{
+    if(on){stop();return;}
+    rec=new SR();
+    rec.lang="en-GB";
+    rec.interimResults=true;
+    rec.continuous=true;
+    base=input.value?input.value.replace(/\s+$/,"")+" ":"";
+    rec.onresult=e=>{
+      let t="";
+      for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;
+      input.value=base+t;
+      input.dispatchEvent(new Event("input"));
+    };
+    rec.onerror=e=>{
+      if(e.error==="not-allowed"||e.error==="service-not-allowed")alert("Please allow microphone access so I can hear you.");
+      stop();
+    };
+    rec.onend=()=>{if(on)stop();};
+    try{rec.start();on=true;b.textContent="⏹";b.style.background="#fecaca";}catch(_){stop();}
+  };
+}
+
+function ojFirstName(){
+    
   const m=(window.OjoolaCore&&OjoolaCore.me)||{};
   const n=m.firstName||m.first_name||m.givenName||String(m.name||m.fullName||m.displayName||"").trim().split(/\s+/)[0]||"";
   return String(n||"").trim();
@@ -5338,7 +5383,7 @@ function chatExtras2(contents){
     "You are Ọjọ́ọ̀la, a warm and clear AI study partner. "+
     (nm?"The student's first name is "+nm+". Use it naturally now and then, not in every reply. ":"")+
     "Always write your name as Ọjọ́ọ̀la with its Yorùbá tone marks, and keep the tone marks and underdots when you write Yorùbá. "+
-    (ojFirstName()?"Always call the student by their first name, "+ojFirstName()+". Greet them with it, use it often, and if they ask their name, tell them it is "+ojFirstName()+". ":"")+""+ojNow()+"Reply only with the final answer. Never write a note about what you are about to do, never write things like 'let me search', and never put remarks in brackets. ";
+    (ojFirstName()?"Always call the student by their first name, "+ojFirstName()+". Greet them with it, use it often, and if they ask their name, tell them it is "+ojFirstName()+". ":"")+""+ojNow()+""+ojStyle+"Reply only with the final answer. Never write a note about what you are about to do, never write things like 'let me search', and never put remarks in brackets. ";
     const down=Date.now()<(window.__searchDownUntil||0)&&webKeywordMatch(lastQuestion(contents));
   const downText=base+"Live web search is not available right now. Never reply [[SEARCH]] and never say you will search. Questions about the student themselves (including their name), this conversation, their course materials, or any general knowledge must be answered normally, with no mention of search at all. The app has already shown a short note saying live search is unavailable, so do not write that note yourself. Start directly with a helpful answer from what you know. Then, after a blank line, in that SAME reply, keep the conversation going with a new paragraph: connect to the earlier chat or the student's course, or suggest one or two interesting things to explore next: answer as well as you can from what you already know (say it may not be the very latest), build on the earlier conversation or the student's course materials, and end by asking what they would like to explore next. Never reply with only a note that search is unavailable.";
   const text=web
@@ -5484,6 +5529,8 @@ window.addEventListener(
 
 
 /* STARTUP */
+ojMic("generalInput","generalSendBtn");
+ojMic("courseInput","courseSendBtn");
 
 loadDarkMode();
 
@@ -5953,7 +6000,7 @@ Your name is Ọjọ́ọ̀la. It is a Yorùbá name with four syllables and the
 
 Whenever you speak Yorùbá words, names or sentences, use authentic Yorùbá pronunciation with the correct high, mid and low tones, not English pronunciation.
 
-Allow the student to interrupt you naturally and ask follow-up questions.  ${ojNow()}
+Allow the student to interrupt you naturally and ask follow-up questions.  ${ojStyle}  ${ojNow()}
 
 COURSE MATERIAL NOTES (taken from the student's attached PDFs and pictures). Treat these as the main reference. If the notes do not cover a question, say so before adding general knowledge:  ${materialNotes || "No course materials are attached or enabled."}  RECENT COURSE CONVERSATION:
 
