@@ -5264,6 +5264,7 @@ function lastQuestion(contents){
 }
 
 function chatWantsWeb(contents){
+  if(Date.now()<(window.__searchDownUntil||0))return false;
   if(window.__noTools||window.__skipOnce)return false;
   if(window.__forceSearch)return true;
   const q=lastQuestion(contents).trim();
@@ -5287,7 +5288,9 @@ function chatExtras2(contents){
     (nm?"The student's first name is "+nm+". Use it naturally now and then, not in every reply. ":"")+
     "Always write your name as Ọjọ́ọ̀la with its Yorùbá tone marks, and keep the tone marks and underdots when you write Yorùbá. "+
     "Reply only with the final answer. Never write a note about what you are about to do, never write things like 'let me search', and never put remarks in brackets. ";
-  const text=web
+    const down=Date.now()<(window.__searchDownUntil||0);
+  const downText=base+"Live web search is not available right now. Never reply [[SEARCH]] and never say you will search. If the question needs current or recent information, begin your reply with one short, friendly sentence saying live search isn't available at the moment and they can try again later. Then, in that SAME reply, keep the conversation going: answer as well as you can from what you already know (say it may not be the very latest), build on the earlier conversation or the student's course materials, and end by asking what they would like to explore next. Never reply with only a note that search is unavailable.";
+  const text=down?downText:web
     ?base+"You have a live Google Search tool. Use it yourself, in the same reply, whenever a question involves news, current events, recent events, people, prices, results, schools or anything that may have changed. Search first, then answer fully in that same reply. Use several searches with different keywords taken from the question. For Nigerian or local topics, look at major Nigerian outlets such as Punch, Vanguard, The Guardian Nigeria, Premium Times, Channels TV, TheCable, Daily Trust, Leadership and BBC News Pidgin, and at official or union statements. For international topics, compare several reputable outlets. For what people say on social media, also search with site:x.com and site:facebook.com plus the keywords, treat those posts as unverified, and say so. Name the sources you used. Never claim information is unavailable until you have tried several searches; if you truly find nothing, say which searches you tried. When the question is about the student's course materials, treat those as the main source and use the web only to add to them."
     :base+"Answer from your own knowledge. If answering well needs current or recent information (news, recent events, the latest on a person, school or product, prices, results, or anything that may have changed since your training), reply with exactly [[SEARCH]] and nothing else, and the app will search for you. Otherwise answer normally. Never promise to search later and never write notes about what you are doing.";
   const o={systemInstruction:{parts:[{text}]}};
@@ -6336,7 +6339,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
         const j=await response.json();
         detail=j.error?.message||JSON.stringify(j);
       }catch(_){detail="HTTP "+response.status}
-      const hadTools=!!window.__hadTools;window.__hadTools=false;if(hadTools&&response.status!==401&&!/daily ai limit|not enabled/i.test(detail)){window.__skipOnce=true;window.__toolFail=true;ownerNote("Search problem: "+response.status+" "+detail.slice(0,200));if(response.status===400&&/tool|search|ground/i.test(detail))window.__noTools=true;}       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
+      const hadTools=!!window.__hadTools;window.__hadTools=false;if(hadTools&&response.status!==401&&!/daily ai limit|not enabled/i.test(detail)){window.__skipOnce=true;window.__toolFail=true;window.__searchDownUntil=Date.now()+5*60*1000;ownerNote("Search problem: "+response.status+" "+detail.slice(0,200));if(response.status===400&&/tool|search|ground/i.test(detail))window.__noTools=true;}       const err=new Error(`Gemini API ${response.status}: ${detail.slice(0,700)}`);
       err.status=response.status;
       throw err;
     }
