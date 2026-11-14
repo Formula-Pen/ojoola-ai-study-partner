@@ -6,7 +6,7 @@
 window.addEventListener("error",function(e){
   var d=document.createElement("div");
   d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px;font:12px/1.4 monospace;overflow-wrap:anywhere";
-  d.textContent="Page error: "+e.message+" (line "+e.lineno+")";
+  if(!(window.OjoolaCore&&OjoolaCore.me&&OjoolaCore.me.role==="admin"))return;d.textContent="Page error: "+e.message+" (line "+e.lineno+")";
   (document.body||document.documentElement).appendChild(d);
 });
 </script>
@@ -4302,7 +4302,7 @@ function plainError(e){
   const mm=m.match(/Gemini API (\d{3})/);
   const s=Number(e&&e.status)||(mm?Number(mm[1]):0);
   if(/daily ai limit/i.test(m))return "You've reached today's AI limit. Please try again tomorrow.";
-  if(/not enabled for your account/i.test(m))return m.replace(/^Gemini API \d+:\s*/,"");
+  if(/not enabled for your account/i.test(m))return "That isn't available right now. Please try something else.";
   if(s===401||/session expired|please sign in|no longer exists/i.test(m))return "Please sign in again to continue.";
   if(s===413||/too large|too big/i.test(m))return "That file is too big to send in one go. Try a smaller PDF or picture.";
   if(/safety/i.test(m))return "I couldn't answer that one. Try asking it a different way.";
@@ -4313,7 +4313,7 @@ function plainError(e){
   return "Something went wrong on my side. Please try again in a moment.";
 }
 
-function plainErrorObj(e){
+function plainErrorObj(e){   try{ownerNote("Real error: "+String((e&&e.message)||e).slice(0,300));}catch(_){}
   if(e&&e.name==="AbortError")return e;
   const err=new Error(plainError(e));
   err.status=e&&e.status;
@@ -5289,8 +5289,8 @@ function chatExtras2(contents){
     "Always write your name as Ọjọ́ọ̀la with its Yorùbá tone marks, and keep the tone marks and underdots when you write Yorùbá. "+
     "Reply only with the final answer. Never write a note about what you are about to do, never write things like 'let me search', and never put remarks in brackets. ";
     const down=Date.now()<(window.__searchDownUntil||0);
-  const downText=base+"Live web search is not available right now. Never reply [[SEARCH]] and never say you will search. If the question needs current or recent information, begin your reply with one short, friendly sentence saying live search isn't available at the moment and they can try again later. Then, in that SAME reply, keep the conversation going: answer as well as you can from what you already know (say it may not be the very latest), build on the earlier conversation or the student's course materials, and end by asking what they would like to explore next. Never reply with only a note that search is unavailable.";
-  const text=down?downText:web
+  const downText=base+"Live web search is not available right now. Never reply [[SEARCH]] and never say you will search. Questions about the student themselves (including their name), this conversation, their course materials, or any general knowledge must be answered normally, with no mention of search at all. ONLY when the question truly needs live news or very recent information, begin your reply with one short, friendly sentence saying live search isn't available at the moment and they can try again later. Then, in that SAME reply, keep the conversation going: answer as well as you can from what you already know (say it may not be the very latest), build on the earlier conversation or the student's course materials, and end by asking what they would like to explore next. Never reply with only a note that search is unavailable.";
+  const text=web
     ?base+"You have a live Google Search tool. Use it yourself, in the same reply, whenever a question involves news, current events, recent events, people, prices, results, schools or anything that may have changed. Search first, then answer fully in that same reply. Use several searches with different keywords taken from the question. For Nigerian or local topics, look at major Nigerian outlets such as Punch, Vanguard, The Guardian Nigeria, Premium Times, Channels TV, TheCable, Daily Trust, Leadership and BBC News Pidgin, and at official or union statements. For international topics, compare several reputable outlets. For what people say on social media, also search with site:x.com and site:facebook.com plus the keywords, treat those posts as unverified, and say so. Name the sources you used. Never claim information is unavailable until you have tried several searches; if you truly find nothing, say which searches you tried. When the question is about the student's course materials, treat those as the main source and use the web only to add to them."
     :base+"Answer from your own knowledge. If answering well needs current or recent information (news, recent events, the latest on a person, school or product, prices, results, or anything that may have changed since your training), reply with exactly [[SEARCH]] and nothing else, and the app will search for you. Otherwise answer normally. Never promise to search later and never write notes about what you are doing.";
   const o={systemInstruction:{parts:[{text}]}};
