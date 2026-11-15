@@ -18,7 +18,10 @@ css.textContent = [
 ".nPick input{width:18px;height:18px}",
 ".nPrev{background:var(--soft);color:var(--text);border-radius:14px;padding:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;margin:6px 0 10px}",
 ".nHist{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:8px;width:100%;text-align:left;color:inherit}",
-".nHist small{display:block;color:var(--muted);margin-top:4px;font-size:12px}"
+".nHist small{display:block;color:var(--muted);margin-top:4px;font-size:12px}",
+".nLbl{font-size:12px;font-weight:800;margin:12px 0 6px}",
+".nChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}",
+".nChips button{border:0;border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700;background:var(--soft);color:var(--blue)}"
 ].join("\n");
 document.head.appendChild(css);
 const tBtn = document.createElement("button");
@@ -31,8 +34,13 @@ pane.className = "hidden";
 pane.innerHTML =
 '<div class="sec">New notification</div>' +
 '<input id="nTitle" class="nField" type="text" maxlength="60" value="A message from Ọjọ́ọ̀la">' +
-'<textarea id="nMsg" class="nField" maxlength="1500" placeholder="Write your message…" style="margin-top:8px"></textarea>' +
-'<div class="info" style="margin-top:6px">Each person\'s first name is added automatically ("Hello Emmanuel, …"). You can also type {name} where you want it.</div>' +
+'<div class="nLbl">Salutation</div>' +
+'<input id="nSal" class="nField" type="text" maxlength="40" value="Hello" placeholder="Hello, Dear, Merry Christmas…">' +
+'<div class="nChips"><button type="button" data-sal="Hello">Hello</button><button type="button" data-sal="Dear">Dear</button><button type="button" data-sal="Hi">Hi</button><button type="button" data-sal="Good morning">Good morning</button><button type="button" data-sal="Merry Christmas">Merry Christmas</button><button type="button" data-sal="Happy New Year">Happy New Year</button></div>' +
+'<div class="info" style="margin-top:6px">Each person\'s first name is added right after the salutation, for example "Dear Emmanuel, …". Leave it empty to start with just the name.</div>' +
+'<div class="nLbl">Message</div>' +
+'<textarea id="nMsg" class="nField" maxlength="1500" placeholder="Write your message…"></textarea>' +
+'<div class="info" style="margin-top:6px">You can also type {name} inside the message to put the first name exactly where you want it. Then the salutation is not added.</div>' +
 '<div class="nRow"><button class="b nOn" id="nAll">All users</button><button class="b" id="nSel">Select users</button></div>' +
 '<div id="nPickWrap" class="hidden"><input id="nSearch" type="search" placeholder="Search users"><div id="nPick" class="nPick"></div><div class="info" id="nCount"></div></div>' +
 '<div class="sec">Preview</div><div id="nPrev" class="nPrev"></div>' +
@@ -45,7 +53,15 @@ wrap.appendChild(pane);
 let mode = "all", sending = false;
 const chosen = new Set();
 const U = () => (typeof users !== "undefined" ? users : []);
-const tpl = m => (m.indexOf("{name}") > -1 ? m : "Hello {name}, " + m);
+try {
+const dm = localStorage.getItem("ojoola_notify_draft");
+if (dm) $("nMsg").value = dm;
+const ds = localStorage.getItem("ojoola_notify_sal");
+if (ds !== null) $("nSal").value = ds;
+} catch (_) {}
+const saveDraft = () => { try { localStorage.setItem("ojoola_notify_draft", $("nMsg").value); localStorage.setItem("ojoola_notify_sal", $("nSal").value); } catch (_) {} };
+const sal = () => $("nSal").value.replace(/[\r\n]+/g, " ").trim();
+const tpl = m => (m.indexOf("{name}") > -1 ? m : (sal() ? sal() + " {name}, " : "{name}, ") + m);
 function preview() {
 let first = "Emmanuel";
 if (mode === "selected" && chosen.size) {
@@ -71,7 +87,15 @@ preview();
 }
 $("nAll").onclick = () => setMode("all");
 $("nSel").onclick = () => setMode("selected");
-$("nMsg").oninput = preview;
+$("nMsg").oninput = () => { preview(); saveDraft(); };
+$("nSal").oninput = () => { preview(); saveDraft(); };
+pane.addEventListener("click", e => {
+const c = e.target.closest("[data-sal]");
+if (!c) return;
+$("nSal").value = c.dataset.sal;
+preview();
+saveDraft();
+});
 $("nSearch").oninput = renderPick;
 $("nPick").addEventListener("change", e => {
 const c = e.target.closest("[data-id]");
@@ -104,9 +128,9 @@ sending = true;
 $("nSend").disabled = true;
 $("nStatus").textContent = "Preparing…";
 try {
-const c = await api("/api/admin/notify/create", { title, message, mode, userIds: [...chosen] });
+const c = await api("/api/admin/notify/create", { title, message, salutation: sal(), mode, userIds: [...chosen] });
 await run(c.id, c.total);
-$("nMsg").value = "";
+saveDraft();
 preview();
 } catch (e) { toast(e.message); $("nStatus").textContent = e.message; }
 sending = false;
@@ -127,7 +151,7 @@ async function showDetail(id) {
 try {
 const d = await api("/api/admin/notify/detail?id=" + id);
 const failed = d.recipients.filter(r => r.emailStatus === "failed").length;
-const rows = d.recipients.map(r => '<div class="ev"><div><b>' + esc(r.name || "Deleted user") + '</b><small style="display:block;color:var(--muted)">@' + esc(r.username || "") + '</small></div><div class="t" style="white-space:normal;text-align:right">' + (r.emailStatus === "sent" ? "✓ Emailed" : r.emailStatus === "failed" ? "✕ Failed" : "… Pending") + ' · ' + (r.readAt ? "Read" : "Unread") + (r.emailError ? "<br>" + esc(r.emailError) : "") + '</div></div>').join("");
+const rows = d.recipients.map(r => '<div class="ev"><div><b>' + esc(r.name || "Deleted user") + '</b><small style="display:block;color:var(--muted)">@' + esc(r.username || "") + '</small></div><div class="t" style="white-space:normal;text-align:right">' + (r.emailStatus === "sent" ? "✓ Emailed" : r.emailStatus === "failed" ? "✕ Failed" : r.emailStatus === "skipped" ? "⊘ Unsubscribed" : "… Pending") + ' · ' + (r.readAt ? "Read" : "Unread") + (r.emailError && r.emailStatus === "failed" ? "<br>" + esc(r.emailError) : "") + '</div></div>').join("");
 $("nDetail").innerHTML = '<button class="b" id="nBack">← Back</button> ' + (failed ? '<button class="b warn" id="nRetry">Retry ' + failed + ' failed</button>' : "") + '<div class="sec">' + esc(d.notification.title) + '</div><div class="nPrev">' + esc(d.notification.message) + '</div>' + rows;
 $("nDetail").classList.remove("hidden");
 $("nHistList").classList.add("hidden");
@@ -166,4 +190,5 @@ pane.classList.add("hidden");
 if (old) return old.apply(this, arguments);
 };
 });
+preview();
 })();
