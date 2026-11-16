@@ -6,7 +6,7 @@
 window.addEventListener("error",function(e){
   var d=document.createElement("div");
   d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px;font:12px/1.4 monospace;overflow-wrap:anywhere";
-  if(!(window.OjoolaCore&&OjoolaCore.me&&OjoolaCore.me.role==="admin"))return;d.textContent="Page error: "+e.message+" (line "+e.lineno+")";
+  if(!(window.OjoolaCore&&OjoolaCore.me&&OjoolaCore.me.role==="admin"))return;d.textContent="Page error: "+e.message+" ("+String(e.filename||"page").split("/").pop().split("?")[0]+", line "+e.lineno+")";
   (document.body||document.documentElement).appendChild(d);
 });
 </script>
