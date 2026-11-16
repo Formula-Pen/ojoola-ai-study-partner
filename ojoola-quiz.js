@@ -272,5 +272,226 @@ const c = COL[st.result.cls] || "#2563eb";
 return '<div class="qzCard qzBig"><div class="n" style="color:' + c + '">' + st.score + ' / ' + st.max + '</div><div style="font-size:18px;font-weight:800">' + st.pct + '%</div><span class="qzChip" style="background:' + c + ';color:#fff;margin-top:8px">' + st.result.cls + '</span>' + (tiles ? '<div class="qzTiles">' + tiles.map(t => '<div><b style="color:' + t[2] + '">' + t[1] + '</b>' + t[0] + '</div>').join("") + '</div>' : "") + '</div>';
 }
 function actions(st) {
+return '<button class="qzBtn" data-a="retry" data-id="' + st.id + '">Retry Same Questions</button>' + '<button class="qzBtn" data-a="again">' + (st.kind === "written" ? "Start New Test" : "Start New Quiz") + '</button>' + '<button class="qzBtn alt" data-a="progress">View My Learning Progress</button>' + '<button class="qzBtn alt" data-a="home">Back to overview</button>';
+}
+/* old copy, switched off
+function actionsOld(st) {
 const w = st.kind === "written";
-return '<button class="qzBtn" data-a="retry" data-id="' + st.id + '">Retry Same Questions</button><button class="
+return '<button class="qzBtn" data-a="retry" data-id="' + st.id + '">Retry Same Questions</button><button class="qzBtn" data-a="again">' + (w ? "Start New Test" : "Start New Quiz") + '</button><button class="qzBtn alt" data-a="progress">View My Learning Progress</button><button class="qzBtn alt" data-a="home">Back to overview</button>';
+}
+*/ function result(st) {
+S.kind = st.kind; S.page = st.kind;
+const r = st.result || { items: [], cls: cls(st.pct) };
+let h;
+if (st.kind === "mcq") {
+h = scoreCard(st, [["Correct", r.counts.correct, "#16a34a"], ["Incorrect", r.counts.wrong, "#dc2626"], ["Unanswered", r.counts.skipped, "#6b7280"]]) + actions(st) + '<h3 style="margin:16px 0 8px">Review and corrections</h3>';
+r.items.forEach((it, n) => {
+h += '<div class="qzCard"><span class="qzChip">' + (n + 1) + ' · ' + esc(it.topic) + '</span><span class="qzChip" style="background:' + (it.status === "correct" ? "#16a34a" : it.status === "wrong" ? "#dc2626" : "#6b7280") + ';color:#fff">' + it.status + '</span><p style="font-weight:700;line-height:1.5">' + esc(it.q) + '</p>' +
+it.opts.map((o, i) => '<div class="qzOpt ' + (i === it.ans ? "ok" : i === it.given ? "bad" : "") + '"><b>' + "ABCD"[i] + '</b><span>' + esc(o) + '</span></div>').join("") +
+(it.expl ? '<p class="muted" style="line-height:1.55"><b>Explanation:</b> ' + esc(it.expl) + '</p>' : "") + '</div>';
+});
+} else {
+h = scoreCard(st, null);
+if ((r.strengths || []).length) h += '<div class="qzCard"><h3>Strengths</h3><ul>' + r.strengths.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul></div>';
+if ((r.weaknesses || []).length) h += '<div class="qzCard"><h3>Needs work</h3><ul>' + r.weaknesses.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul></div>';
+h += actions(st) + '<h3 style="margin:16px 0 8px">Feedback on each answer</h3>';
+r.items.forEach((it, n) => {
+h += '<div class="qzCard"><span class="qzChip">' + (n + 1) + ' · ' + esc(it.topic) + '</span><span class="qzChip" style="background:' + (COL[cls(it.score / 5 * 100)]) + ';color:#fff">' + it.score + ' / 5</span><p style="font-weight:700;line-height:1.5">' + esc(it.q) + '</p><p class="muted" style="white-space:pre-wrap;line-height:1.5"><b>Your answer:</b> ' + esc(it.given || "No answer") + '</p><p style="line-height:1.55;margin:6px 0"><b>Feedback:</b> ' + esc(it.feedback) + '</p>' +
+((it.missing || []).length ? '<div style="font-size:13px"><b>Missing or incorrect:</b><ul class="qzMiss">' + it.missing.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul></div>' : "") +
+(it.model ? '<p class="muted" style="line-height:1.5"><b>Model answer:</b> ' + esc(it.model) + '</p>' : "") + '</div>';
+});
+}
+body(h);
+window.scrollTo(0, 0);
+S.open[st.kind] = null;
+}
+/* PAGE 4: PROGRESS */
+const ring = (p, c) => { const k = 2 * Math.PI * 52; return '<svg viewBox="0 0 120 120" width="130" height="130"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(128,128,128,.25)" stroke-width="12"/><circle cx="60" cy="60" r="52" fill="none" stroke="' + c + '" stroke-width="12" stroke-linecap="round" stroke-dasharray="' + (k * p / 100) + ' ' + k + '" transform="rotate(-90 60 60)"/><text x="60" y="67" text-anchor="middle" font-size="26" font-weight="800" fill="currentColor">' + Math.round(p) + '%</text></svg>'; };
+function chart(h) {
+const W = 320, H = 150, P = 26;
+const pts = h.map((x, i) => [P + (h.length > 1 ? i * (W - 2 * P) / (h.length - 1) : (W - 2 * P) / 2), H - P - x.pct / 100 * (H - 2 * P)]);
+let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">';
+[0, 50, 100].forEach(v => { const y = H - P - v / 100 * (H - 2 * P); s += '<line x1="' + P + '" x2="' + (W - P) + '" y1="' + y + '" y2="' + y + '" stroke="rgba(128,128,128,.3)"/><text x="2" y="' + (y + 4) + '" font-size="10" fill="currentColor" opacity=".7">' + v + '</text>'; });
+if (pts.length > 1) s += '<polyline fill="none" stroke="#94a3b8" stroke-width="2" points="' + pts.map(p => p.join(",")).join(" ") + '"/>';
+pts.forEach((p, i) => { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="5" fill="' + (h[i].kind === "mcq" ? "#2563eb" : "#8b5cf6") + '"/>'; });
+return s + '</svg><div class="muted"><span style="color:#2563eb">●</span> Multiple choice &nbsp; <span style="color:#8b5cf6">●</span> Written</div>';
+}
+const bars = (arr, col) => arr.length ? arr.map(t => '<div class="qzLine"><span>' + esc(t.topic) + '</span><b>' + t.acc + '%</b></div><div class="qzBar"><i style="width:' + t.acc + '%;background:' + col + '"></i></div>').join("") : '<p class="muted" style="margin:0">Not enough results yet.</p>';
+const TREND = { improving: "↑ Improving", declining: "↓ Declining", stable: "→ Steady", building: "Building your history" };
+function askReset() {
+const o = document.createElement("div");
+o.className = "qzOv";
+o.innerHTML = '<div class="qzCard"><h3>Reset learning progress?</h3><p style="line-height:1.6;margin:0">This clears your scores, test history and mastery for this course only. Your study materials and questions are kept, and new tests will build your evaluation afresh.</p><div class="qzRow"><button class="qzBtn alt" data-x="0">Cancel</button><button class="qzBtn" style="background:#dc2626" data-x="1">Reset</button></div></div>';
+o.addEventListener("click", async e => {
+const b = e.target.closest("[data-x]");
+if (!b) return;
+o.remove();
+if (b.dataset.x !== "1") return;
+busy("Resetting your progress…");
+try {
+await call("/api/quiz/reset", { course: cid() });
+S.open = { mcq: null, written: null };
+progress();
+} catch (err) { showErr(err); }
+});
+document.body.appendChild(o);
+}
+async function progress() {
+leave(); S.page = "progress";
+busy("Loading your learning history…");
+try {
+const p = await call("/api/quiz/progress?course=" + encodeURIComponent(cid())); const all = {};
+if (!p.n) { body('<div class="qzCard qzC"><p>You have not completed a test in this course yet. Take a multiple-choice or written test and your progress will appear here.</p><button class="qzBtn" data-a="mcq">Multiple-Choice Test</button><button class="qzBtn alt" data-a="written">Written-Based Test</button><button class="qzBtn alt" data-a="home">Back to overview</button></div>'); return; }
+const c = COL[p.cls];
+let h = '';
+if (all.courses && all.courses.length > 1) h += '<div class="qzCard"><h3>All your courses</h3><div class="qzLine"><span>Combined learning score</span><b style="color:' + COL[all.cls] + '">' + Math.round(all.overall) + '% · ' + all.cls + '</b></div>' + all.courses.map(x => { const cc = typeof courses !== "undefined" ? courses.find(k => String(k.id) === x.course) : null; return '<div class="qzLine" style="margin-top:6px"><span>' + esc(cc ? cc.name : "Course " + x.course) + '</span><span>' + x.overall + '% · ' + (TREND[x.trend] || "") + '</span></div>'; }).join("") + '</div>';
+h += '<div class="qzCard qzBig"><div class="muted">Overall learning performance</div>' + ring(p.overall, c) + '<div><span class="qzChip" style="background:' + c + ';color:#fff">' + p.cls + '</span><span class="qzChip">' + (TREND[p.trend] || "") + '</span></div><p class="muted" style="margin:10px 0 0;line-height:1.5">' + (p.confidence === "early" ? "Early estimate. A few more tests will make it more reliable." : p.confidence === "growing" ? "Based on a growing history of " + p.n + " tests, with recent results counting more." : "Based on " + p.n + " tests. Recent results count more, and one unusual score cannot swing it.") + '</p></div>';
+h += '<div class="qzTiles"><div><b>' + p.n + '</b>Tests taken</div><div><b>' + (p.nMcq ? p.avgMcq + "%" : "-") + '</b>Multiple choice avg (' + p.nMcq + ')</div><div><b>' + (p.nWritten ? p.avgWritten + "%" : "-") + '</b>Written avg (' + p.nWritten + ')</div></div>';
+if (p.counts) h += '<div class="qzTiles" style="margin-bottom:12px"><div><b>' + p.counts.mastered + '</b>Mastered</div><div><b>' + p.counts.steady + '</b>Always correct</div><div><b>' + p.counts.shaky + '</b>Often missed</div></div>';
+h += '<div class="qzCard"><h3>Performance over time</h3>' + chart(p.history.slice(-20)) + '</div>';
+h += '<div class="qzCard"><h3>Strongest topics</h3>' + bars(p.strong, "#16a34a") + '</div><div class="qzCard"><h3>Weakest topics</h3>' + bars(p.weak, "#dc2626") + '</div>';
+h += '<div class="qzCard"><h3>Improving topics</h3>' + (p.improving.length ? p.improving.map(t => '<div class="qzLine"><span>' + esc(t.topic) + '</span><b style="color:#16a34a">+' + t.delta + ' points</b></div>').join("") : '<p class="muted" style="margin:0">None yet.</p>') + '</div>';
+h += '<div class="qzCard"><h3>Needs more practice</h3>' + bars(p.needs, "#d97706") + '</div>';
+h += '<div class="qzCard"><h3>By difficulty</h3>' + [["Easy", 1], ["Intermediate", 2], ["Difficult", 3]].map(d => { const x = p.diffs[d[1]]; return '<div class="qzLine"><span>' + d[0] + '</span><b>' + (x.n ? x.acc + "%" : "-") + '</b></div><div class="qzBar"><i style="width:' + (x.n ? x.acc : 0) + '%"></i></div>'; }).join("") + '</div>';
+h += '<div class="qzCard" id="qzAI"><h3>Your personal assessment</h3><div class="qzSpin"></div><p class="muted" style="text-align:center;margin:0">Preparing your assessment…</p></div>';
+h += '<button class="qzBtn" style="background:#dc2626" data-a="reset">Reset Learning Progress</button>'; h += '<button class="qzBtn" data-a="mcq">Multiple-Choice Test</button><button class="qzBtn" data-a="written">Written-Based Test</button><button class="qzBtn alt" data-a="home">Back to overview</button>';
+body(h);
+call("/api/quiz/insight", { course: cid() }).then(o => insight(o, p)).catch(() => insight(null, p));
+} catch (e) { showErr(e); }
+}
+function insight(o, p) {
+const el = $("qzAI");
+if (!el || S.page !== "progress") return;
+let h = '<h3>Your personal assessment</h3>';
+if (o && o.summary) {
+h += '<p style="line-height:1.6;margin:0 0 8px">' + esc(o.summary) + '</p>';
+["mastered", "attention", "changes"].forEach(k => { if (o[k]) h += '<p style="line-height:1.6;margin:0 0 8px">' + esc(o[k]) + '</p>'; });
+if ((o.focus || []).length) h += '<b>What to focus on next</b><ul>' + o.focus.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul>';
+} else {
+h += '<p style="line-height:1.6;margin:0 0 8px">Across ' + p.n + ' tests your overall score is ' + Math.round(p.overall) + '% (' + p.cls + '), and your trend is ' + (TREND[p.trend] || "").replace(/^[↑↓→] /, "").toLowerCase() + '.</p>';
+if (p.strong.length) h += '<p style="margin:0 0 8px">Strongest: ' + p.strong.map(t => esc(t.topic)).join(", ") + '.</p>';
+if (p.needs.length) h += '<p style="margin:0 0 8px">Focus on: ' + p.needs.map(t => esc(t.topic)).join(", ") + '.</p>';
+h += '<p class="muted" style="margin:0">The written coaching comment is unavailable right now. These figures come from your recorded results.</p>';
+}
+el.innerHTML = h;
+}
+/* EVENTS */
+$("qzBody").addEventListener("click", e => {
+const b = e.target.closest("[data-a]");
+if (!b) return;
+const a = b.dataset.a, i = Number(b.dataset.i);
+if (a === "home") { leave(); home(); }
+else if (a === "mcq" || a === "written") { leave(); intro(a); }
+else if (a === "progress") progress(); else if (a === "reset") askReset();
+else if (a === "begin" || a === "again") begin(S.kind, "new");
+else if (a === "retry") begin(S.kind, "same", Number(b.dataset.id));
+else if (a === "opt") { setAns(S.run.qs[S.idx].id, i); renderRun(); }
+else if (a === "prev") { S.idx = Math.max(0, S.idx - 1); renderRun(); }
+else if (a === "next") { S.idx = Math.min(S.run.qs.length - 1, S.idx + 1); renderRun(); }
+else if (a === "goto") { S.idx = i; renderRun(); }
+else if (a === "ask") confirmSubmit();
+else if (a === "cancel") { const o = document.querySelector(".qzOv"); if (o) o.remove(); }
+else if (a === "submit") { const o = document.querySelector(".qzOv"); if (o) o.remove(); submit(false); }
+else if (a === "resubmit") { if (S.run) submit(false); else home(); }
+});
+$("qzBody").addEventListener("input", e => {
+if (e.target.id !== "qzText" || !S.run) return;
+setAns(S.run.qs[S.idx].id, e.target.value);
+const w = $("qzWc"); if (w) w.textContent = wc(e.target.value) + " words";
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && S.run) tick(); });
+window.addEventListener("pagehide", () => {
+if (!S.run || S.submitting) return;
+try { fetch(API + "/api/quiz/leave", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json", Authorization: "Bearer " + core.token() }, body: JSON.stringify({ attempt: S.run.id, cname: (course() || {}).name || "" }) }); } catch (_) {}
+});
+/* DELETED MATERIAL DATA */
+const mbox = document.createElement("div");
+mbox.id = "qzDeletedBox";
+mbox.className = "infoSection";
+let mT = null;
+function placeBox() {
+if (mbox.isConnected) return;
+const card = document.querySelector("#courseInfoView .card");
+if (!card) return;
+const secs = card.querySelectorAll(".infoSection");
+const last = secs[secs.length - 1];
+if (last) last.after(mbox); else card.appendChild(mbox);
+}
+function synced() {
+try {
+const m = JSON.parse(localStorage.getItem("ojoola_acct_" + localStorage.getItem("ojoola_uid") + "__ojoola_sync_meta") || "{}");
+return !!(m.ts && m.ts.ojoola_courses);
+} catch (_) { return false; }
+}
+function matItems() {
+const c = course() || {};
+return [...(c.pdfs || []).filter(f => f && f.id).map(f => ({ id: f.id, name: f.name || "PDF", kind: "pdf" })), ...(c.pictures || []).filter(f => f && f.id).map(f => ({ id: f.id, name: f.name || "Picture", kind: "picture" }))].slice(0, 40);
+}
+function drawDeleted(list) {
+if (!list.length) { mbox.innerHTML = ""; return; }
+mbox.innerHTML = '<h3>Deleted Material Data</h3><div class="muted" style="margin-bottom:8px;line-height:1.5">These materials were deleted, but data made from them is still stored and can still appear in quizzes and progress. Erase it to remove it for good.</div>' +
+list.map(x => '<div class="fileItem" style="margin-bottom:8px"><div style="min-width:0"><div style="font-weight:700;overflow-wrap:anywhere">' + (x.kind === "picture" ? "🖼 " : "📄 ") + esc(x.name) + '</div><div class="muted">Data still stored' + (x.qn ? " · " + x.qn + " questions" : "") + '</div></div><button class="danger" data-erase="' + esc(x.id) + '">Erase Data</button></div>').join("") +
+(list.length > 1 ? '<button class="danger" style="width:100%" data-erase="all">Erase All Deleted Material Data</button>' : "");
+}
+function refreshMaterials() {
+clearTimeout(mT);
+mT = setTimeout(async () => {
+const cc = cid();
+if (!cc || $("courseInfoView").classList.contains("hidden")) return;
+placeBox();
+if (!synced()) return;
+try {
+const d = await call("/api/quiz/materials", { course: cc, items: matItems() });
+if (cid() === cc) drawDeleted(d.deleted || []);
+} catch (_) {}
+}, 700);
+}
+function cleanLocal(mids) {
+const set = new Set(mids);
+try {
+const st = JSON.parse(localStorage.getItem("ojoola_file_notes") || "{}") || {};
+let ch = false;
+Object.keys(st).forEach(k => {
+if (set.has(k) || (k.indexOf("pics:") === 0 && k.slice(5).split("|").some(x => set.has(x)))) { delete st[k]; ch = true; }
+});
+if (ch) localStorage.setItem("ojoola_file_notes", JSON.stringify(st));
+} catch (_) {}
+try {
+const lv = JSON.parse(localStorage.getItem("ojoola_live_notes") || "{}") || {};
+if (lv[cid()]) { delete lv[cid()]; localStorage.setItem("ojoola_live_notes", JSON.stringify(lv)); }
+} catch (_) {}
+try { if (window.OjoolaSync) OjoolaSync.flush(); } catch (_) {}
+}
+function askErase(all, fn) {
+const o = document.createElement("div");
+o.className = "qzOv";
+o.innerHTML = '<div class="qzCard"><h3>Erase material data?</h3><p style="line-height:1.6;margin:0">This will permanently remove the stored data associated with ' + (all ? "all deleted materials" : "this material") + ' and prevent it from being used in future quizzes, AI analysis, grading, and current course performance evaluation.</p><div class="qzRow"><button class="qzBtn alt" data-x="0">Cancel</button><button class="qzBtn" style="background:#dc2626" data-x="1">Erase Data</button></div></div>';
+o.addEventListener("click", e => {
+const b = e.target.closest("[data-x]");
+if (!b) return;
+o.remove();
+if (b.dataset.x === "1") fn();
+});
+document.body.appendChild(o);
+}
+mbox.addEventListener("click", e => {
+const b = e.target.closest("[data-erase]");
+if (!b) return;
+const all = b.dataset.erase === "all", id = b.dataset.erase;
+askErase(all, async () => {
+const cc = cid();
+mbox.querySelectorAll("button").forEach(x => { x.disabled = true; });
+try {
+const d = await call("/api/quiz/erase", all ? { course: cc, all: true } : { course: cc, ids: [id] });
+cleanLocal(d.erased || []);
+mbox.innerHTML = '<div class="muted">Material data erased.</div>';
+setTimeout(refreshMaterials, 2000);
+} catch (err) {
+mbox.querySelectorAll("button").forEach(x => { x.disabled = false; });
+alert(err.message || "Could not erase the data. Please try again.");
+}
+});
+});
+const origRCF = window.renderCourseFiles;
+if (typeof origRCF === "function") window.renderCourseFiles = function () { const r = origRCF.apply(this, arguments); refreshMaterials(); return r; };
+})();
