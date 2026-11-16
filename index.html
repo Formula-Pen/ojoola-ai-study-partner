@@ -753,6 +753,14 @@ body.dark .welcome{
   border-radius:9px
 }
 
+.courseHint{
+  font-size:9px;
+  line-height:1.35;
+  color:#64748b;
+  margin-top:6px
+}
+.dark .courseHint{color:#94a3b8}
+
 /* PLAYBACK */
 
 .playback{
@@ -2582,7 +2590,7 @@ const defaultCourses=
   Array.from(
     {length:15},
     (_,i)=>({
-      code:"CSC "+(301+i),
+      code:"",
       name:"Course "+(i+1)
     })
   );
@@ -2616,7 +2624,7 @@ courses=
     (c,i)=>({
       id:c.id??i,
       code:c.code||
-        "CSC "+(301+i),
+        "",
       name:c.name||
         "Course "+(i+1),
       description:
@@ -2637,7 +2645,7 @@ courses=
     })
   );
 
-let currentCourseIndex=null;  async function loadFileData(){   try{     if(navigator.storage&&navigator.storage.persist){navigator.storage.persist();}     for(const c of courses){       for(const f of [...(c.pdfs||[]),...(c.pictures||[])]){         if(f&&f.id&&!f.data){           const d=await idbGet(f.id);           if(d){f.data=d;idbDone.add(f.id);}         }       }     }     if(currentCourseIndex!==null&&courses[currentCourseIndex]){renderCourseFiles();}     saveCourses();   }catch(e){     reportAppError("Could not load files: "+e.message);   } } loadFileData();
+courses.forEach((c,i)=>{if(c.code==="CSC "+(301+i)&&c.name==="Course "+(i+1))c.code=""}); let currentCourseIndex=null;  async function loadFileData(){   try{     if(navigator.storage&&navigator.storage.persist){navigator.storage.persist();}     for(const c of courses){       for(const f of [...(c.pdfs||[]),...(c.pictures||[])]){         if(f&&f.id&&!f.data){           const d=await idbGet(f.id);           if(d){f.data=d;idbDone.add(f.id);}         }       }     }     if(currentCourseIndex!==null&&courses[currentCourseIndex]){renderCourseFiles();}     saveCourses();   }catch(e){     reportAppError("Could not load files: "+e.message);   } } loadFileData();
 
 
 function renderCourses(){
@@ -3224,6 +3232,55 @@ function formatBytes(n){
   u[i];
 }
 
+
+/* DEFAULT COURSE PROMPTS */
+
+function isDefaultCourse(c,i){
+  return (!c.name||c.name==="Course "+(i+1))&&
+         (!c.code||c.code==="CSC "+(301+i));
+}
+
+function renderCourses(){
+  const grid=$("courseGrid");
+  grid.innerHTML="";
+  courses.forEach((c,i)=>{
+    const d=isDefaultCourse(c,i);
+    const b=document.createElement("button");
+    b.className="courseBox";
+    b.innerHTML=
+      (d||!c.code?"":`<div class="courseCode">${escapeHTML(c.code)}</div>`)+
+      `<div class="courseName">${escapeHTML(c.name||"Course "+(i+1))}</div>`+
+      (d?`<div class="courseHint">Update your course info and upload your course materials</div>`:"")+
+      `<div class="courseRef">${c.ref?"Reference enabled":"Reference disabled"}</div>`;
+    b.onclick=()=>openCourse(i);
+    grid.appendChild(b);
+  });
+}
+
+(function(){
+  const NP="Put your course name",CP="Put your course code";
+  const wrap=(n,fn)=>{
+    const o=window[n];
+    window[n]=function(){const r=o.apply(this,arguments);fn();return r};
+  };
+  wrap("openCourseManager",()=>{
+    courses.forEach((c,i)=>{
+      const a=$("managerName"+i),b=$("managerCode"+i);
+      if(a){a.placeholder=NP;if(isDefaultCourse(c,i))a.value=""}
+      if(b){b.placeholder=CP;if(isDefaultCourse(c,i))b.value=""}
+    });
+  });
+  wrap("openCourseEditor",()=>{
+    const c=courses[currentCourseIndex];
+    if(!c)return;
+    $("editCourseName").placeholder=NP;
+    $("editCourseCode").placeholder=CP;
+    if(isDefaultCourse(c,currentCourseIndex)){
+      $("editCourseName").value="";
+      $("editCourseCode").value="";
+    }
+  });
+})();
 
 /* CHAT DATA */
 
