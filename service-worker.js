@@ -1,4 +1,4 @@
-const CACHE_NAME = "ojoola-v12";
+const CACHE_NAME = "ojoola-v13";
 const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 self.addEventListener("notificationclick", event => {
 event.notification.close();
