@@ -14,7 +14,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const S = { page: "home", kind: "mcq", run: null, answers: {}, idx: 0, timer: null, skew: 0, dirty: false, saveT: null, submitting: false, open: { mcq: null, written: null }, bank: { mcq: 0, written: 0 } };
 async function call(path, body) {
 let r;
-try { r = await fetch(API + path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", Authorization: "Bearer " + core.token() }, body: body ? JSON.stringify(body) : undefined }); }
+try { r = await fetch(API + path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", Authorization: "Bearer " + core.token() }, body: body ? JSON.stringify(Object.assign({ cname: (course() || {}).name || "" }, body)) : undefined }); }
 catch (_) { const e = new Error("You seem to be offline. Please check your connection and try again."); e.offline = true; throw e; }
 const d = await r.json().catch(() => ({}));
 if (!r.ok) { const e = new Error(typeof d.error === "string" && !/^Server error/.test(d.error) ? d.error : "Something went wrong. Please try again in a moment."); e.status = r.status; throw e; }
@@ -113,7 +113,7 @@ if (S.page === "home") { leave(); sec.classList.add("hidden"); backToCourseInfo(
 else { leave(); home(); }
 };
 function stopTimer() { clearInterval(S.timer); S.timer = null; }
-function leave() { stopTimer(); if (S.run && S.dirty) flush(); S.run = null; S.submitting = false; }
+function leave() { stopTimer(); if (S.run && S.dirty) flush(); if (S.run && !S.submitting) call("/api/quiz/leave", { attempt: S.run.id }).catch(() => {}); S.run = null; S.submitting = false; }
 function showErr(e) {
 body('<div class="qzCard qzC"><p>' + esc(e.message || "Something went wrong.") + '</p><button class="qzBtn alt" data-a="home">Back to overview</button></div>');
 }
@@ -354,4 +354,98 @@ setAns(S.run.qs[S.idx].id, e.target.value);
 const w = $("qzWc"); if (w) w.textContent = wc(e.target.value) + " words";
 });
 document.addEventListener("visibilitychange", () => { if (!document.hidden && S.run) tick(); });
+window.addEventListener("pagehide", () => {
+if (!S.run || S.submitting) return;
+try { fetch(API + "/api/quiz/leave", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json", Authorization: "Bearer " + core.token() }, body: JSON.stringify({ attempt: S.run.id, cname: (course() || {}).name || "" }) }); } catch (_) {}
+});
+/* DELETED MATERIAL DATA */
+const mbox = document.createElement("div");
+mbox.id = "qzDeletedBox";
+mbox.className = "infoSection";
+let mT = null;
+function placeBox() {
+if (mbox.isConnected) return;
+const card = document.querySelector("#courseInfoView .card");
+if (!card) return;
+const secs = card.querySelectorAll(".infoSection");
+const last = secs[secs.length - 1];
+if (last) last.after(mbox); else card.appendChild(mbox);
+}
+function synced() {
+try {
+const m = JSON.parse(localStorage.getItem("ojoola_acct_" + localStorage.getItem("ojoola_uid") + "__ojoola_sync_meta") || "{}");
+return !!(m.ts && m.ts.ojoola_courses);
+} catch (_) { return false; }
+}
+function matItems() {
+const c = course() || {};
+return [...(c.pdfs || []).filter(f => f && f.id).map(f => ({ id: f.id, name: f.name || "PDF", kind: "pdf" })), ...(c.pictures || []).filter(f => f && f.id).map(f => ({ id: f.id, name: f.name || "Picture", kind: "picture" }))].slice(0, 40);
+}
+function drawDeleted(list) {
+if (!list.length) { mbox.innerHTML = ""; return; }
+mbox.innerHTML = '<h3>Deleted Material Data</h3><div class="muted" style="margin-bottom:8px;line-height:1.5">These materials were deleted, but data made from them is still stored and can still appear in quizzes and progress. Erase it to remove it for good.</div>' +
+list.map(x => '<div class="fileItem" style="margin-bottom:8px"><div style="min-width:0"><div style="font-weight:700;overflow-wrap:anywhere">' + (x.kind === "picture" ? "🖼 " : "📄 ") + esc(x.name) + '</div><div class="muted">Data still stored' + (x.qn ? " · " + x.qn + " questions" : "") + '</div></div><button class="danger" data-erase="' + esc(x.id) + '">Erase Data</button></div>').join("") +
+(list.length > 1 ? '<button class="danger" style="width:100%" data-erase="all">Erase All Deleted Material Data</button>' : "");
+}
+function refreshMaterials() {
+clearTimeout(mT);
+mT = setTimeout(async () => {
+const cc = cid();
+if (!cc || $("courseInfoView").classList.contains("hidden")) return;
+placeBox();
+if (!synced()) return;
+try {
+const d = await call("/api/quiz/materials", { course: cc, items: matItems() });
+if (cid() === cc) drawDeleted(d.deleted || []);
+} catch (_) {}
+}, 700);
+}
+function cleanLocal(mids) {
+const set = new Set(mids);
+try {
+const st = JSON.parse(localStorage.getItem("ojoola_file_notes") || "{}") || {};
+let ch = false;
+Object.keys(st).forEach(k => {
+if (set.has(k) || (k.indexOf("pics:") === 0 && k.slice(5).split("|").some(x => set.has(x)))) { delete st[k]; ch = true; }
+});
+if (ch) localStorage.setItem("ojoola_file_notes", JSON.stringify(st));
+} catch (_) {}
+try {
+const lv = JSON.parse(localStorage.getItem("ojoola_live_notes") || "{}") || {};
+if (lv[cid()]) { delete lv[cid()]; localStorage.setItem("ojoola_live_notes", JSON.stringify(lv)); }
+} catch (_) {}
+try { if (window.OjoolaSync) OjoolaSync.flush(); } catch (_) {}
+}
+function askErase(all, fn) {
+const o = document.createElement("div");
+o.className = "qzOv";
+o.innerHTML = '<div class="qzCard"><h3>Erase material data?</h3><p style="line-height:1.6;margin:0">This will permanently remove the stored data associated with ' + (all ? "all deleted materials" : "this material") + ' and prevent it from being used in future quizzes, AI analysis, grading, and current course performance evaluation.</p><div class="qzRow"><button class="qzBtn alt" data-x="0">Cancel</button><button class="qzBtn" style="background:#dc2626" data-x="1">Erase Data</button></div></div>';
+o.addEventListener("click", e => {
+const b = e.target.closest("[data-x]");
+if (!b) return;
+o.remove();
+if (b.dataset.x === "1") fn();
+});
+document.body.appendChild(o);
+}
+mbox.addEventListener("click", e => {
+const b = e.target.closest("[data-erase]");
+if (!b) return;
+const all = b.dataset.erase === "all", id = b.dataset.erase;
+askErase(all, async () => {
+const cc = cid();
+mbox.querySelectorAll("button").forEach(x => { x.disabled = true; });
+try {
+const d = await call("/api/quiz/erase", all ? { course: cc, all: true } : { course: cc, ids: [id] });
+cleanLocal(d.erased || []);
+mbox.innerHTML = '<div class="muted">Material data erased.</div>';
+setTimeout(refreshMaterials, 2000);
+} catch (err) {
+mbox.querySelectorAll("button").forEach(x => { x.disabled = false; });
+alert(err.message || "Could not erase the data. Please try again.");
+}
+});
+});
+const origRCF = window.renderCourseFiles;
+if (typeof origRCF === "function") window.renderCourseFiles = function () { const r = origRCF.apply(this, arguments); refreshMaterials(); return r; };
 })();
