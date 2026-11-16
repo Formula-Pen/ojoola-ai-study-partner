@@ -3298,6 +3298,47 @@ let stoppedByUser=false;
 let requestToken=0;
 
 
+/* RESET COURSE TO DEFAULT WHEN LEFT BLANK */
+
+function saveCourseNames(){
+  courses.forEach((c,i)=>{
+    const n=$("managerName"+i).value.trim();
+    const code=$("managerCode"+i).value.trim();
+    c.name=n||"Course "+(i+1);
+    c.code=code;
+    if(!n&&!code){
+      c.description="";
+      c.ref=true;
+    }
+  });
+  saveCourses();
+  renderCourses();
+  if(currentCourseIndex!==null){
+    renderCourseInfo();
+    renderCourseChat();
+  }
+  closeCourseManager();
+}
+
+function saveCurrentCourseEdit(){
+  const c=courses[currentCourseIndex];
+  if(!c)return;
+  const n=$("editCourseName").value.trim();
+  const code=$("editCourseCode").value.trim();
+  c.name=n||"Course "+(currentCourseIndex+1);
+  c.code=code;
+  c.description=$("editCourseDescription").value.trim();
+  if(!n&&!code){
+    c.description="";
+    c.ref=true;
+  }
+  saveCourses();
+  renderCourses();
+  renderCourseInfo();
+  renderCourseChat();
+  closeCourseEditor();
+}
+
 /* CHAT RENDERING */
 
 function renderGeneralChat(){
