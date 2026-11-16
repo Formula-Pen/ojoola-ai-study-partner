@@ -114,7 +114,7 @@ else { leave(); home(); }
 };
 function stopTimer() { clearInterval(S.timer); S.timer = null; }
 function leave() { stopTimer(); if (S.run && S.dirty) flush(); if (S.run && !S.submitting) call("/api/quiz/leave", { attempt: S.run.id }).catch(() => {}); S.run = null; S.submitting = false; }
-function showErr(e) {
+function showErr(e) { if (e && e.silent) return;
 body('<div class="qzCard qzC"><p>' + esc(e.message || "Something went wrong.") + '</p><button class="qzBtn alt" data-a="home">Back to overview</button></div>');
 }
 /* PAGE 1: OVERVIEW */
@@ -145,6 +145,30 @@ body('<div class="qzCard"><h3>' + (m ? "Multiple-Choice Test" : "Written-Based T
 '<li>Answers save automatically. If you refresh, your answers and the original deadline are kept.</li></ul></div>' +
 '<button class="qzBtn" data-a="begin">' + (S.open[kind] ? "Resume your test" : "Start test") + '</button><button class="qzBtn alt" data-a="home">Back to overview</button>');
 }
+async function ensureNotes() {
+const c = course();
+const pdfs = (c.pdfs || []).filter(f => f && f.id), pics = (c.pictures || []).filter(f => f && f.id);
+if (!pdfs.length && !pics.length) throw new Error("Add a PDF or picture to this course first, then come back to take a quiz.");
+if (!c.ref) throw new Error("Please switch on “Use course materials as reference” on the course page, then try again.");
+const t0 = Date.now(), pg = S.page;
+for (;;) {
+if (S.page !== pg) { const x = new Error("Cancelled."); x.silent = true; throw x; }
+let pending = 0, got = 0, total = 0;
+const st = getNoteStore();
+pdfs.forEach(f => { const e = noteEntry(st, f.id); if (e && e.parts) got += e.parts.length; if (e && e.total) total += e.total; if (!e || !e.done) pending++; });
+if (!pending) break;
+if (Date.now() - t0 > 240000) { if (got) break; throw new Error("Your PDF is taking a long time to read. Please check your connection and try again in a few minutes."); }
+try { startReading(c); } catch (_) {}
+busy("Reading your study material" + (total ? " (" + got + " of " + total + " sections)" : "") + ". This happens once per file and can take a few minutes for a big PDF…");
+await sleep(2500);
+}
+if (pics.some(f => f.data)) { try { await liveNotes(c); } catch (_) {} }
+const store = getNoteStore(), out = [];
+pdfs.forEach(f => { const e = noteEntry(store, f.id); const t = e && e.parts ? e.parts.join("\n\n") : ""; if (t.trim()) out.push({ ids: [f.id], t }); });
+const pk = "pics:" + pics.filter(f => f.data).map(f => f.id).join("|");
+if (typeof store[pk] === "string" && store[pk].trim()) out.push({ ids: pk.slice(5).split("|"), t: store[pk] });
+return out;
+}
 async function begin(kind, mode, from) {
 S.kind = kind; S.page = kind;
 busy("Preparing your test…");
@@ -153,8 +177,8 @@ try {
 const m = mats();
 let st = await call("/api/quiz/start", { course: cid(), kind, mode, from, ...m });
 if (st.need === "generate") {
-busy("Building your question bank from your study notes. The first time can take up to a minute…");
-try { await call("/api/quiz/generate", { course: cid(), kind, ...m }); }
+const notes = await ensureNotes(); if (S.page !== kind) return; busy("Building your question bank from your study notes. The first time can take up to a minute…");
+try { await call("/api/quiz/generate", { course: cid(), kind, notes, ...m }); }
 catch (e) { if (st.have < N) throw e; }
 st = await call("/api/quiz/start", { course: cid(), kind, mode, from, noGen: true, ...m });
 if (st.need === "generate") throw new Error("Your study materials do not yet give enough questions for a full test. Add more material or wait until your PDF has finished reading, then try again.");
