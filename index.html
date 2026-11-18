@@ -5686,8 +5686,10 @@ function ownerNote(t){
     b.style.cssText="width:100%;margin-top:10px";
     b.textContent="📚 Learning Path (study step by step)";
     b.onclick=open;
-    const live=card.querySelector('button[onclick="proceedToLiveConversation()"]');
-    if(live)live.after(b);else card.appendChild(b);
+    
+    const chat=card.querySelector('button[onclick="proceedToCourseChat()"]');
+    if(chat)chat.before(b);else card.appendChild(b);
+    
   }
   addBtn();
 
@@ -5912,11 +5914,6 @@ function ownerNote(t){
     if(S.page!=="lesson"||S.idx!==i||hidden())return;
     renderLesson(c,load(c),i,false);
     window.scrollTo(0,0);
-  }
-
-  if(isOpen("learnView")){
-      $("lpBack").click();
-      return isOpen("learnView")?"stay":"left";
   }
 
   function renderLesson(c,p,i,just){
