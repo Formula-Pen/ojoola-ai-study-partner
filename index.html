@@ -5592,6 +5592,411 @@ function ownerNote(t){
   };
 })();
 
+/* LEARNING PATH: study your material section by section */
+(function(){
+  const esc=escapeHTML;
+  const css=document.createElement("style");
+  css.textContent=[
+    ".lpCard{background:#fff;border:1px solid #e3e8f1;border-radius:20px;padding:16px;margin-bottom:12px}",
+    "body.dark .lpCard{background:#121c2e;border-color:#26344d}",
+    ".lpBtn{display:block;width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15px;margin-top:10px;background:#2563eb;color:#fff}",
+    ".lpBtn.alt{background:#eaf0ff;color:#2563eb}",
+    "body.dark .lpBtn.alt{background:#1d3158;color:#bfdbfe}",
+    ".lpBtn.ok{background:#16a34a}",
+    ".lpBtn:disabled{opacity:.45}",
+    ".lpStripe{display:flex;gap:3px;margin:10px 0 8px}",
+    ".lpStripe i{flex:1;height:9px;border-radius:5px;background:rgba(128,128,128,.28)}",
+    ".lpStripe i.done{background:#16a34a}",
+    ".lpStripe i.cur{background:#2563eb}",
+    ".lpRow{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:1px solid #e3e8f1;background:transparent;color:inherit;border-radius:16px;padding:12px;margin-bottom:8px}",
+    "body.dark .lpRow{border-color:#26344d}",
+    ".lpRow.done{border-color:#16a34a;background:rgba(22,163,74,.08)}",
+    ".lpRow.cur{border-color:#2563eb;background:rgba(37,99,235,.08)}",
+    ".lpRow.lock{opacity:.6}",
+    ".lpDot{flex:0 0 30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:13px;background:rgba(128,128,128,.22)}",
+    ".lpRow.done .lpDot{background:#16a34a;color:#fff}",
+    ".lpRow.cur .lpDot{background:#2563eb;color:#fff}",
+    ".lpT{font-weight:800;font-size:15px;line-height:1.35}",
+    ".lpM{font-size:12px;color:#64748b;margin-top:3px}",
+    ".lpS{font-size:13px;line-height:1.45;margin-top:5px;opacity:.85}",
+    ".lpHead{font-weight:900;margin:14px 2px 8px;font-size:14px}",
+    ".lpChip{display:inline-block;padding:3px 10px;border-radius:99px;background:#eaf0ff;color:#2563eb;font-size:11px;font-weight:800;margin-right:4px}",
+    "body.dark .lpChip{background:#1d3158;color:#bfdbfe}",
+    ".lpLesson{line-height:1.7;font-size:15px;overflow-wrap:anywhere}",
+    ".lpOpt{display:block;width:100%;text-align:left;border:2px solid #dbe3ef;background:transparent;color:inherit;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:14px;line-height:1.45}",
+    "body.dark .lpOpt{border-color:#334155}",
+    ".lpOpt.ok{border-color:#16a34a;background:rgba(22,163,74,.12)}",
+    ".lpOpt.bad{border-color:#dc2626;background:rgba(220,38,38,.12)}",
+    ".lpC{text-align:center;padding:30px 16px}",
+    ".lpSpin{width:30px;height:30px;margin:0 auto 12px;border:3px solid rgba(37,99,235,.25);border-top-color:#2563eb;border-radius:50%;animation:ojspin .9s linear infinite}"
+  ].join("\n");
+  document.head.appendChild(css);
+
+  const sec=document.createElement("section");
+  sec.id="learnView";
+  sec.className="wrap hidden";
+  sec.innerHTML='<div class="pageHeader"><button class="iconBtn" id="lpBack" aria-label="Back">←</button><div style="flex:1"><h2 id="lpTitle">Learning Path</h2><div class="muted" id="lpSub"></div></div></div><div id="lpBody"></div>';
+  document.querySelector("main").appendChild(sec);
+
+  const S={page:"list",idx:0,building:false};
+  const L=id=>document.getElementById(id);
+  const body=h=>{L("lpBody").innerHTML=h;};
+  const busy=t=>body('<div class="lpCard lpC"><div class="lpSpin"></div><p>'+esc(t)+'</p></div>');
+  const hidden=()=>sec.classList.contains("hidden");
+  const course=()=>courses[currentCourseIndex]||null;
+  const key=c=>"lp:"+c.id;
+  const sig=c=>(c.pdfs||[]).filter(f=>f&&f.id).map(f=>f.id).join("|")+"#"+(c.pictures||[]).filter(f=>f&&f.id).map(f=>f.id).join("|");
+  const load=c=>getNoteStore()[key(c)]||null;
+  function save(c,p){
+    const st=getNoteStore();
+    st[key(c)]=p;
+    try{localStorage.setItem("ojoola_file_notes",JSON.stringify(st));}catch(_){lpToast("Your device is low on storage space.");}
+    try{if(window.OjoolaSync)OjoolaSync.flush();}catch(_){}
+  }
+  function lpToast(t){
+    const e=document.createElement("div");
+    e.textContent=t;
+    e.style.cssText="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);max-width:88vw;background:#14213d;color:#fff;padding:11px 16px;border-radius:14px;font:14px Arial,sans-serif;z-index:100002;box-shadow:0 8px 24px rgba(0,0,0,.3)";
+    document.body.appendChild(e);
+    setTimeout(()=>e.remove(),3200);
+  }
+
+  const origSP=window.setPage;
+  window.setPage=function(){sec.classList.add("hidden");return origSP.apply(this,arguments);};
+
+  function open(){
+    const c=course();
+    if(!c)return;
+    window.setPage("courseInfo",{noHistory:true});
+    $("courseInfoView").classList.add("hidden");
+    sec.classList.remove("hidden");
+    L("lpTitle").textContent=c.name;
+    L("lpSub").textContent=(c.code?c.code+" · ":"")+"Learning Path";
+    show();
+    window.scrollTo(0,0);
+  }
+
+  function addBtn(){
+    if(L("lpOpenBtn"))return;
+    const card=document.querySelector("#courseInfoView .card");
+    if(!card){setTimeout(addBtn,500);return;}
+    const b=document.createElement("button");
+    b.id="lpOpenBtn";
+    b.className="secondary";
+    b.style.cssText="width:100%;margin-top:10px";
+    b.textContent="📚 Learning Path (study step by step)";
+    b.onclick=open;
+    const live=card.querySelector('button[onclick="proceedToLiveConversation()"]');
+    if(live)live.after(b);else card.appendChild(b);
+  }
+  addBtn();
+
+  L("lpBack").onclick=()=>{
+    if(S.page==="list"||S.page==="build"){sec.classList.add("hidden");backToCourseInfo();}
+    else show();
+  };
+
+  function showErr(e){
+    body('<div class="lpCard lpC"><p>'+esc((e&&e.message)||"Something went wrong. Please try again.")+'</p><button class="lpBtn" data-a="list">Try again</button></div>');
+  }
+
+  async function show(){
+    const c=course();
+    if(!c)return;
+    S.page="list";
+    if(!c.ref){body('<div class="lpCard lpC"><p>Please switch on “Use course materials as reference” on the course page, then come back.</p></div>');return;}
+    const hasFiles=(c.pdfs||[]).some(f=>f&&f.id)||(c.pictures||[]).some(f=>f&&f.id);
+    if(!hasFiles){body('<div class="lpCard lpC"><p>Add a PDF or picture to this course first. Your learning path is built from your materials.</p></div>');return;}
+    const p=load(c);
+    if(!p){
+      if(S.building){S.page="build";busy("Building your learning path…");return;}
+      build(c,null);
+      return;
+    }
+    renderList(c,p,p.sig!==sig(c));
+  }
+
+  function stripe(p){
+    const cur=p.sections.findIndex(s=>!s.done);
+    return '<div class="lpStripe">'+p.sections.map((s,i)=>'<i class="'+(s.done?"done":i===cur?"cur":"")+'"></i>').join("")+"</div>";
+  }
+  const pagesLabel=s=>s.pages?(s.pages[0]===s.pages[1]?"Page "+s.pages[0]:"Pages "+s.pages[0]+" to "+s.pages[1]):"";
+  const kindLabel=s=>s.kind.charAt(0).toUpperCase()+s.kind.slice(1);
+
+  function renderList(c,p,changed){
+    S.page="list";
+    const secs=p.sections,n=secs.length,done=secs.filter(s=>s.done).length;
+    const cur=secs.findIndex(s=>!s.done);
+    const pct=n?Math.round(done/n*100):0;
+    const multi=new Set(secs.map(s=>s.fid)).size>1;
+    let h="";
+    if(changed)h+='<div class="lpCard" style="border-color:#f59e0b"><b>Your materials have changed.</b><div class="muted" style="margin-top:4px">Update the path so new or removed material is included. Sections you finished stay ticked.</div><button class="lpBtn" data-a="update">Update learning path</button></div>';
+    h+='<div class="lpCard"><h3 style="margin:0 0 4px">Your learning path</h3><div class="muted">'+done+" of "+n+" sections complete · "+pct+"%</div>"+stripe(p)+'<div class="muted" style="line-height:1.5">Finish each section to unlock the next one, so nothing gets skipped.</div>'+(cur>-1?'<button class="lpBtn" data-a="go" data-i="'+cur+'">'+(done?"Continue: ":"Start: ")+esc(secs[cur].title)+"</button>":'<div style="margin-top:10px;font-weight:800;color:#16a34a">🎉 You have completed every section.</div>')+"</div>";
+    let last=null;
+    secs.forEach((s,i)=>{
+      if(multi&&s.file!==last){h+='<div class="lpHead">📄 '+esc(s.file)+"</div>";last=s.file;}
+      const st=s.done?"done":i===cur?"cur":"lock";
+      const meta=[kindLabel(s),pagesLabel(s),s.done?"Completed":i===cur?"Up next":"Locked"].filter(Boolean).join(" · ");
+      h+='<button class="lpRow '+st+'" data-a="go" data-i="'+i+'"><div class="lpDot">'+(s.done?"✓":st==="lock"?"🔒":i+1)+'</div><div style="flex:1;min-width:0"><div class="lpT">'+esc(s.title)+'</div><div class="lpM">'+esc(meta)+"</div>"+(s.summary?'<div class="lpS">'+esc(s.summary)+"</div>":"")+"</div></button>";
+    });
+    h+='<button class="lpBtn alt" data-a="update">Rebuild learning path</button><button class="lpBtn alt" style="color:#dc2626" data-a="reset">Reset my progress</button>';
+    body(h);
+  }
+
+  async function askSections(text,name){
+    const prompt="You are building a study path for a student from the page-numbered notes below (file: "+name+"). Split the material into an ordered list of study sections that together cover EVERYTHING in the notes, in reading order, so that nothing is skipped. Each section is one chapter, topic or theme and covers at most 8 pages; split bigger chapters into parts such as 'Chapter 3 (part 1)'. Reply with JSON only, in this shape: {\"sections\":[{\"title\":\"short clear title\",\"kind\":\"chapter\",\"from\":12,\"to\":18,\"summary\":\"one or two sentences about what the section covers\"}]}. The kind must be chapter, topic or theme. Use PDF page numbers from the notes; use 0 for from and to when page numbers are unknown. Do not invent content. Write in British English.\n\nNOTES:\n"+text;
+    for(let t=0;t<2;t++){
+      let r;
+      try{r=await callGemini(prompt,[],[],null,null,new AbortController().signal);}
+      catch(e){if(t===1)throw e;continue;}
+      const a=r.indexOf("{"),b=r.lastIndexOf("}");
+      if(a>-1&&b>a){
+        try{
+          const o=JSON.parse(r.slice(a,b+1));
+          if(Array.isArray(o.sections)&&o.sections.length)return o.sections;
+        }catch(_){}
+      }
+    }
+    throw new Error("We couldn't organise your material just now. Please try again in a moment.");
+  }
+
+  async function build(c,old){
+    if(S.building)return;
+    S.building=true;
+    S.page="build";
+    const t0=Date.now();
+    try{
+      const pdfs=(c.pdfs||[]).filter(f=>f&&f.id),pics=(c.pictures||[]).filter(f=>f&&f.id);
+      for(;;){
+        if(S.page!=="build"||hidden())return;
+        let pending=0,got=0,total=0;
+        const st=getNoteStore();
+        pdfs.forEach(f=>{
+          const e=noteEntry(st,f.id);
+          if(e&&e.parts)got+=e.parts.length;
+          if(e&&e.total)total+=e.total;
+          if(!e||!e.done)pending++;
+        });
+        if(!pending)break;
+        if(Date.now()-t0>300000)throw new Error("Your PDF is taking a long time to read. Please check your connection and try again in a few minutes.");
+        try{startReading(c);}catch(_){}
+        busy("Reading your study material"+(total?" ("+got+" of "+total+" sections)":"")+". This happens once per file, and your learning path will appear when it is done…");
+        await sleep(2500);
+      }
+      const store=getNoteStore();
+      const sources=[];
+      pdfs.forEach(f=>{
+        const e=noteEntry(store,f.id);
+        if(e&&e.parts&&e.parts.length)sources.push({fid:f.id,name:f.name||"PDF",parts:e.parts.slice()});
+      });
+      if(pics.some(f=>f.data)){
+        busy("Reading your pictures…");
+        try{await liveNotes(c);}catch(_){}
+        const st2=getNoteStore();
+        const pk="pics:"+pics.filter(f=>f.data).map(f=>f.id).join("|");
+        if(typeof st2[pk]==="string"&&st2[pk].trim())sources.push({fid:"pics",name:"Pictures",parts:[st2[pk]]});
+      }
+      if(!sources.length)throw new Error("We couldn't read your materials yet. Please try again in a moment.");
+      const plan=[];
+      sources.forEach(s=>{
+        let cur=[],len=0;
+        s.parts.forEach(part=>{
+          if(len+part.length>90000&&cur.length){plan.push({s,g:cur});cur=[];len=0;}
+          cur.push(part);
+          len+=part.length;
+        });
+        if(cur.length)plan.push({s,g:cur});
+      });
+      const out=[];
+      for(let k=0;k<plan.length;k++){
+        if(!hidden()&&S.page==="build")busy("Organising “"+plan[k].s.name+"” into study sections ("+(k+1)+" of "+plan.length+")…");
+        const secs=await askSections(plan[k].g.join("\n\n"),plan[k].s.name);
+        secs.forEach(x=>out.push({x,fid:plan[k].s.fid,file:plan[k].s.name}));
+      }
+      const oldDone={};
+      ((old&&old.sections)||[]).forEach(s=>{if(s.done)oldDone[s.fid+"|"+s.title.toLowerCase()]=s.doneAt||1;});
+      const seen=new Set(),sections=[];
+      let n=0;
+      out.forEach(({x,fid,file})=>{
+        const title=String(x.title||"").trim().slice(0,120);
+        if(!title)return;
+        const a=Math.round(Number(x.from)),b=Math.round(Number(x.to));
+        const kind=["chapter","topic","theme"].includes(x.kind)?x.kind:"topic";
+        const summary=String(x.summary||"").slice(0,300);
+        const push=(t,pages)=>{
+          const k=fid+"|"+t.toLowerCase()+"|"+(pages?pages[0]:"");
+          if(seen.has(k))return;
+          seen.add(k);
+          const d=oldDone[fid+"|"+t.toLowerCase()];
+          const s={id:"s"+(++n),fid,file,title:t,kind,pages,summary,done:!!d};
+          if(d)s.doneAt=d;
+          sections.push(s);
+        };
+        if(a>0&&b>=a){
+          const parts=Math.ceil((b-a+1)/8);
+          for(let q=0;q<parts;q++){
+            const from=a+q*8,to=Math.min(b,from+7);
+            push(parts>1?title+" (part "+(q+1)+")":title,[from,to]);
+          }
+        }else push(title,null);
+      });
+      if(!sections.length)throw new Error("We couldn't organise your material just now. Please try again in a moment.");
+      const p={sig:sig(c),built:Date.now(),sections};
+      save(c,p);
+      if(!hidden()&&S.page==="build")renderList(c,p,false);
+    }catch(e){
+      if(!hidden()&&S.page==="build")showErr(e);
+    }finally{
+      S.building=false;
+    }
+  }
+
+  async function makeLesson(c,p,i){
+    const s=p.sections[i];
+    const att=[];
+    let notes="";
+    const f=(c.pdfs||[]).find(x=>x&&x.id===s.fid&&x.data);
+    if(f&&s.pages){
+      try{
+        const src=await pdfDocFor(f);
+        const n=src.getPageCount();
+        const a=Math.min(s.pages[0],n),b=Math.min(s.pages[1],n);
+        const lib=await loadPdfLib();
+        const doc=await lib.PDFDocument.create();
+        const idx=Array.from({length:b-a+1},(_,k)=>a-1+k);
+        (await doc.copyPages(src,idx)).forEach(pg=>doc.addPage(pg));
+        att.push({inline_data:{mime_type:"application/pdf",data:liveBytesToBase64(await doc.save())}});
+      }catch(_){}
+    }
+    if(!att.length){
+      const st=getNoteStore();
+      if(s.fid==="pics"){
+        const k=Object.keys(st).find(x=>x.indexOf("pics:")===0);
+        notes=k?String(st[k]):"";
+      }else{
+        const e=noteEntry(st,s.fid);
+        notes=e&&e.parts?e.parts.join("\n\n"):"";
+      }
+      notes=notes.slice(0,60000);
+    }
+    const prompt="You are Ọjọ́ọ̀la, a patient teacher. Teach the student ONE section of their own study material, using only "+(att.length?"the attached pages":"the notes below")+". Section: "+s.title+". File: "+s.file+"."+(s.pages?" Pages: "+pagesLabel(s)+".":"")+" Write a clear, detailed lesson in British English with these parts, each part starting with a bold heading line: (1) a two-sentence overview; (2) the key ideas explained step by step in simple language; (3) important terms in bold with short definitions; (4) any examples, lists and tables from the material, drawing tables as Markdown tables with a header row and a separator row; (5) an 'In short' list of 3 to 5 bullet points. Mention page numbers where useful. Do not invent anything that is not in the material. After the lesson write a line containing exactly ===QUESTIONS=== and then a JSON array of exactly 3 multiple-choice questions that test this section only, in this shape: [{\"q\":\"question\",\"opts\":[\"option A\",\"option B\",\"option C\",\"option D\"],\"ans\":0,\"why\":\"one sentence explaining the answer\"}] where ans is the index from 0 to 3 of the correct option. Write nothing after the JSON."+(att.length?"":"\n\nNOTES:\n"+notes);
+    const r=await callGemini(prompt,[],att,null,null,new AbortController().signal);
+    const cut=String(r).split(/={3,}\s*QUESTIONS\s*={3,}/i);
+    let qs=[];
+    if(cut[1]){
+      const a=cut[1].indexOf("["),b=cut[1].lastIndexOf("]");
+      if(a>-1&&b>a){try{qs=JSON.parse(cut[1].slice(a,b+1));}catch(_){}}
+    }
+    qs=(Array.isArray(qs)?qs:[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length===4&&Number.isInteger(Number(q.ans))).slice(0,3).map(q=>({q:String(q.q),opts:q.opts.map(String),ans:Number(q.ans),why:String(q.why||"")}));
+    const lesson=ojClean(cut[0]).trim();
+    if(!lesson)throw new Error("We couldn't prepare that lesson just now. Please try again.");
+    s.lesson=lesson;
+    s.qs=qs;
+    s.given=[];
+    save(c,p);
+  }
+
+  async function openSection(i){
+    const c=course();
+    if(!c)return;
+    const p=load(c);
+    if(!p||!p.sections[i])return;
+    if(i>0&&!p.sections[i-1].done){lpToast("Finish the previous section first, so nothing is skipped.");return;}
+    S.page="lesson";
+    S.idx=i;
+    if(!p.sections[i].lesson){
+      busy("Preparing your lesson: "+p.sections[i].title+"…");
+      try{await makeLesson(c,p,i);}
+      catch(e){if(S.page==="lesson"&&S.idx===i&&!hidden()){S.page="list";showErr(e);}return;}
+    }
+    if(S.page!=="lesson"||S.idx!==i||hidden())return;
+    renderLesson(c,load(c),i,false);
+    window.scrollTo(0,0);
+  }
+
+  if(isOpen("learnView")){
+      $("lpBack").click();
+      return isOpen("learnView")?"stay":"left";
+  }
+
+  function renderLesson(c,p,i,just){
+    const s=p.sections[i],n=p.sections.length,done=p.sections.filter(x=>x.done).length;
+    const qs=s.qs||[],given=s.given||[];
+    const answered=!qs.length||qs.every((q,qi)=>given[qi]!==undefined&&given[qi]!==null);
+    let h="";
+    if(just)h+='<div class="lpCard" style="border-color:#16a34a;background:rgba(22,163,74,.1)"><b>✓ Section complete!</b><div class="muted" style="margin-top:4px">'+(i<n-1?"The next section is now unlocked.":"You have finished the whole learning path. Well done!")+"</div></div>";
+    h+='<div class="lpCard"><div class="muted">Section '+(i+1)+" of "+n+" · "+done+" complete</div>"+stripe(p)+'<span class="lpChip">'+esc(kindLabel(s))+"</span>"+(s.pages?'<span class="lpChip">'+esc(pagesLabel(s))+"</span>":"")+(s.done?'<span class="lpChip" style="background:#16a34a;color:#fff">Completed</span>':"")+"</div>";
+    h+='<div class="lpCard"><h3 style="margin:0 0 10px">'+esc(s.title)+'</h3><div class="lpLesson">'+renderMarkdown(s.lesson)+"</div></div>";
+    if(qs.length){
+      h+='<div class="lpCard"><h3 style="margin:0 0 4px">Check yourself</h3><div class="muted">Answer these to '+(s.done?"revise this section.":"unlock the Complete button.")+"</div>";
+      qs.forEach((q,qi)=>{
+        const g=given[qi];
+        h+='<p style="font-weight:700;margin:14px 0 4px;line-height:1.5">'+(qi+1)+". "+esc(q.q)+"</p>";
+        q.opts.forEach((o,oi)=>{
+          let cls="";
+          if(g!==undefined&&g!==null){if(oi===q.ans)cls=" ok";else if(oi===g)cls=" bad";}
+          h+='<button class="lpOpt'+cls+'" data-a="opt" data-q="'+qi+'" data-o="'+oi+'"'+(g!==undefined&&g!==null?" disabled":"")+">"+"ABCD"[oi]+". "+esc(o)+"</button>";
+        });
+        if(g!==undefined&&g!==null&&q.why)h+='<p class="muted" style="margin:6px 0 0;line-height:1.5">'+esc(q.why)+"</p>";
+      });
+      const score=qs.filter((q,qi)=>given[qi]===q.ans).length;
+      if(answered)h+='<p style="font-weight:800;margin:14px 0 0">Score: '+score+" of "+qs.length+(score<qs.length?'. You may want to re-read the lesson.':". Great work!")+'</p><button class="lpBtn alt" data-a="retry">Try the questions again</button>';
+      h+="</div>";
+    }
+    if(!s.done)h+='<button class="lpBtn ok" data-a="complete"'+(answered?"":" disabled")+">Mark section complete ✓</button>"+(answered?"":'<div class="muted" style="text-align:center;margin-top:6px">Answer the check questions above to unlock this.</div>');
+    if(s.done&&i<n-1)h+='<button class="lpBtn" data-a="next">Continue to the next section →</button>';
+    h+='<button class="lpBtn alt" data-a="ask">Ask Ọjọ́ọ̀la about this section</button>';
+    if(i>0)h+='<button class="lpBtn alt" data-a="prev">← Previous section</button>';
+    h+='<button class="lpBtn alt" data-a="list">All sections</button>';
+    body(h);
+  }
+
+  L("lpBody").addEventListener("click",e=>{
+    const b=e.target.closest("[data-a]");
+    if(!b)return;
+    const a=b.dataset.a,c=course();
+    if(!c)return;
+    if(a==="go"){openSection(Number(b.dataset.i));return;}
+    if(a==="update"){build(c,load(c));return;}
+    if(a==="list"){show();return;}
+    if(a==="reset"){
+      if(!confirm("Reset your progress on this path? Your sections stay, but all ticks are cleared."))return;
+      const p=load(c);
+      if(p){p.sections.forEach(s=>{s.done=false;delete s.doneAt;s.given=[];});save(c,p);renderList(c,p,false);}
+      return;
+    }
+    const p=load(c);
+    if(!p)return;
+    const s=p.sections[S.idx];
+    if(!s)return;
+    if(a==="opt"){
+      s.given=s.given||[];
+      s.given[Number(b.dataset.q)]=Number(b.dataset.o);
+      save(c,p);
+      renderLesson(c,p,S.idx,false);
+    }else if(a==="retry"){
+      s.given=[];
+      save(c,p);
+      renderLesson(c,p,S.idx,false);
+    }else if(a==="complete"){
+      s.done=true;
+      s.doneAt=Date.now();
+      save(c,p);
+      renderLesson(c,p,S.idx,true);
+      window.scrollTo(0,0);
+    }else if(a==="next"){openSection(S.idx+1);}
+    else if(a==="prev"){openSection(S.idx-1);}
+    else if(a==="ask"){
+      sec.classList.add("hidden");
+      proceedToCourseChat();
+      setTimeout(()=>{
+        const t=$("courseInput");
+        if(t){t.value="Explain “"+s.title+"” in more detail, with examples.";t.dispatchEvent(new Event("input"));t.focus();}
+      },300);
+    }
+  });
+})();
+
 /* DOWN BUTTONS */
 
 const generalDownBtn=
