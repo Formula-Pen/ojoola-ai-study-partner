@@ -4994,7 +4994,7 @@ ${prompt}`;
       }
     }
 
-    const attachmentSize=
+    notesText+=await addDocPages(course,prompt,attachments,s=>{if(token===requestToken)$(statusId).textContent=s;},controller.signal);     const attachmentSize=
       attachments.reduce(
         (sum,part)=>
           sum+
@@ -5421,10 +5421,10 @@ function lastQuestion(contents){
 
 function ojNow(){   const d=new Date();   let s="";   try{s=d.toLocaleString("en-NG",{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});}catch(_){s=d.toString();}   return "The current date and time on the student's device is "+s+". Always use this for today's date, the day, the month, the year and the time. Never guess them from memory. "; } 
   
-  const ojStyle="Write in British English only: British spelling (colour, organise, programme, centre, maths, behaviour), British phrasing and British date style such as 14 November 2026. Write like a thoughtful person talking to a friend, not like a machine. Use plain, natural words and a mix of short and medium sentences. Do not use em dashes or en dashes at all, and avoid hyphens unless a word truly needs one. Never open with filler such as Certainly, Absolutely, Great question or Of course. Never close with lines such as I hope this helps or Let me know if you need anything else. Avoid stock phrases such as delve, tapestry, it is important to note, in conclusion, game changer, navigate, landscape, unlock and journey. Do not over-format: use short paragraphs, and only use bullet points, bold text or headings when the student asks for them or the content really needs them. Keep emojis rare. Answer first, then explain only as much as is useful. ";
+  const ojStyle="Write in British English only: British spelling (colour, organise, programme, centre, maths, behaviour), British phrasing and British date style such as 14 November 2026. Write like a thoughtful person talking to a friend, not like a machine. Use plain, natural words and a mix of short and medium sentences. Do not use em dashes or en dashes at all, and avoid hyphens unless a word truly needs one. Never open with filler such as Certainly, Absolutely, Great question or Of course. Never close with lines such as I hope this helps or Let me know if you need anything else. Avoid stock phrases such as delve, tapestry, it is important to note, in conclusion, game changer, navigate, landscape, unlock and journey. Do not over-format: use short paragraphs, and only use bullet points, bold text or headings when the student asks for them or the content really needs them. Keep emojis rare. Give detailed, well-organised answers by default: explain the reasoning, give examples and cover the topic properly, using short paragraphs and clear steps. When the student asks for something short (for example brief, concise, short, summary, in one line, TL;DR), give a concise answer of a few sentences instead. When the student asks about an uploaded document, say which page, chapter or section your answer comes from, and describe outlines, themes, bullet lists, tables and footnotes accurately. Never invent page numbers or quotes: if you cannot see the exact text, say so. ";
 
 function ojClean(t){
-  return String(t||"").replace(/\s*—\s*/g,", ").replace(/\s–\s/g,", ");
+  if(window.__verbatim)return String(t||"");return String(t||"").replace(/\s*—\s*/g,", ").replace(/\s–\s/g,", ");
 }
 
 function ojCap(t){
@@ -6554,7 +6554,7 @@ async function streamOneModel(onChunk,model,contents,key,onStatus,signal){
       headers:{"Content-Type":"application/json","x-goog-api-key":key},
       body:JSON.stringify({
         contents,
-        ...(onChunk?chatExtras2(contents):noExtras()),generationConfig:{temperature:.7,maxOutputTokens:4096}
+        ...(onChunk?chatExtras2(contents):noExtras()),generationConfig:{temperature:.7,maxOutputTokens:12000}
       }),
       signal:controller.signal
     });
@@ -6692,7 +6692,7 @@ async function readOneFile(f,signal){
       label="pages "+(a+1)+" to "+b;
     }
     const text=await callGemini(
-      "Study this part of the file ("+label+") carefully. Write detailed study notes capturing all key definitions, concepts, formulas, examples, steps, tables and diagrams. Mention page numbers or headings where you can. Be accurate and do not add outside information.",
+      "This attached file is "+label+" of the original document, so number its pages accordingly. Study it carefully and write structured notes. For EVERY page write: Page N (the PDF page number; add the printed page number in brackets if it is different), the chapter or section it belongs to, its main points and themes, every heading and sub-heading in order, any bullet or numbered lists, any tables (column names and the key rows) and any footnotes or endnotes with their numbers. Say when a chapter or section starts or ends. Keep the exact wording of important definitions. Be accurate and do not add outside information.",
       [],
       [{inline_data:{mime_type:"application/pdf",data}}],
       null,null,signal
@@ -6803,6 +6803,101 @@ async function liveNotes(c){
     if(typeof st[key]==="string")text+=(text?"\n\n":"")+"=== Pictures ===\n"+st[key];
   }
   return text;
+}
+
+/* DOCUMENT LOOKUP: exact pages, word for word, tables and footnotes */
+window.__pdfDocs=window.__pdfDocs||{};
+async function pdfDocFor(f){
+  if(window.__pdfDocs[f.id])return window.__pdfDocs[f.id];
+  const lib=await loadPdfLib();
+  const d=await lib.PDFDocument.load(liveBase64ToBytes(f.data),{ignoreEncryption:true});
+  window.__pdfDocs[f.id]=d;
+  return d;
+}
+
+function pickPdf(files,q,c){
+  const lq=q.toLowerCase();
+  const hit=files.find(f=>{
+    const n=String(f.name||"").toLowerCase().replace(/\.pdf$/,"").replace(/[_\-.]+/g," ").trim();
+    return n.length>=4&&lq.includes(n);
+  });
+  if(hit)return hit;
+  if(window.__rd&&window.__rd.cid===c.id){
+    const r=files.find(f=>f.id===window.__rd.fid);
+    if(r)return r;
+  }
+  return files[0];
+}
+
+function fileNotes(f){
+  const e=noteEntry(getNoteStore(),f.id);
+  return e&&e.parts?e.parts.join("\n\n"):"";
+}
+
+async function findPages(f,q,signal){
+  const notes=fileNotes(f);
+  if(!notes.trim())return null;
+  const r=await callGemini(
+    "Using ONLY the page-numbered notes below, find the pages that contain what the student is asking for. Reply with JSON only, like {\"from\":12,\"to\":14}. Use the PDF page numbers from the notes. If you cannot tell, reply {\"from\":0,\"to\":0}.\n\nSTUDENT REQUEST: "+q+"\n\nNOTES:\n"+notes.slice(0,90000),
+    [],[],null,null,signal
+  );
+  const m=String(r).match(/\{[^}]*\}/);
+  if(!m)return null;
+  let o;
+  try{o=JSON.parse(m[0]);}catch(_){return null;}
+  const a=Math.round(Number(o.from)),b=Math.round(Number(o.to));
+  if(!(a>0&&b>=a))return null;
+  return [a,Math.min(b,a+5)];
+}
+
+async function addDocPages(c,q,attachments,onStatus,signal){
+  window.__verbatim=false;
+  try{
+    if(!c||!c.ref)return"";
+    const files=(c.pdfs||[]).filter(f=>f&&f.id&&f.data);
+    if(!files.length)return"";
+    q=String(q||"");
+    const pg=q.match(/\bpages?\s*(\d{1,4})(?:\s*(?:-|–|to|and|through)\s*(\d{1,4}))?/i);
+    const exact=/(word[\s-]*for[\s-]*word|verbatim|exact(ly)?\b|read\b.{0,25}\b(aloud|out|to me)|quote|reproduce|transcribe)/i.test(q);
+    const whole=/(whole|entire|full|complete)\s+(document|file|pdf|book|text|chapter)|from the (start|beginning)/i.test(q);
+    const cont=q.trim().length<40&&/^\s*(continue|next|go on|keep going|carry on|read on)\b/i.test(q);
+    const named=/\b(chapter|section|unit|appendix|figure|table|footnote)s?\s*([0-9]{1,3}|[ivxl]+)\b/i.test(q);
+    const struct=/\b(tables?|figures?|footnotes?|endnotes?|captions?)\b/i.test(q)&&!/\b(make|create|draw|build|generate|design)\b/i.test(q);
+    const readish=/(read|show|give|quote|text|say|exact|word)/i.test(q);
+    const rd=window.__rd&&window.__rd.cid===c.id&&Date.now()-window.__rd.ts<900000?window.__rd:null;
+    let file=pickPdf(files,q,c),range=null;
+    if(pg){
+      let a=+pg[1],b=pg[2]?+pg[2]:a;
+      if(b<a){const t=a;a=b;b=t;}
+      range=[a,Math.min(b,a+5)];
+    }else if(cont&&rd){
+      file=files.find(f=>f.id===rd.fid)||file;
+      range=[rd.next,rd.next+5];
+    }else if(whole&&exact){
+      range=[1,6];
+    }else if(exact||((named||struct)&&readish)){
+      onStatus?.("Finding the right pages in your document…");
+      range=await findPages(file,q,signal);
+      if(!range)return "\n\n(The app could not locate the exact pages. If the student wants exact wording, kindly ask them for the page number.)";
+    }
+    if(!range)return"";
+    onStatus?.("Opening the exact pages…");
+    const src=await pdfDocFor(file);
+    const n=src.getPageCount();
+    if(range[0]>n)return "\n\n(The file \""+(file.name||"document")+"\" has only "+n+" pages, so page "+range[0]+" does not exist. Tell the student this.)";
+    range[1]=Math.min(range[1],n);
+    const lib=await loadPdfLib();
+    const doc=await lib.PDFDocument.create();
+    const idx=Array.from({length:range[1]-range[0]+1},(_,i)=>range[0]-1+i);
+    (await doc.copyPages(src,idx)).forEach(p=>doc.addPage(p));
+    attachments.push({inline_data:{mime_type:"application/pdf",data:liveBytesToBase64(await doc.save())}});
+    window.__rd={cid:c.id,fid:file.id,next:range[1]+1,ts:Date.now()};
+    window.__verbatim=!!(exact||whole||cont);
+    return "\n\nEXACT PAGES ATTACHED: the attached PDF holds pages "+range[0]+" to "+range[1]+" of \""+(file.name||"the document")+"\" ("+n+" pages in total). The student asked about this document, so you may mention it. Read the attached pages directly and answer from them. Label each page as Page N using the PDF page number, and mention the printed page number too if it is visible and different. If the student wants the exact words (word for word, quote, read it out), copy the text exactly as written: keep the original spelling, punctuation, dashes, capital letters, headings, bullet points and numbering, with no summarising, no paraphrasing and no corrections, and ignore any earlier style rules about British English or dashes for this copied text. Write tables one row per line with | between cells, and give footnotes at the end of their page, marked as footnotes. Otherwise explain the pages in detail, covering the headings, themes, lists, tables and footnotes you see. If the last page ends in the middle of a section, end by saying: say continue to read on. If what the student asked for is not on these pages, say which pages you checked.";
+  }catch(e){
+    if(e&&e.name==="AbortError")throw e;
+    return "";
+  }
 }
 
 /* SAVED NOTES FOR EACH PDF / PICTURE (read once, reused) */
