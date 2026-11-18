@@ -5421,7 +5421,7 @@ function lastQuestion(contents){
 
 function ojNow(){   const d=new Date();   let s="";   try{s=d.toLocaleString("en-NG",{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});}catch(_){s=d.toString();}   return "The current date and time on the student's device is "+s+". Always use this for today's date, the day, the month, the year and the time. Never guess them from memory. "; } 
   
-  const ojStyle="Write in British English only: British spelling (colour, organise, programme, centre, maths, behaviour), British phrasing and British date style such as 14 November 2026. Write like a thoughtful person talking to a friend, not like a machine. Use plain, natural words and a mix of short and medium sentences. Do not use em dashes or en dashes at all, and avoid hyphens unless a word truly needs one. Never open with filler such as Certainly, Absolutely, Great question or Of course. Never close with lines such as I hope this helps or Let me know if you need anything else. Avoid stock phrases such as delve, tapestry, it is important to note, in conclusion, game changer, navigate, landscape, unlock and journey. Do not over-format: use short paragraphs, and only use bullet points, bold text or headings when the student asks for them or the content really needs them. Keep emojis rare. Give detailed, well-organised answers by default: explain the reasoning, give examples and cover the topic properly, using short paragraphs and clear steps. When the student asks for something short (for example brief, concise, short, summary, in one line, TL;DR), give a concise answer of a few sentences instead. When the student asks about an uploaded document, say which page, chapter or section your answer comes from, and describe outlines, themes, bullet lists, tables and footnotes accurately. Never invent page numbers or quotes: if you cannot see the exact text, say so. ";
+  const ojStyle="Write in British English only: British spelling (colour, organise, programme, centre, maths, behaviour), British phrasing and British date style such as 14 November 2026. Write like a thoughtful person talking to a friend, not like a machine. Use plain, natural words and a mix of short and medium sentences. Do not use em dashes or en dashes at all, and avoid hyphens unless a word truly needs one. Never open with filler such as Certainly, Absolutely, Great question or Of course. Never close with lines such as I hope this helps or Let me know if you need anything else. Avoid stock phrases such as delve, tapestry, it is important to note, in conclusion, game changer, navigate, landscape, unlock and journey. Do not over-format: use short paragraphs, and only use bullet points, bold text or headings when the student asks for them or the content really needs them. Keep emojis rare. When the student asks for a table, or when the content is a comparison or data that fits columns, draw it as a proper Markdown table: a header row, then a separator row made of dashes such as |---|---|, then one row per line with a pipe character between cells. Put a blank line before and after the table, keep every row on a single line, and never put a table inside a code block. Give detailed, well-organised answers by default: explain the reasoning, give examples and cover the topic properly, using short paragraphs and clear steps. When the student asks for something short (for example brief, concise, short, summary, in one line, TL;DR), give a concise answer of a few sentences instead. When the student asks about an uploaded document, say which page, chapter or section your answer comes from, and describe outlines, themes, bullet lists, tables and footnotes accurately. Never invent page numbers or quotes: if you cannot see the exact text, say so. ";
 
 function ojClean(t){
   if(window.__verbatim)return String(t||"");return String(t||"").replace(/\s*—\s*/g,", ").replace(/\s–\s/g,", ");
@@ -5530,6 +5530,67 @@ function ownerNote(t){
     d.textContent="Admin note (tap to close): "+t;
   }catch(_){}
 }
+
+/* CLEAN TABLES IN ANSWERS */
+(function(){
+  const st=document.createElement("style");
+  st.textContent=".ojTblWrap{overflow-x:auto;margin:10px 0;border:1px solid rgba(128,128,128,.35);border-radius:10px;-webkit-overflow-scrolling:touch}.ojTbl{border-collapse:collapse;width:100%;font-size:13px;line-height:1.45}.ojTbl th,.ojTbl td{border:1px solid rgba(128,128,128,.3);padding:8px 10px;text-align:left;vertical-align:top;min-width:80px}.ojTbl th{background:rgba(37,99,235,.14);font-weight:800}.ojTbl tbody tr:nth-child(even){background:rgba(128,128,128,.08)}";
+  document.head.appendChild(st);
+
+  const isRow=l=>/^\s*\|/.test(l)&&(l.match(/\|/g)||[]).length>=2;
+  const isSep=l=>/^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(l);
+
+  function splitTables(text){
+    const parts=String(text||"").split(/(```[\s\S]*?```)/g);
+    const tables=[];
+    const out=parts.map((p,idx)=>{
+      if(idx%2===1)return p;
+      const lines=p.split("\n"),res=[];
+      let i=0;
+      while(i<lines.length){
+        if(isRow(lines[i])){
+          let j=i;
+          while(j<lines.length&&isRow(lines[j]))j++;
+          if(j-i>=2){
+            res.push("\nOJTABLEPH"+tables.length+"X\n");
+            tables.push(lines.slice(i,j));
+            i=j;
+            continue;
+          }
+        }
+        res.push(lines[i]);
+        i++;
+      }
+      return res.join("\n");
+    });
+    return {text:out.join(""),tables};
+  }
+
+  function tableHTML(block){
+    const cells=l=>{
+      let s=l.trim();
+      if(s[0]==="|")s=s.slice(1);
+      if(s.slice(-1)==="|")s=s.slice(0,-1);
+      return s.split("|").map(x=>x.trim());
+    };
+    const f=t=>escapeHTML(t).replace(/&lt;br\s*\/?&gt;/gi,"<br>").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+    const head=cells(block[0]);
+    const body=block.slice(1).filter(l=>!isSep(l)).map(cells);
+    const n=Math.max(head.length,...body.map(r=>r.length));
+    const pad=r=>{const a=r.slice();while(a.length<n)a.push("");return a;};
+    return '<div class="ojTblWrap"><table class="ojTbl"><thead><tr>'+pad(head).map(c=>"<th>"+f(c)+"</th>").join("")+"</tr></thead><tbody>"+body.map(r=>"<tr>"+pad(r).map(c=>"<td>"+f(c)+"</td>").join("")+"</tr>").join("")+"</tbody></table></div>";
+  }
+
+  const orig=renderMarkdown;
+  window.renderMarkdown=function(text){
+    const t=splitTables(text);
+    let html=orig(t.text);
+    t.tables.forEach((b,i)=>{
+      html=html.replace(new RegExp("(?:<br>)*OJTABLEPH"+i+"X(?:<br>)*"),()=>tableHTML(b));
+    });
+    return html;
+  };
+})();
 
 /* DOWN BUTTONS */
 
@@ -6893,7 +6954,7 @@ async function addDocPages(c,q,attachments,onStatus,signal){
     attachments.push({inline_data:{mime_type:"application/pdf",data:liveBytesToBase64(await doc.save())}});
     window.__rd={cid:c.id,fid:file.id,next:range[1]+1,ts:Date.now()};
     window.__verbatim=!!(exact||whole||cont);
-    return "\n\nEXACT PAGES ATTACHED: the attached PDF holds pages "+range[0]+" to "+range[1]+" of \""+(file.name||"the document")+"\" ("+n+" pages in total). The student asked about this document, so you may mention it. Read the attached pages directly and answer from them. Label each page as Page N using the PDF page number, and mention the printed page number too if it is visible and different. If the student wants the exact words (word for word, quote, read it out), copy the text exactly as written: keep the original spelling, punctuation, dashes, capital letters, headings, bullet points and numbering, with no summarising, no paraphrasing and no corrections, and ignore any earlier style rules about British English or dashes for this copied text. Write tables one row per line with | between cells, and give footnotes at the end of their page, marked as footnotes. Otherwise explain the pages in detail, covering the headings, themes, lists, tables and footnotes you see. If the last page ends in the middle of a section, end by saying: say continue to read on. If what the student asked for is not on these pages, say which pages you checked.";
+    return "\n\nEXACT PAGES ATTACHED: the attached PDF holds pages "+range[0]+" to "+range[1]+" of \""+(file.name||"the document")+"\" ("+n+" pages in total). The student asked about this document, so you may mention it. Read the attached pages directly and answer from them. Label each page as Page N using the PDF page number, and mention the printed page number too if it is visible and different. If the student wants the exact words (word for word, quote, read it out), copy the text exactly as written: keep the original spelling, punctuation, dashes, capital letters, headings, bullet points and numbering, with no summarising, no paraphrasing and no corrections, and ignore any earlier style rules about British English or dashes for this copied text. Write tables as Markdown tables (a header row, a separator row like |---|---|, then one row per line), and give footnotes at the end of their page, marked as footnotes. Otherwise explain the pages in detail, covering the headings, themes, lists, tables and footnotes you see. If the last page ends in the middle of a section, end by saying: say continue to read on. If what the student asked for is not on these pages, say which pages you checked.";
   }catch(e){
     if(e&&e.name==="AbortError")throw e;
     return "";
