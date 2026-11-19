@@ -5746,7 +5746,7 @@ function ownerNote(t){
   }
 
   async function askSections(text,name){
-    const prompt="You are building a study path for a student from the page-numbered notes below (file: "+name+"). Split the material into an ordered list of study sections that together cover EVERYTHING in the notes, in reading order, so that nothing is skipped. Each section is one chapter, topic or theme and covers at most 8 pages; split bigger chapters into parts such as 'Chapter 3 (part 1)'. Reply with JSON only, in this shape: {\"sections\":[{\"title\":\"short clear title\",\"kind\":\"chapter\",\"from\":12,\"to\":18,\"summary\":\"one or two sentences about what the section covers\"}]}. The kind must be chapter, topic or theme. Use PDF page numbers from the notes; use 0 for from and to when page numbers are unknown. Do not invent content. Write in British English.\n\nNOTES:\n"+text;
+    const prompt="You are building a study path for a student from the page-numbered notes below (file: "+name+"). Split the material into an ordered list of study sections that together cover EVERYTHING in the notes, in reading order, so that nothing is skipped. Each section is one chapter, topic or theme and covers at most 5 pages; split bigger chapters into parts such as 'Chapter 3 (part 1)'. Reply with JSON only, in this shape: {\"sections\":[{\"title\":\"short clear title\",\"kind\":\"chapter\",\"from\":12,\"to\":18,\"summary\":\"one or two sentences about what the section covers\"}]}. The kind must be chapter, topic or theme. Use PDF page numbers from the notes; use 0 for from and to when page numbers are unknown. Do not invent content. Write in British English.\n\nNOTES:\n"+text;
     for(let t=0;t<2;t++){
       let r;
       try{r=await callGemini(prompt,[],[],null,null,new AbortController().signal);}
@@ -5835,9 +5835,9 @@ function ownerNote(t){
           sections.push(s);
         };
         if(a>0&&b>=a){
-          const parts=Math.ceil((b-a+1)/8);
+          const parts=Math.ceil((b-a+1)/5);
           for(let q=0;q<parts;q++){
-            const from=a+q*8,to=Math.min(b,from+7);
+            const from=a+q*5,to=Math.min(b,from+4);
             push(parts>1?title+" (part "+(q+1)+")":title,[from,to]);
           }
         }else push(title,null);
@@ -8519,6 +8519,49 @@ input,textarea{font-size:14px;padding:10px 12px}
       btn.classList.add("hidden");
     };
   }
+})();
+
+    /* COMPLETE LESSONS + QUESTIONS ONLY FROM THE LESSON TEXT */
+(function(){
+const prev=window.callGemini;
+const QFORMAT='a JSON array of exactly 5 questions. The first 3 are multiple choice, each in this shape: {"q":"question","opts":["option A","option B","option C","option D"],"ans":0,"why":"one sentence explaining the answer"} where ans is the index from 0 to 3 of the correct option. The last 2 are fill in the gap questions, each in this shape: {"type":"gap","q":"a sentence copied from the lesson with the missing key word, phrase or end of the sentence replaced by ____","ans":["the exact missing words","an acceptable alternative"],"why":"one sentence explaining the answer"}. The missing part must be a key term or short phrase of no more than 8 words. Write only the JSON array.';
+window.callGemini=async function(prompt){
+const args=Array.prototype.slice.call(arguments);
+if(typeof prompt!=="string"||prompt.indexOf("Teach the student ONE section")<0)return prev.apply(this,args);
+const w=prompt.indexOf(" Write a clear, detailed lesson");
+if(w<0)return prev.apply(this,args);
+const n=prompt.lastIndexOf("\n\nNOTES:\n");
+const header=prompt.slice(0,w);
+const tail=n>-1?prompt.slice(n):"";
+args[0]=header+" Write a COMPLETE lesson in British English that covers EVERY piece of information in this material, so the student can learn the whole section from your lesson alone and miss nothing. Go through the material in reading order, page by page. Include every heading, definition, term, fact, name, date, number, formula, rule, step, example, case, list item (every single item) and table (as a full Markdown table with every row, a header row and a separator row), plus any footnotes or notes. Never summarise away details and never skip something because it looks minor. Explain each point in simple language but keep every specific detail. Structure: a two-sentence overview; then the full explanation under bold headings that follow the material's own headings; then a 'Key terms' list with definitions; then an 'In short' list of the main points. Mention page numbers. Do not add anything that is not in the material. Formatting rules: use **double asterisks** only around headings and key terms, use "- " at the start of every bullet point, and never use underscores, horizontal lines or backslashes for formatting. Write only the lesson, with no questions."+tail;
+const lesson=String(await prev.apply(this,args)).split(/={3,}\s*QUESTIONS\s*={3,}/i)[0].replace(/^[ \x09]*[*•][ \x09]+/gm,"- ").replace(/^[ \x09]*(?:-{3,}|\*{3,}|_{3,})[ \x09]*$/gm,"").replace(/\x5C([*_#])/g,"$1").replace(/(^|\s)_+([^_\x0A]+?)_+(?=\s|[.,;:!?]|$)/g,"$1$2").trim();
+if(!lesson)return lesson;
+const qp="Below is a lesson. Using ONLY the lesson text, write "+QFORMAT+" Every question must be answerable from the lesson text alone. Never use outside knowledge and never ask about anything the lesson does not state. Spread the questions across different parts of the lesson, test the most important points, and write in British English.\n\nLESSON:\n"+lesson.slice(0,60000);
+let qtext="";
+for(let t=0;t<2&&!qtext;t++){
+try{
+const r=await prev.call(this,qp,[],[],null,null,args[5]||new AbortController().signal);
+const a=r.indexOf("["),b=r.lastIndexOf("]");
+if(a>-1&&b>a){JSON.parse(r.slice(a,b+1));qtext=r.slice(a,b+1);}
+}catch(e){if(e&&e.name==="AbortError")throw e;}
+}
+return lesson+"\n===QUESTIONS===\n"+(qtext||"[]");
+};
+})();
+
+  /* TIDY MARKDOWN BEFORE DISPLAY */
+(function(){
+const prev=window.renderMarkdown;
+window.renderMarkdown=function(text){
+  let t=String(text||"");
+  t=t.split(/(```[\s\S]*?(?:```|$))/g).map((p,i)=>i%2?p:p
+    .replace(/^[ \x09]*(?:-{3,}|\*{3,}|_{3,})[ \x09]*$/gm,"")
+    .replace(/^[ \x09]*[-*•][ \x09]+/gm,"• ")
+    .replace(/\x5C([*_#])/g,"$1")
+    .replace(/(^|\s)_+([^_\x0A]+?)_+(?=\s|[.,;:!?]|$)/g,"$1$2")
+  ).join("");
+  return prev(t);
+};
 })();
 </script>
 
