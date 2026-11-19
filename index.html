@@ -5889,7 +5889,7 @@ function ownerNote(t){
       const a=cut[1].indexOf("["),b=cut[1].lastIndexOf("]");
       if(a>-1&&b>a){try{qs=JSON.parse(cut[1].slice(a,b+1));}catch(_){}}
     }
-    qs=(Array.isArray(qs)?qs:[]).filter(q=>q&&q.q&&Array.isArray(q.opts)&&q.opts.length===4&&Number.isInteger(Number(q.ans))).slice(0,3).map(q=>({q:String(q.q),opts:q.opts.map(String),ans:Number(q.ans),why:String(q.why||"")}));
+    qs=window.ojNormQs(qs);
     const lesson=ojClean(cut[0]).trim();
     if(!lesson)throw new Error("We couldn't prepare that lesson just now. Please try again.");
     s.lesson=lesson;
@@ -5929,14 +5929,14 @@ function ownerNote(t){
       qs.forEach((q,qi)=>{
         const g=given[qi];
         h+='<p style="font-weight:700;margin:14px 0 4px;line-height:1.5">'+(qi+1)+". "+esc(q.q)+"</p>";
-        q.opts.forEach((o,oi)=>{
+        (q.opts||[]).forEach((o,oi)=>{
           let cls="";
           if(g!==undefined&&g!==null){if(oi===q.ans)cls=" ok";else if(oi===g)cls=" bad";}
           h+='<button class="lpOpt'+cls+'" data-a="opt" data-q="'+qi+'" data-o="'+oi+'"'+(g!==undefined&&g!==null?" disabled":"")+">"+"ABCD"[oi]+". "+esc(o)+"</button>";
         });
-        if(g!==undefined&&g!==null&&q.why)h+='<p class="muted" style="margin:6px 0 0;line-height:1.5">'+esc(q.why)+"</p>";
+        if(q.type==="gap")h+=window.ojGapHTML(q,qi,g);if(g!==undefined&&g!==null&&q.why)h+='<p class="muted" style="margin:6px 0 0;line-height:1.5">'+esc(q.why)+"</p>";
       });
-      const score=qs.filter((q,qi)=>given[qi]===q.ans).length;
+      const score=qs.filter((q,qi)=>window.ojQOk(q,given[qi])).length;
       if(answered)h+='<p style="font-weight:800;margin:14px 0 0">Score: '+score+" of "+qs.length+(score<qs.length?'. You may want to re-read the lesson.':". Great work!")+'</p><button class="lpBtn alt" data-a="retry">Try the questions again</button>';
       h+="</div>";
     }
@@ -5969,6 +5969,15 @@ function ownerNote(t){
     if(a==="opt"){
       s.given=s.given||[];
       s.given[Number(b.dataset.q)]=Number(b.dataset.o);
+      save(c,p);
+      renderLesson(c,p,S.idx,false);
+    }else if(a==="gap"){
+      const qi=Number(b.dataset.q);
+      const inp=document.getElementById("gapIn"+qi);
+      const v=inp?inp.value.trim():"";
+      if(!v){lpToast("Type your answer first.");return;}
+      s.given=s.given||[];
+      s.given[qi]=v;
       save(c,p);
       renderLesson(c,p,S.idx,false);
     }else if(a==="retry"){
@@ -7948,6 +7957,300 @@ input,textarea{font-size:14px;padding:10px 12px}
 .ojCode pre.ojPre{padding:9px 10px;font-size:11.5px;line-height:1.5;tab-size:2;white-space:pre-wrap;overflow-wrap:anywhere}
 `;
   document.head.appendChild(st);
+})();
+
+  /* SEARCH FIX, LESSON READ ALOUD WITH SPEED, 5 QUESTION LESSONS */
+(function(){
+  /* ---------- 1. CHAT SEARCH ---------- */
+  window.generalSearchMatches=[];
+  window.generalSearchIndex=-1;
+  window.courseSearchMatches=[];
+  window.courseSearchIndex=-1;
+
+  window.applySearch=function(type,q,matches){
+    const box=$(type==="general"?"generalMsgs":"courseMsgs");
+    if(!box||!matches.length)return;
+    const els=box.querySelectorAll(".message");
+    const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");
+    matches.forEach(i=>{
+      const el=els[i];
+      if(!el)return;
+      const mt=el.querySelector(".messageText");
+      if(!mt)return;
+      const w=document.createTreeWalker(mt,NodeFilter.SHOW_TEXT);
+      const nodes=[];
+      while(w.nextNode())nodes.push(w.currentNode);
+      nodes.forEach(n=>{
+        const t=n.nodeValue;
+        re.lastIndex=0;
+        if(!re.test(t))return;
+        re.lastIndex=0;
+        const frag=document.createDocumentFragment();
+        let last=0,m;
+        while((m=re.exec(t))){
+          if(m[0]===""){re.lastIndex++;continue;}
+          if(m.index>last)frag.appendChild(document.createTextNode(t.slice(last,m.index)));
+          const mk=document.createElement("mark");
+          mk.className="highlight";
+          mk.textContent=m[0];
+          frag.appendChild(mk);
+          last=m.index+m[0].length;
+        }
+        if(last<t.length)frag.appendChild(document.createTextNode(t.slice(last)));
+        n.parentNode.replaceChild(frag,n);
+      });
+    });
+    moveSearch(type,1);
+  };
+  $("generalSearch").addEventListener("input",()=>runGeneralSearch());
+  $("courseSearch").addEventListener("input",()=>runCourseSearch());
+
+  /* ---------- 2. READ ALOUD WITH SPEED ---------- */
+  const st=document.createElement("style");
+  st.textContent=`
+.ojSpeed{width:auto;border:1px solid #dbe3ef;border-radius:8px;padding:4px 6px;font-size:12px;background:transparent;color:inherit}
+#lpListen{position:sticky;z-index:12;margin-bottom:12px;padding:10px 12px}
+`;
+  document.head.appendChild(st);
+
+  const getSpeed=()=>{
+    const v=Number(localStorage.getItem("ojoola_speech_speed"));
+    return v>=.5&&v<=3?v:1;
+  };
+
+  window.createPlaybackUI=function(container){
+    container.querySelector(".playback")?.remove();
+    const p=document.createElement("div");
+    p.className="playback";
+    const sp=String(getSpeed());
+    const opts=[["0.75","0.75x"],["1","Normal"],["1.25","1.25x"],["1.5","1.5x"],["2","2x"]]
+      .map(o=>'<option value="'+o[0]+'"'+(o[0]===sp?" selected":"")+">"+o[1]+"</option>").join("");
+    p.innerHTML=
+      '<div class="playbackTop">'+
+      '<button title="Rewind 10 seconds" onclick="rewindSpeech()">↶10</button>'+
+      '<button id="speechPlayBtn" title="Play or pause" onclick="toggleSpeechPlay()">❚❚</button>'+
+      '<button title="Forward 10 seconds" onclick="forwardSpeech()">10↷</button>'+
+      '<input id="speechSeek" type="range" min="0" max="100" value="0" oninput="seekSpeech(this.value)">'+
+      '<span id="speechTime" class="time">0:00 / 0:00</span>'+
+      '<button title="Stop" onclick="stopSpeech()">■</button>'+
+      '</div>'+
+      '<div class="playbackTop" style="margin-top:6px;justify-content:space-between"><span class="muted">Speed</span>'+
+      '<select class="ojSpeed" onchange="setSpeechSpeed(this.value)">'+opts+'</select></div>';
+    container.appendChild(p);
+  };
+
+  window.setSpeechSpeed=function(v){
+    v=Number(v)||1;
+    try{localStorage.setItem("ojoola_speech_speed",String(v));}catch(_){}
+    document.querySelectorAll(".ojSpeed").forEach(s=>{s.value=String(v);});
+    const p=speechPlayer;
+    if(p&&p.text&&p.speaking&&!p.paused){pauseSpeech();toggleSpeechPlay();}
+  };
+
+  window.startSpeechTimer=function(){
+    clearInterval(speechPlayer.timer);
+    speechPlayer.timer=setInterval(()=>{
+      const p=speechPlayer;
+      if(!p.speaking||p.paused)return;
+      const limit=p.starts[p.index+1]!==undefined?p.starts[p.index+1]:p.total;
+      p.position=Math.min(limit,p.position+getSpeed());
+      updateSpeechUI();
+    },1000);
+  };
+
+  window.speakChunk=function(delay,off){
+    const p=speechPlayer;
+    if(!p.text)return;
+    if(p.index>=p.chunks.length){finishSpeech();return;}
+    off=off||0;
+    const token=p.token,i=p.index,whole=p.chunks[i];
+    const u=new SpeechSynthesisUtterance(whole.slice(off));
+    u.lang="en-US";
+    u.rate=getSpeed();
+    p.off=off;
+    p.t0=Date.now();
+    p.heard=false;
+    u.onboundary=e=>{
+      if(token!==speechPlayer.token)return;
+      if(typeof e.charIndex==="number"){speechPlayer.off=off+e.charIndex;speechPlayer.heard=true;}
+    };
+    u.onend=()=>{
+      if(token!==speechPlayer.token||speechPlayer.paused)return;
+      speechPlayer.index=i+1;
+      speechPlayer.off=0;
+      speechPlayer.position=speechPlayer.starts[i+1]!==undefined?speechPlayer.starts[i+1]:speechPlayer.total;
+      speakChunk(0,0);
+    };
+    u.onerror=e=>{
+      if(token!==speechPlayer.token)return;
+      if(e.error==="canceled"||e.error==="interrupted")return;
+      pauseSpeech();
+    };
+    p.utterance=u;
+    p.position=p.starts[i]||0;
+    p.speaking=true;
+    p.paused=false;
+    setTimeout(()=>{
+      if(token!==speechPlayer.token||speechPlayer.paused)return;
+      speechSynthesis.speak(u);
+    },delay);
+    startSpeechTimer();
+    updateSpeechUI();
+  };
+
+  window.pauseSpeech=function(){
+    const p=speechPlayer;
+    if(!p.text||p.paused)return;
+    const whole=p.chunks[p.index]||"";
+    if(!p.heard){
+      const est=Math.floor((p.off||0)+(Date.now()-(p.t0||Date.now()))/1000*13*getSpeed())-12;
+      const sp=whole.lastIndexOf(" ",Math.max(0,est));
+      p.off=sp>0?sp+1:0;
+    }else{
+      const sp=whole.lastIndexOf(" ",Math.max(0,(p.off||0)-2));
+      p.off=sp>0?sp+1:0;
+    }
+    p.token++;
+    p.paused=true;
+    p.speaking=true;
+    clearInterval(p.timer);
+    p.timer=null;
+    try{speechSynthesis.cancel();}catch(_){}
+    updateSpeechUI();
+  };
+
+  /* ---------- 3. LISTEN BAR ON LESSONS (reads the lesson only, never the questions) ---------- */
+  const sec=$("learnView");
+  if(sec){
+    const bar=document.createElement("div");
+    bar.id="lpListen";
+    bar.className="card hidden";
+    bar.innerHTML='<div class="flex between"><b>🔊 Listen to this lesson</b><button type="button" class="secondary" id="lpListenBtn">Start listening</button></div><div id="lpListenHost"></div>';
+    sec.insertBefore(bar,$("lpBody"));
+    const host=bar.querySelector("#lpListenHost");
+    const btn=bar.querySelector("#lpListenBtn");
+    let lessonText="";
+
+    function lessonPlain(el){
+      const c=el.cloneNode(true);
+      c.querySelectorAll(".ojCode").forEach(x=>x.replaceWith(" The code is shown on screen. "));
+      c.querySelectorAll("br").forEach(x=>x.replaceWith("\n"));
+      c.querySelectorAll("td,th").forEach(x=>x.append(", "));
+      c.querySelectorAll("tr").forEach(x=>x.append("\n"));
+      let t=c.textContent||"";
+      t=t.replace(/•/g,"").replace(/[ \t]+/g," ");
+      t=t.replace(/([^.!?:;,\n])[ \t]*\n+/g,"$1. ").replace(/\n+/g," ");
+      return t.replace(/\s+/g," ").trim();
+    }
+
+    const origStop=window.stopSpeech;
+    window.stopSpeech=function(){
+      const r=origStop.apply(this,arguments);
+      if(!host.querySelector(".playback"))btn.classList.remove("hidden");
+      return r;
+    };
+
+    btn.onclick=()=>{
+      if(!lessonText)return;
+      toggleReadAloud(lessonText,host);
+      btn.classList.add("hidden");
+    };
+
+    function syncLesson(){
+      const les=document.querySelector("#lpBody .lpLesson");
+      if(!les){
+        bar.classList.add("hidden");
+        if(speechPlayer.container===host)stopSpeech();
+        lessonText="";
+        return;
+      }
+      const t=lessonPlain(les);
+      bar.style.top=($("topHeader").offsetHeight+6)+"px";
+      bar.classList.remove("hidden");
+      if(t!==lessonText){
+        if(speechPlayer.container===host)stopSpeech();
+        lessonText=t;
+        btn.classList.remove("hidden");
+      }
+    }
+    new MutationObserver(syncLesson).observe($("lpBody"),{childList:true});
+    new MutationObserver(()=>{
+      if(sec.classList.contains("hidden")&&speechPlayer.container===host)stopSpeech();
+    }).observe(sec,{attributes:true,attributeFilter:["class"]});
+  }
+
+  /* ---------- 4. FIVE QUESTIONS: 3 MULTIPLE CHOICE + 2 FILL IN THE GAP ---------- */
+  const NEWQ='a JSON array of exactly 5 questions that test this section only. The first 3 are multiple choice, each in this shape: {"q":"question","opts":["option A","option B","option C","option D"],"ans":0,"why":"one sentence explaining the answer"} where ans is the index from 0 to 3 of the correct option. The last 2 are fill in the gap questions, each in this shape: {"type":"gap","q":"a sentence from the lesson with the missing key word, phrase or end of the sentence replaced by ____","ans":["the exact missing words","an acceptable alternative"],"why":"one sentence explaining the answer"}. The missing part must be a key term, a short phrase or the last part of a sentence, no longer than 8 words. Write nothing after the JSON.';
+  const origCG=window.callGemini;
+  window.callGemini=function(prompt){
+    const args=Array.prototype.slice.call(arguments);
+    if(typeof prompt==="string"&&prompt.indexOf("Teach the student ONE section")>-1){
+      args[0]=prompt.replace(/a JSON array of exactly 3 multiple-choice questions[\s\S]*?Write nothing after the JSON\./,()=>NEWQ);
+    }
+    return origCG.apply(this,args);
+  };
+
+  window.ojNormQs=function(raw){
+    const arr=Array.isArray(raw)?raw:[];
+    const mcq=[],gap=[];
+    arr.forEach(q=>{
+      if(!q||!q.q)return;
+      if(q.type==="gap"||(!Array.isArray(q.opts)&&q.ans!==undefined)){
+        const ans=(Array.isArray(q.ans)?q.ans:[q.ans]).map(a=>String(a||"").trim()).filter(Boolean);
+        if(!ans.length||!/_{2,}/.test(String(q.q)))return;
+        gap.push({type:"gap",q:String(q.q),ans,why:String(q.why||"")});
+      }else if(Array.isArray(q.opts)&&q.opts.length===4&&Number.isInteger(Number(q.ans))){
+        mcq.push({q:String(q.q),opts:q.opts.map(String),ans:Number(q.ans),why:String(q.why||"")});
+      }
+    });
+    return mcq.slice(0,3).concat(gap.slice(0,2));
+  };
+
+  const norm=t=>String(t||"").toLowerCase().replace(/[’']/g,"").replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ").trim().replace(/^(a|an|the)\s+/,"");
+  function lev(a,b){
+    const m=a.length,n=b.length;
+    if(!m)return n;
+    if(!n)return m;
+    let prev=Array.from({length:n+1},(_,j)=>j);
+    for(let i=1;i<=m;i++){
+      const cur=[i];
+      for(let j=1;j<=n;j++){
+        cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      }
+      prev=cur;
+    }
+    return prev[n];
+  }
+  function gapOk(q,g){
+    const u=norm(g);
+    if(!u)return false;
+    return (Array.isArray(q.ans)?q.ans:[q.ans]).some(a=>{
+      const e=norm(a);
+      if(!e)return false;
+      if(u===e)return true;
+      if((" "+u+" ").indexOf(" "+e+" ")>-1)return true;
+      const tol=e.length>=12?2:e.length>=5?1:0;
+      return tol>0&&lev(u,e)<=tol;
+    });
+  }
+  window.ojQOk=function(q,g){
+    if(g===undefined||g===null)return false;
+    if(q&&q.type==="gap")return gapOk(q,g);
+    return g===q.ans;
+  };
+  window.ojGapHTML=function(q,qi,g){
+    const done=g!==undefined&&g!==null;
+    let h='<div class="lpGap">';
+    if(!done){
+      h+='<input id="gapIn'+qi+'" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Type the missing words" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.nextElementSibling.click();}">';
+      h+='<button type="button" class="lpBtn" data-a="gap" data-q="'+qi+'" style="margin-top:8px">Check answer</button>';
+    }else{
+      const ok=gapOk(q,g);
+      h+='<div class="lpOpt '+(ok?"ok":"bad")+'" style="margin-top:8px">Your answer: '+escapeHTML(g)+'</div>';
+      if(!ok)h+='<div class="lpOpt ok">Correct answer: '+escapeHTML((q.ans||[])[0]||"")+'</div>';
+    }
+    return h+'</div>';
+  };
 })();
 </script>
 
