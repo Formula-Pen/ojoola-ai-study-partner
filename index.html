@@ -6409,7 +6409,7 @@ function liveSend(obj) {
 
 async function startCourseLive() {
   if (courseLive.starting || courseLive.ws) return;
-  if (currentCourseIndex === null) return;
+  if ((courseLive.courseIndex ?? currentCourseIndex) === null) return;
 
   courseLive.starting = true;   const __resume = !!courseLive.resume;   courseLive.resume = false;   if (!__resume) liveRetries = 0;
   $("liveStartBtn").disabled = true;
@@ -6494,7 +6494,7 @@ async function startCourseLive() {
     }
 
 
-    /* PREPARE COURSE CONTEXT */
+    const currentCourseIndex = courseLive.courseIndex ?? window.ojCurIdx();
 
     const c = courses[currentCourseIndex];
 
@@ -6586,7 +6586,7 @@ Do not claim to have read attached PDFs or images unless their contents are actu
 
 Explain difficult concepts in simple language.
 
-Keep spoken answers reasonably concise.
+Keep spoken answers reasonably concise. ${window.ojLivePageRule ? window.ojLivePageRule() : ""}
 
 The student's first name is ${(window.OjoolaCore && OjoolaCore.me && OjoolaCore.me.firstName) || "not known"}. Use it naturally now and then, never in every sentence.
 
@@ -6751,7 +6751,7 @@ ${history || "No previous messages."}
         }
 
 
-        /* STUDENT SPEECH TRANSCRIPTION */
+        /* STUDENT SPEECH TRANSCRIPTION */ if (window.ojLiveHear) window.ojLiveHear(sc);
 
         if (
           sc.inputTranscription &&
@@ -8855,7 +8855,7 @@ ov.innerHTML='<div class="wrap">'+
 '<button class="primary pdfBig" data-a="addopen">+ Add Notes / Images</button>'+
 '<div id="pdfStripBox" class="hidden"><div class="muted" style="margin-top:12px">Tap a page to crop, rotate or adjust it.</div><div id="pdfStrip" class="pdfStrip"></div>'+
 '<button class="secondary pdfBig" data-a="manage">Manage and reorder pages</button>'+
-'<button class="secondary pdfBig" data-a="auto">✨ Auto Scan &amp; Crop All Pages</button></div>'+
+'<button class="secondary pdfBig" data-a="cropall">✂ Crop Pages</button></div>'+
 '<div class="pdfQ"><button class="secondary" data-a="q" data-q="small">Small File</button><button class="secondary" data-a="q" data-q="balanced">Balanced</button><button class="secondary" data-a="q" data-q="high">High Quality</button></div>'+
 '<input id="pdfName" placeholder="PDF name (optional)" style="margin-top:10px">'+
 '<div class="muted" id="pdfEst" style="margin-top:6px"></div>'+
@@ -8965,7 +8965,7 @@ function openEdit(i){
   '<label class="muted">Brightness</label><input type="range" min="-50" max="50" value="'+p.br+'" data-s="br">'+
   '<label class="muted">Contrast</label><input type="range" min="-50" max="50" value="'+p.ct+'" data-s="ct">'+
   '<button class="secondary pdfBig" data-a="erot">⟳ Rotate</button>'+
-  '<button class="secondary pdfBig" data-a="eauto">✨ Re-run auto scan on this page</button>'+
+  '<button class="secondary pdfBig" data-a="ecrop">✂ Crop this page</button><button class="secondary pdfBig" data-a="eview">🔍 View full size</button>'+
   '<button class="secondary pdfBig" data-a="ereset">Reset this page</button>'+
   '<button class="danger pdfBig" data-a="edel">Delete this page</button>'+
   '<button class="primary pdfBig" data-a="edone">Done</button>';
@@ -9027,7 +9027,7 @@ pp.addEventListener("click",act);
 $("pdfDelAfter").checked=localStorage.getItem(SKEY)==="1";
 $("pdfDelAfter").onchange=function(){localStorage.setItem(SKEY,this.checked?"1":"0");};
 
-function openPages(){pp.classList.remove("hidden");pgOpen=true;render();pp.scrollTop=0;}
+function openPages(){pp.classList.remove("hidden");pgOpen=true;render();pp.scrollTop=0;} window.ojPdfApi={pages:()=>pages,edit:()=>edit,openEdit,saveDraft,render,toCanvas,blobOf,free,makeThumb,rotateCv,adjust,toast:t=>toast(t)};
 function closePages(){
   if(working){toast("Please wait, or tap Stop first.");return;}
   saveDraft();pp.classList.add("hidden");pgOpen=false;render();
@@ -9059,7 +9059,567 @@ cb.type="button";cb.className="secondary";cb.textContent="📄 Create PDF";cb.on
 row.appendChild(cb);
 })();
 
-  
+  /* MANUAL CROP, FULL SIZE VIEW, LIVE IN THE BACKGROUND, LIVE PAGE READING */
+(function(){
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function tip(t){
+    const e=document.createElement("div");
+    e.textContent=t;
+    e.style.cssText="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);max-width:88vw;background:#14213d;color:#fff;padding:11px 16px;border-radius:14px;font:14px Arial,sans-serif;z-index:100011;box-shadow:0 8px 24px rgba(0,0,0,.3)";
+    document.body.appendChild(e);
+    setTimeout(()=>e.remove(),3800);
+  }
+
+  const st=document.createElement("style");
+  st.textContent=`
+#ojCrop,#ojView{position:fixed;inset:0;z-index:100007;display:flex;flex-direction:column;background:#0b1220;color:#fff}
+.ojBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;font:700 13px Arial,sans-serif}
+.ojBar button,.ojFoot button{border:0;border-radius:11px;padding:10px 13px;font:800 13px Arial,sans-serif;background:#fff;color:#111}
+.ojBar button.ghost,.ojFoot button.ghost{background:rgba(255,255,255,.16);color:#fff}
+.ojFoot{display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.ojFoot button{flex:1;min-width:84px}
+.ojFoot button.go{background:#2563eb;color:#fff}
+.ojMsg{padding:0 14px 6px;font:12px Arial,sans-serif;color:#cbd5e1;text-align:center}
+.ojStage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:22px}
+.ojBox{position:relative;line-height:0;touch-action:none;-webkit-user-select:none;user-select:none}
+.ojBox img{display:block;max-width:calc(100vw - 44px);max-height:calc(100vh - 250px);max-height:calc(100dvh - 250px);width:auto;height:auto;pointer-events:none}
+.ojCropRect{position:absolute;left:0;top:0;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.55);touch-action:none;cursor:move}
+.ojCropRect i{position:absolute;width:30px;height:30px;background:#fff;border-radius:50%;box-shadow:0 0 0 3px #2563eb;touch-action:none}
+.ojCropRect i[data-h=nw]{left:-15px;top:-15px}
+.ojCropRect i[data-h=n]{left:calc(50% - 15px);top:-15px}
+.ojCropRect i[data-h=ne]{right:-15px;top:-15px}
+.ojCropRect i[data-h=e]{right:-15px;top:calc(50% - 15px)}
+.ojCropRect i[data-h=se]{right:-15px;bottom:-15px}
+.ojCropRect i[data-h=s]{left:calc(50% - 15px);bottom:-15px}
+.ojCropRect i[data-h=sw]{left:-15px;bottom:-15px}
+.ojCropRect i[data-h=w]{left:-15px;top:calc(50% - 15px)}
+.ojVBody{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch}
+.ojVBody img{display:block;max-width:100%;max-height:calc(100vh - 70px);max-height:calc(100dvh - 70px);width:auto;height:auto;object-fit:contain}
+#ojView.actual .ojVBody{display:block}
+#ojView.actual .ojVBody img{max-width:none;max-height:none}
+#liveBar{position:fixed;left:50%;transform:translateX(-50%);z-index:100009;display:flex;align-items:center;gap:8px;max-width:94vw;padding:6px 8px 6px 12px;border-radius:99px;background:#16a34a;color:#fff;font:700 12px Arial,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+#liveBar button{border:0;border-radius:99px;padding:6px 11px;font:800 12px Arial,sans-serif;background:#fff;color:#166534}
+#liveBar button.end{background:#dc2626;color:#fff}
+#liveBar .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#fff}
+#liveBarText{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+`;
+  document.head.appendChild(st);
+  window.ojBackHooks=window.ojBackHooks||[];
+
+  /* ================= 1. MANUAL CROP AND FULL SIZE VIEW ================= */
+  const A=()=>window.ojPdfApi;
+  let cropEl=null,viewEl=null,S=null,cropBusy=false;
+
+  async function pageUrl(p,max,adj){
+    const a=A();
+    let cv=await a.toCanvas(await idbGet("pg:"+p.id),max);
+    cv=a.rotateCv(cv,p.rot||0);
+    if(adj)a.adjust(cv,p.br||0,p.ct||0);
+    const blob=await a.blobOf(cv,.92);
+    a.free(cv);
+    return URL.createObjectURL(blob);
+  }
+
+  function closeView(){
+    if(!viewEl)return;
+    const im=viewEl.querySelector("img");
+    if(im&&im.src)URL.revokeObjectURL(im.src);
+    viewEl.remove();
+    viewEl=null;
+  }
+  async function openView(i){
+    const a=A(),p=a&&a.pages()[i];
+    if(!p)return;
+    let url;
+    try{url=await pageUrl(p,2400,true);}
+    catch(_){tip("This page could not be opened.");return;}
+    closeView();
+    const v=document.createElement("div");
+    v.id="ojView";
+    v.innerHTML='<div class="ojBar"><span>Page '+(i+1)+' of '+a.pages().length+'</span><span><button type="button" class="ghost" id="ojVMode">Actual size</button> <button type="button" id="ojVClose">Close</button></span></div><div class="ojVBody"><img alt="Page '+(i+1)+'"></div>';
+    const img=v.querySelector("img"),mode=v.querySelector("#ojVMode");
+    img.src=url;
+    const toggle=()=>{
+      const actual=v.classList.toggle("actual");
+      if(actual){
+        img.style.width=(img.naturalWidth/(window.devicePixelRatio||1))+"px";
+        mode.textContent="Fit to screen";
+      }else{
+        img.style.width="";
+        mode.textContent="Actual size";
+      }
+    };
+    img.onclick=toggle;
+    mode.onclick=toggle;
+    v.querySelector("#ojVClose").onclick=closeView;
+    document.body.appendChild(v);
+    viewEl=v;
+  }
+
+  function closeCrop(){
+    if(!cropEl)return;
+    const im=cropEl.querySelector("img");
+    if(im&&im.src)URL.revokeObjectURL(im.src);
+    cropEl.remove();
+    cropEl=null;
+    S=null;
+  }
+  function paintRect(){
+    const r=cropEl&&cropEl.querySelector(".ojCropRect");
+    if(!r||!S)return;
+    r.style.left=S.x+"px";
+    r.style.top=S.y+"px";
+    r.style.width=S.w+"px";
+    r.style.height=S.h+"px";
+  }
+  function bindRect(rectEl){
+    let mode=null,sx=0,sy=0,r0=null;
+    rectEl.addEventListener("pointerdown",e=>{
+      if(!S)return;
+      mode=(e.target.dataset&&e.target.dataset.h)||"move";
+      sx=e.clientX;sy=e.clientY;
+      r0={x:S.x,y:S.y,w:S.w,h:S.h};
+      try{rectEl.setPointerCapture(e.pointerId);}catch(_){}
+      e.preventDefault();
+    });
+    rectEl.addEventListener("pointermove",e=>{
+      if(!mode||!S)return;
+      const dx=e.clientX-sx,dy=e.clientY-sy,min=40;
+      let x=r0.x,y=r0.y,w=r0.w,h=r0.h;
+      if(mode==="move"){
+        x=clamp(r0.x+dx,0,S.W-r0.w);
+        y=clamp(r0.y+dy,0,S.H-r0.h);
+      }else{
+        if(mode.indexOf("w")>-1){const nx=clamp(r0.x+dx,0,r0.x+r0.w-min);w=r0.w+(r0.x-nx);x=nx;}
+        if(mode.indexOf("e")>-1){w=clamp(r0.w+dx,min,S.W-r0.x);}
+        if(mode.indexOf("n")>-1){const ny=clamp(r0.y+dy,0,r0.y+r0.h-min);h=r0.h+(r0.y-ny);y=ny;}
+        if(mode.indexOf("s")>-1){h=clamp(r0.h+dy,min,S.H-r0.y);}
+      }
+      S.x=x;S.y=y;S.w=w;S.h=h;
+      paintRect();
+    });
+    const end=()=>{mode=null;};
+    rectEl.addEventListener("pointerup",end);
+    rectEl.addEventListener("pointercancel",end);
+  }
+
+  async function showCrop(i){
+    const a=A(),pg=a.pages();
+    if(!cropEl||i<0||i>=pg.length)return;
+    const p=pg[i];
+    S.i=i;
+    document.getElementById("ojCropTitle").textContent="Crop page "+(i+1)+" of "+pg.length;
+    const img=cropEl.querySelector("img");
+    if(img.src)URL.revokeObjectURL(img.src);
+    img.removeAttribute("src");
+    document.getElementById("ojCropMsg").textContent="Loading page…";
+    let url;
+    try{url=await pageUrl(p,2400,false);}
+    catch(_){document.getElementById("ojCropMsg").textContent="This page could not be opened.";return;}
+    if(!cropEl||!S||S.i!==i){URL.revokeObjectURL(url);return;}
+    img.onload=()=>{
+      S.W=img.clientWidth||1;
+      S.H=img.clientHeight||1;
+      S.x=0;S.y=0;S.w=S.W;S.h=S.H;
+      paintRect();
+      document.getElementById("ojCropMsg").textContent="Drag the corners or edges, or move the box. Then tap Crop this page.";
+    };
+    img.src=url;
+  }
+
+  async function applyCrop(){
+    const a=A(),p=a.pages()[S.i];
+    if(!p||!S.W)return false;
+    const fx=S.x/S.W,fy=S.y/S.H,fw=S.w/S.W,fh=S.h/S.H;
+    if(fx<.005&&fy<.005&&fw>.99&&fh>.99)return false;
+    const src=await idbGet("pg:"+p.id);
+    if(!(await idbGet("og:"+p.id)))await idbPut("og:"+p.id,src);
+    let cv=await a.toCanvas(src,2400);
+    cv=a.rotateCv(cv,p.rot||0);
+    const sx=Math.round(fx*cv.width),sy=Math.round(fy*cv.height);
+    const sw=Math.max(8,Math.min(cv.width-sx,Math.round(fw*cv.width)));
+    const sh=Math.max(8,Math.min(cv.height-sy,Math.round(fh*cv.height)));
+    const o=document.createElement("canvas");
+    o.width=sw;o.height=sh;
+    o.getContext("2d").drawImage(cv,sx,sy,sw,sh,0,0,sw,sh);
+    a.free(cv);
+    const blob=await a.blobOf(o,.9);
+    a.free(o);
+    await idbPut("pg:"+p.id,blob);
+    p.th=await a.makeThumb(blob);
+    await idbPut("th:"+p.id,p.th);
+    p.rot=0;
+    p.cropped=true;
+    a.saveDraft();
+    a.render();
+    return true;
+  }
+
+  function openCrop(i,mode){
+    const a=A();
+    if(!a||!a.pages().length){tip("Add some pictures first.");return;}
+    closeCrop();
+    S={i:i,mode:mode,x:0,y:0,w:1,h:1,W:1,H:1};
+    const v=document.createElement("div");
+    v.id="ojCrop";
+    v.innerHTML=
+      '<div class="ojBar"><b id="ojCropTitle"></b><button type="button" class="ghost" id="ojCropDone">Done</button></div>'+
+      '<div class="ojStage"><div class="ojBox"><img alt="Page to crop"><div class="ojCropRect">'+
+      ["nw","n","ne","e","se","s","sw","w"].map(h=>'<i data-h="'+h+'"></i>').join("")+
+      '</div></div></div>'+
+      '<div id="ojCropMsg" class="ojMsg"></div>'+
+      '<div class="ojFoot"><button type="button" class="ghost" id="ojCropPrev">◀ Back</button><button type="button" class="ghost" id="ojCropReset">Reset box</button><button type="button" class="go" id="ojCropApply">Crop this page</button><button type="button" class="ghost" id="ojCropNext">Skip ▶</button></div>';
+    document.body.appendChild(v);
+    cropEl=v;
+    bindRect(v.querySelector(".ojCropRect"));
+    const finish=()=>{closeCrop();a.render();};
+    v.querySelector("#ojCropDone").onclick=()=>{
+      const k=S?S.i:0,one=S&&S.mode==="one";
+      finish();
+      if(one)a.openEdit(k);
+    };
+    if(mode==="one"){
+      v.querySelector("#ojCropPrev").style.display="none";
+      v.querySelector("#ojCropNext").style.display="none";
+    }
+    v.querySelector("#ojCropPrev").onclick=()=>{if(S&&S.i>0)showCrop(S.i-1);};
+    v.querySelector("#ojCropNext").onclick=()=>{
+      if(!S)return;
+      if(S.i<a.pages().length-1)showCrop(S.i+1);
+      else{finish();tip("All pages checked.");}
+    };
+    v.querySelector("#ojCropReset").onclick=()=>{
+      if(!S)return;
+      S.x=0;S.y=0;S.w=S.W;S.h=S.H;
+      paintRect();
+    };
+    v.querySelector("#ojCropApply").onclick=async()=>{
+      if(cropBusy||!S)return;
+      cropBusy=true;
+      try{
+        const changed=await applyCrop();
+        if(!changed){tip("Drag the box first, then tap Crop this page.");return;}
+        tip("Page "+(S.i+1)+" cropped.");
+        if(S.mode==="one"){const k=S.i;finish();a.openEdit(k);return;}
+        if(S.i<a.pages().length-1)showCrop(S.i+1);
+        else{finish();tip("All pages checked.");}
+      }catch(_){tip("This page could not be cropped.");}
+      finally{cropBusy=false;}
+    };
+    showCrop(i);
+  }
+
+  (function wireLibrary(){
+    const lib=document.getElementById("pdfLib"),pp=document.getElementById("pdfPages");
+    if(!lib||!pp)return;
+    lib.addEventListener("click",e=>{
+      const b=e.target.closest&&e.target.closest("[data-a]");
+      const act=b&&b.dataset.a,api=A();
+      if(act==="cropall"){openCrop(0,"all");return;}
+      if(act==="ecrop"&&api){const k=api.edit();if(k!==null)openCrop(k,"one");return;}
+      if(act==="eview"&&api){const k=api.edit();if(k!==null)openView(k);return;}
+      if(e.target&&e.target.id==="pdfEdImg"&&api){const k=api.edit();if(k!==null)openView(k);}
+    });
+    pp.addEventListener("click",e=>{
+      const img=e.target.closest&&e.target.closest(".pdfTh img");
+      if(!img)return;
+      const idx=[...pp.querySelectorAll(".pdfPg")].indexOf(img.closest(".pdfPg"));
+      if(idx>-1)openView(idx);
+    });
+  })();
+
+  window.ojBackHooks.unshift(
+    {isOpen:()=>!!viewEl,close:closeView},
+    {isOpen:()=>!!cropEl,close:()=>{closeCrop();if(A())A().render();}}
+  );
+
+  /* ================= 2. LIVE CONVERSATION KEEPS RUNNING ================= */
+  window.ojCurIdx=()=>currentCourseIndex;
+  let lastPg=null;
+
+  const bar=document.createElement("div");
+  bar.id="liveBar";
+  bar.className="hidden";
+  bar.innerHTML='<span class="dot"></span><span id="liveBarText"></span><button type="button" id="liveBarOpen">Open</button><button type="button" class="end" id="liveBarEnd">End</button>';
+  document.body.appendChild(bar);
+
+  function refreshBar(){
+    const on=!!courseLive.wanted;
+    const viewOpen=!document.getElementById("courseLiveView").classList.contains("hidden");
+    bar.classList.toggle("hidden",!on||viewOpen);
+    if(!on||viewOpen)return;
+    const c=courses[courseLive.courseIndex];
+    document.getElementById("liveBarText").textContent=(courseLive.setup?"Live: ":"Reconnecting: ")+(c?c.name:"course");
+    const h=document.getElementById("topHeader");
+    bar.style.top=((h?h.offsetHeight:56)+6)+"px";
+  }
+  setInterval(refreshBar,600);
+
+  function closeOverlays(){
+    for(let n=0;n<8;n++){
+      let closed=false;
+      for(const h of window.ojBackHooks){
+        try{if(h.isOpen()){h.close();closed=true;break;}}catch(_){}
+      }
+      const m=document.querySelector(".modal:not(.hidden)");
+      if(m){m.classList.add("hidden");closed=true;}
+      if(!closed)break;
+    }
+  }
+  document.getElementById("liveBarOpen").onclick=()=>{
+    if(courseLive.courseIndex==null)return;
+    closeOverlays();
+    currentCourseIndex=courseLive.courseIndex;
+    proceedToLiveConversation();
+  };
+  document.getElementById("liveBarEnd").onclick=()=>stopCourseLive();
+
+  const origStart=window.startCourseLive;
+  window.startCourseLive=async function(){
+    const resume=!!courseLive.resume;
+    if(!resume){
+      if(courseLive.ws||courseLive.starting)return;
+      if(currentCourseIndex===null)return;
+      courseLive.courseIndex=currentCourseIndex;
+      courseLive.wanted=true;
+      lastPg=null;
+    }
+    refreshBar();
+    try{await origStart.apply(this,arguments);}
+    finally{
+      if(!courseLive.ws&&!courseLive.starting){
+        const was=courseLive.wanted;
+        courseLive.wanted=false;
+        if(resume&&was)tip("The live conversation ended. Open Live Conversation to start again.");
+      }
+      refreshBar();
+    }
+  };
+
+  const origStop=window.stopCourseLive;
+  window.stopCourseLive=function(updateStatus){
+    if(updateStatus!==false)courseLive.wanted=false;
+    const r=origStop.apply(this,arguments);
+    refreshBar();
+    return r;
+  };
+
+  window.autoResumeLive=function(){
+    if(!courseLive.wanted||courseLive.ws||courseLive.starting)return;
+    if(courseLive.upAt&&Date.now()-courseLive.upAt>20000)liveRetries=0;
+    if(/quota|billing/i.test(String(courseLive.lastClose||""))){
+      courseLive.wanted=false;
+      liveSetStatus("The voice service is busy right now. Please wait a minute, then tap Start conversation.");
+      tip("The live conversation stopped because the voice service is busy.");
+      return;
+    }
+    if(liveRetries>=3){
+      courseLive.wanted=false;
+      liveSetStatus("I couldn't reconnect. Tap Start conversation and we'll continue where we left off.");
+      tip("The live conversation could not reconnect. Open Live Conversation to start again.");
+      return;
+    }
+    liveRetries++;
+    liveSetStatus("Reconnecting, one moment…");
+    courseLive.resume=true;
+    courseLive.upAt=0;
+    startCourseLive();
+  };
+
+  window.backFromLiveConversation=function(){backToCourseInfo();};
+  window.backToCourseChatFromLive=function(){proceedToCourseChat();};
+
+  const origProceed=window.proceedToLiveConversation;
+  window.proceedToLiveConversation=function(){
+    if(courseLive.wanted&&courseLive.courseIndex!=null&&courseLive.courseIndex!==currentCourseIndex&&courses[courseLive.courseIndex]){
+      currentCourseIndex=courseLive.courseIndex;
+      tip("A live conversation is already running for "+courses[currentCourseIndex].name+".");
+    }
+    const r=origProceed.apply(this,arguments);
+    refreshBar();
+    return r;
+  };
+
+  window.renderLiveTranscript=function(){
+    const box=document.getElementById("liveTranscript");
+    const idx=courseLive.wanted&&courseLive.courseIndex!=null?courseLive.courseIndex:currentCourseIndex;
+    const c=courses[idx];
+    if(!box||!c)return;
+    const entries=(c.chat||[]).filter(m=>m&&m.text&&m.text!=="Thinking..."&&m.text!=="Response stopped.").slice(-30);
+    box.innerHTML=entries.map(m=>'<div class="liveLine '+(m.role==="user"?"user":"ai")+'"><b>'+(m.role==="user"?"You":"Ọjọ́ọ̀la")+':</b><br>'+liveEscape(m.text)+'</div>').join("");
+    box.scrollTop=box.scrollHeight;
+  };
+
+  window.saveLiveLine=function(role,text){
+    text=String(text||"").trim();
+    const idx=courseLive.wanted&&courseLive.courseIndex!=null?courseLive.courseIndex:currentCourseIndex;
+    if(!text||idx===null||idx===undefined)return;
+    const c=courses[idx];
+    if(!c)return;
+    c.chat=c.chat||[];
+    const last=c.chat[c.chat.length-1];
+    if(last&&last.role===role&&last.livePartial){
+      last.text=(last.text+" "+text).trim();
+      last.livePartial=false;
+    }else{
+      c.chat.push({id:uid(),role,text,time:Date.now(),source:"live"});
+    }
+    saveCourses();
+    if(!document.getElementById("courseLiveView").classList.contains("hidden"))renderLiveTranscript();
+    if(!document.getElementById("courseChatView").classList.contains("hidden")&&idx===currentCourseIndex&&!activeRun)renderCourseChat();
+  };
+
+  /* ================= 3. LIVE CONVERSATION READS PAGES ================= */
+  const OFF="ojoola_pg_offset";
+  const ONES={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+  const TENS={twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+  const isNW=x=>{
+    const p=x.replace(/[^a-z-]/g,"").split("-");
+    return p.length>0&&p[0]!==""&&p.every(y=>(y in ONES)||(y in TENS)||y==="hundred");
+  };
+  function words2num(tokens){
+    let cur=0,any=false;
+    for(const t0 of tokens){
+      for(const x of t0.split("-")){
+        if(x==="and"||x==="")continue;
+        if(x in ONES){cur+=ONES[x];any=true;}
+        else if(x in TENS){cur+=TENS[x];any=true;}
+        else if(x==="hundred"){cur=(cur||1)*100;any=true;}
+        else return null;
+      }
+    }
+    return any?cur:null;
+  }
+  function wordsToDigits(s){
+    const w=String(s).toLowerCase().split(/\s+/).filter(Boolean),out=[];
+    for(let i=0;i<w.length;i++){
+      if(isNW(w[i])){
+        const run=[w[i]];
+        while(i+1<w.length&&(isNW(w[i+1])||(w[i+1]==="and"&&i+2<w.length&&isNW(w[i+2])))){i++;run.push(w[i]);}
+        const n=words2num(run.map(x=>x.replace(/[^a-z-]/g,"")));
+        out.push(n===null?run.join(" "):String(n));
+      }else out.push(w[i]);
+    }
+    return out.join(" ");
+  }
+  function parseReq(raw){
+    const t=wordsToDigits(raw).replace(/[.,!?]/g," ").replace(/\s+/g," ");
+    let rel="";
+    if(/\b(next|following)\s+page\b/.test(t))rel="next";
+    else if(/\b(previous|prior)\s+page\b|\bgo back (a|one) page\b|\bback a page\b/.test(t))rel="prev";
+    else if(/\b(read|say|repeat)\b.*\bagain\b/.test(t))rel="again";
+    else if(/\bcontinue reading\b|\bkeep reading\b|\bread on\b/.test(t))rel="next";
+    if(rel)return {kind:rel,raw:t};
+    const m=t.match(/\bpage\s*(?:number\s*|no\s*)?(\d{1,4})\b/);
+    if(!m)return null;
+    const verb=/\b(read|open|go to|turn to|show|start|begin|continue|take me|what is on|what s on|what does|tell me about|explain|summarise|summarize)\b/.test(t);
+    if(!verb&&t.split(" ").length>7)return null;
+    const pdf=/\b(pdf|scan|scanned|image|picture|phone|file)\s+page\b/.test(t);
+    return {kind:pdf?"pdf":"printed",n:Number(m[1]),raw:t};
+  }
+
+  const PAGE_PROMPT="This attached file is ONE page from a scanned book or notes. Transcribe the page exactly as it is written, in the order a person reads it: headings first, then the body text paragraph by paragraph (column by column if there are columns), keeping the original wording, spelling and punctuation. Put any footnotes at the bottom of the page in a separate part. Describe tables row by row, and describe any picture or diagram in one short sentence in square brackets. Also find the page number printed on the page itself, usually at the bottom or the top. Reply with JSON only, in this shape: {\"printed\":\"the printed page number, or empty text if there is none\",\"text\":\"the transcription of headings and body\",\"footnotes\":\"the footnotes, or empty text\"}. Do not add anything that is not on the page.";
+
+  async function getPage(f,pdf){
+    const key="pgtext:"+f.id+":"+pdf;
+    try{const c=await idbGet(key);if(c&&(c.text||c.foot))return c;}catch(_){}
+    const src=await pdfDocFor(f);
+    const lib=await loadPdfLib();
+    const doc=await lib.PDFDocument.create();
+    (await doc.copyPages(src,[pdf-1])).forEach(p=>doc.addPage(p));
+    const data=liveBytesToBase64(await doc.save());
+    const r=String(await callGemini(PAGE_PROMPT,[],[{inline_data:{mime_type:"application/pdf",data}}],null,null,new AbortController().signal));
+    let o=null;
+    const a=r.indexOf("{"),b=r.lastIndexOf("}");
+    if(a>-1&&b>a){try{o=JSON.parse(r.slice(a,b+1));}catch(_){}}
+    const rec={printed:String((o&&o.printed)||"").trim(),text:String((o&&o.text)||(o?"":r)).trim(),foot:String((o&&o.footnotes)||"").trim()};
+    if(rec.text||rec.foot)idbPut(key,rec).catch(()=>{});
+    return rec;
+  }
+
+  function sendToLive(msg){
+    liveSend({realtimeInput:{text:msg}});
+  }
+
+  let pBusy=false;
+  async function openPage(req){
+    if(pBusy)return;
+    const c=courses[courseLive.courseIndex];
+    if(!c||!courseLive.setup)return;
+    pBusy=true;
+    try{
+      const files=(c.pdfs||[]).filter(f=>f&&f.id&&f.data);
+      if(!files.length){
+        sendToLive("The student asked for a page, but no PDF is attached to this course. Tell them to add the PDF to the course first.");
+        return;
+      }
+      const relative=req.kind==="next"||req.kind==="prev"||req.kind==="again";
+      const f=relative&&lastPg?(files.find(x=>x.id===lastPg.fid)||files[0]):pickPdf(files,req.raw,c);
+      const total=(await pdfDocFor(f)).getPageCount();
+      const offs=safeJSON(localStorage.getItem(OFF),{})||{};
+      let pdf;
+      if(req.kind==="next")pdf=lastPg?lastPg.pdf+1:1;
+      else if(req.kind==="prev")pdf=lastPg?lastPg.pdf-1:1;
+      else if(req.kind==="again")pdf=lastPg?lastPg.pdf:1;
+      else if(req.kind==="pdf")pdf=req.n;
+      else pdf=req.n+(offs[f.id]||0);
+      if(pdf<1||pdf>total){
+        sendToLive("The student asked for a page that does not exist. This PDF has "+total+" pages. Tell them.");
+        return;
+      }
+      liveSetStatus("Opening the page…");
+      let res=null;
+      const tried=new Set();
+      for(let hop=0;hop<3;hop++){
+        tried.add(pdf);
+        res=await getPage(f,pdf);
+        const pn=parseInt(res.printed,10);
+        if(req.kind!=="printed"||!isFinite(pn)||pn===req.n)break;
+        const nx=pdf+(req.n-pn);
+        if(nx<1||nx>total||tried.has(nx))break;
+        pdf=nx;
+      }
+      const pn=parseInt(res.printed,10);
+      if(isFinite(pn)){
+        offs[f.id]=pdf-pn;
+        try{localStorage.setItem(OFF,JSON.stringify(offs));}catch(_){}
+      }
+      lastPg={fid:f.id,pdf};
+      let warn="";
+      if(req.kind==="printed"&&(!isFinite(pn)||pn!==req.n)){
+        warn=" Note: the student asked for printed page "+req.n+", but this page "+(isFinite(pn)?"shows the printed number "+pn:"has no readable printed number")+". Say so briefly before reading.";
+      }
+      const label="PDF page "+pdf+" of "+total+(res.printed?", printed page number "+res.printed:", no printed page number found");
+      sendToLive("PAGE TEXT ("+label+")."+warn+" If the student asked you to read the page, read it aloud now exactly as written, in this order: headings, body text, then the footnotes (say the word Footnote before each one). If they asked a question about the page, answer it from this text. Do not add anything that is not in the text.\n\nBODY:\n"+res.text+(res.foot?"\n\nFOOTNOTES:\n"+res.foot:""));
+      liveSetStatus("Reading page "+(res.printed||pdf)+"…");
+    }catch(e){
+      sendToLive("I could not open that page just now. Tell the student something went wrong and ask them to try again.");
+    }finally{
+      pBusy=false;
+    }
+  }
+
+  let heard="",hTimer=null;
+  window.ojLiveHear=function(sc){
+    const t=sc&&sc.inputTranscription&&sc.inputTranscription.text;
+    if(t){
+      heard=(heard+" "+t).trim();
+      clearTimeout(hTimer);
+      hTimer=setTimeout(()=>{
+        hTimer=null;
+        const x=heard;
+        heard="";
+        const req=parseReq(x);
+        if(req)openPage(req);
+      },1100);
+    }else if(sc&&(sc.turnComplete||sc.interrupted)&&!hTimer){
+      heard="";
+    }
+  };
+  window.ojLivePageRule=function(){
+    return "Page reading: when the student asks you to read, open or go to a page, or says next page, previous page or read it again, reply with ONE short sentence such as One moment, opening page 12, and then wait. The app will send you a message that starts with PAGE TEXT containing the exact text of that page. Only then read it, exactly as written and in the order given: headings, body, then footnotes. Never read page content from your notes or from memory, and never make up page text. The student can name a page by the number printed at the bottom of the scanned page, or by its position in the PDF if they say PDF page.";
+  };
+})();
 
 </script>
 
