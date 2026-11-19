@@ -9621,6 +9621,483 @@ row.appendChild(cb);
   };
 })();
 
+  /* PRIVATE PDF LIBRARY PER ACCOUNT + LIVE: FIND TEXT AND READ IT ALOUD */
+(function(){
+  const note=t=>{const e=document.createElement("div");e.textContent=t;e.style.cssText="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);max-width:88vw;background:#14213d;color:#fff;padding:11px 16px;border-radius:14px;font:14px Arial,sans-serif;z-index:100013;box-shadow:0 8px 24px rgba(0,0,0,.3)";document.body.appendChild(e);setTimeout(()=>e.remove(),3500);};
+
+  /* ============ 1. EACH ACCOUNT HAS ITS OWN PDF LIBRARY ============ */
+  const ns=()=>{
+    const m=window.OjoolaCore&&OjoolaCore.me;
+    if(!m)return null;
+    const id=m.id!=null?"u"+m.id:(m.username?"n"+m.username:(m.role==="admin"?"admin":null));
+    return id?String(id).replace(/[^A-Za-z0-9_-]/g,""):null;
+  };
+
+  const LS=["ojoola_pdf_draft","ojoola_pdf_lib"];
+  const sp=Storage.prototype,g0=sp.getItem,s0=sp.setItem,r0=sp.removeItem;
+  const lk=k=>k+":"+(ns()||"nouser");
+  sp.getItem=function(k){
+    k=String(k);
+    if(this===localStorage&&LS.indexOf(k)>-1){
+      const nk=lk(k);
+      let v=g0.call(this,nk);
+      if(v===null&&ns()){
+        const old=g0.call(this,k);
+        if(old!==null){s0.call(this,nk,old);r0.call(this,k);v=old;}
+      }
+      return v;
+    }
+    return g0.call(this,k);
+  };
+  sp.setItem=function(k,v){
+    k=String(k);
+    if(this===localStorage&&LS.indexOf(k)>-1)return s0.call(this,lk(k),v);
+    return s0.call(this,k,v);
+  };
+  sp.removeItem=function(k){
+    k=String(k);
+    if(this===localStorage&&LS.indexOf(k)>-1)return r0.call(this,lk(k));
+    return r0.call(this,k);
+  };
+
+  const PFX=/^(pg|og|th|pdf):/;
+  const ik=k=>String(k).replace(PFX,m=>m+(ns()||"nouser")+":");
+  const gI=window.idbGet,pI=window.idbPut,dI=window.idbDel;
+  window.idbGet=async function(k){
+    if(!PFX.test(String(k)))return gI(k);
+    const v=await gI(ik(k));
+    return v!==undefined?v:gI(k);
+  };
+  window.idbPut=function(k,v){return PFX.test(String(k))?pI(ik(k),v):pI(k,v);};
+  window.idbDel=async function(k){
+    if(!k)return;
+    if(!PFX.test(String(k)))return dI(k);
+    await dI(ik(k));
+    await dI(k);
+  };
+
+  (function guard(){
+    const b=[...document.querySelectorAll("button")].find(x=>x.textContent.trim()==="📄 Create PDF");
+    if(!b)return;
+    const orig=b.onclick;
+    let seen=null;
+    b.onclick=function(){
+      const n=ns();
+      if(!n){note("Your account is still loading. Please try again in a moment.");return;}
+      if(seen&&seen!==n){location.reload();return;}
+      seen=n;
+      return orig&&orig.apply(this,arguments);
+    };
+  })();
+
+  /* ============ 2. LIVE: FIND THE TEXT, THEN READ IT ALOUD ============ */
+  const N1={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+  const N10={twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+  const ORD={first:1,second:2,third:3,fourth:4,fifth:5,sixth:6,seventh:7,eighth:8,ninth:9,tenth:10,eleventh:11,twelfth:12};
+  function digits(s){
+    const w=String(s).toLowerCase().replace(/[^a-z0-9\s-]/g," ").split(/\s+/).filter(Boolean),out=[];
+    for(let i=0;i<w.length;i++){
+      const x=w[i];
+      if(x in ORD){out.push(String(ORD[x]));continue;}
+      const m=x.match(/^(\d+)(st|nd|rd|th)$/);
+      if(m){out.push(m[1]);continue;}
+      const parts=x.split("-");
+      if(parts.every(p=>(p in N1)||(p in N10))){
+        let n=0;
+        parts.forEach(p=>{n+=(p in N1)?N1[p]:N10[p];});
+        while(i+1<w.length&&(w[i+1] in N1)&&n>=20&&n%10===0&&N1[w[i+1]]<10){n+=N1[w[i+1]];i++;}
+        out.push(String(n));
+      }else out.push(x);
+    }
+    return out.join(" ")
+      .replace(/\b(\d{1,2}) hundred(?: and)? (\d{1,2})\b/g,(m,a,b)=>String(a*100+ +b))
+      .replace(/\b(\d{1,2}) hundred\b/g,(m,a)=>String(a*100));
+  }
+
+  const SENT=/(?:[^.!?]|[.!?](?!\s|$))+[.!?]*["')\]”’]*\s*/g;
+  const ABBR=/\b(?:Dr|Mr|Mrs|Ms|Prof|Sr|Jr|St|vs|etc|e\.g|i\.e|Fig|No)\.$/i;
+  function split(text){
+    text=String(text||"");
+    let paras=text.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+    if(paras.length<2&&/\n/.test(text))paras=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
+    const sents=[];
+    paras.forEach((p,pi)=>{
+      const raw=(p.match(SENT)||[p]).map(s=>s.trim()).filter(Boolean),m=[];
+      raw.forEach(s=>{if(m.length&&ABBR.test(m[m.length-1]))m[m.length-1]+=" "+s;else m.push(s);});
+      m.forEach(s=>sents.push({p:pi,t:s}));
+    });
+    return {paras,sents};
+  }
+  const parRange=(S,p)=>{
+    const a=S.findIndex(s=>s.p===p);
+    if(a<0)return null;
+    let b=a;
+    while(b+1<S.length&&S[b+1].p===p)b++;
+    return [a,b];
+  };
+  function chunkify(list){
+    const out=[];
+    list.forEach(s0=>{
+      let s=String(s0).replace(/[*_#>`]/g,"").replace(/\s+/g," ").trim();
+      while(s.length>220){
+        let cut=Math.max(s.lastIndexOf(", ",220),s.lastIndexOf("; ",220),s.lastIndexOf(": ",220));
+        if(cut<60)cut=s.lastIndexOf(" ",220);
+        if(cut<40)cut=220;
+        out.push(s.slice(0,cut+1).trim());
+        s=s.slice(cut+1).trim();
+      }
+      if(s&&/[\p{L}\p{N}]/u.test(s))out.push(s);
+    });
+    return out;
+  }
+
+  /* what the student said */
+  function spec(t,w){
+    if(new RegExp("\\blast\\s+"+w+"\\b").test(t))return "last";
+    let m=t.match(new RegExp("\\b"+w+"s?\\s*(?:number\\s*|no\\s*)?(\\d{1,3})(?:\\s*(?:to|through|and|until)\\s*(\\d{1,3}))?\\b"));
+    if(!m)m=t.match(new RegExp("\\b(\\d{1,3})\\s+"+w+"\\b"));
+    if(!m)return null;
+    const a=+m[1],b=m[2]?+m[2]:a;
+    return [Math.min(a,b),Math.max(a,b)];
+  }
+  let last=null,busy=false;
+  function parseReq(raw){
+    const t=" "+digits(raw)+" ";
+    const read=/\b(read|recite|reading)\b/.test(t);
+    const cmdRead=/(^|\b(please|can you|could you|will you|would you|now|just|then|and)\s+)(read|recite)\b/.test(t.trim());
+    const ask=/\b(what|explain|summari[sz]e|tell me|mean|meaning)\b/.test(t);
+    let rel=null;
+    if(/\b(next|following)\s+page\b/.test(t))rel="nextpage";
+    else if(/\b(previous|prior)\s+page\b|\bback a page\b|\bgo back (a|1) page\b/.test(t))rel="prevpage";
+    else if(/\b(next|following)\s+paragraph\b/.test(t))rel="nextpar";
+    else if(/\b(previous|prior)\s+paragraph\b/.test(t))rel="prevpar";
+    else if(/\b(next|following)\s+sentence\b/.test(t))rel="nextsent";
+    else if(/\b(previous|prior)\s+sentence\b/.test(t))rel="prevsent";
+    else if(/\b(read|repeat)\b/.test(t)&&/\bagain\b/.test(t))rel="again";
+    else if(/\b(continue|keep|carry on|go on)\s+reading\b|\bread on\b/.test(t))rel="cont";
+    else if(/\brepeat\b/.test(t)&&/\b(that|it|paragraph|sentence)\b/.test(t))rel="again";
+    const pm=t.match(/\bpage\s*(?:number\s*|no\s*)?(\d{1,4})\b/);
+    const para=spec(t,"paragraph"),sent=spec(t,"sentence");
+    const o={raw:String(raw).trim(),rel,n:pm?+pm[1]:0,pdfFlag:/\b(pdf|scan|scanned|file|phone)\s+page\b/.test(t),para,sent,read:true,find:false};
+    if(rel){
+      if(!last&&rel!=="nextpage"&&rel!=="prevpage")return null;
+      o.read=read||!ask;
+      return o;
+    }
+    if(pm||para||sent){
+      if((para||sent)&&!pm&&!read&&!ask)return null;
+      const verb=/\b(open|go to|turn to|show|start|begin|continue|take me)\b/.test(t);
+      if(pm&&!para&&!sent&&!read&&!ask&&!verb&&t.trim().split(/\s+/).length>7)return null;
+      o.read=read||!ask;
+      return o;
+    }
+    if(cmdRead&&/\b(paragraph|sentence|part|section|passage|line|lines|heading|title|chapter|text|about|says|starts? with|begins? with)\b/.test(t)){
+      o.find=true;
+      return o;
+    }
+    return null;
+  }
+
+  /* the page text (same cache the old reader used) */
+  const PAGE_PROMPT="This attached file is ONE page from a scanned book or notes. Transcribe the page exactly as it is written, in the order a person reads it: headings first, then the body text paragraph by paragraph (column by column if there are columns), keeping the original wording, spelling and punctuation, and leave a blank line between paragraphs. Put any footnotes at the bottom of the page in a separate part. Describe tables row by row, and describe any picture or diagram in one short sentence in square brackets. Also find the page number printed on the page itself, usually at the bottom or the top. Reply with JSON only, in this shape: {\"printed\":\"the printed page number, or empty text if there is none\",\"text\":\"the transcription of headings and body\",\"footnotes\":\"the footnotes, or empty text\"}. Do not add anything that is not on the page.";
+  async function getPage(f,pdf){
+    const key="pgtext:"+f.id+":"+pdf;
+    try{const c=await idbGet(key);if(c&&(c.text||c.foot))return c;}catch(_){}
+    const src=await pdfDocFor(f);
+    const lib=await loadPdfLib();
+    const doc=await lib.PDFDocument.create();
+    (await doc.copyPages(src,[pdf-1])).forEach(p=>doc.addPage(p));
+    const data=liveBytesToBase64(await doc.save());
+    const r=String(await callGemini(PAGE_PROMPT,[],[{inline_data:{mime_type:"application/pdf",data}}],null,null,new AbortController().signal));
+    let o=null;
+    const a=r.indexOf("{"),b=r.lastIndexOf("}");
+    if(a>-1&&b>a){try{o=JSON.parse(r.slice(a,b+1));}catch(_){}}
+    const rec={printed:String((o&&o.printed)||"").trim(),text:String((o&&o.text)||(o?"":r)).trim(),foot:String((o&&o.footnotes)||"").trim()};
+    if(rec.text||rec.foot)idbPut(key,rec).catch(()=>{});
+    return rec;
+  }
+
+  const OFF="ojoola_pg_offset";
+  const sleep2=ms=>new Promise(r=>setTimeout(r,ms));
+  const tell=m=>liveSend({realtimeInput:{text:m}});
+
+  async function pageRes(f,req,total){
+    const offs=safeJSON(localStorage.getItem(OFF),{})||{};
+    const printedKind=req.n>0&&!req.pdfFlag&&req.rel!=="nextpage"&&req.rel!=="prevpage";
+    let pdf;
+    if(req.rel==="nextpage")pdf=last?last.pdf+1:1;
+    else if(req.rel==="prevpage")pdf=last?last.pdf-1:1;
+    else if(req.n&&req.pdfFlag)pdf=req.n;
+    else if(req.n)pdf=req.n+(offs[f.id]||0);
+    else pdf=last?last.pdf:1;
+    if(pdf<1||pdf>total)return {err:"That page does not exist. This PDF has "+total+" pages."};
+    let res=null;
+    const tried=new Set();
+    for(let hop=0;hop<3;hop++){
+      tried.add(pdf);
+      res=await getPage(f,pdf);
+      const pn=parseInt(res.printed,10);
+      if(!printedKind||!isFinite(pn)||pn===req.n)break;
+      const nx=pdf+(req.n-pn);
+      if(nx<1||nx>total||tried.has(nx))break;
+      pdf=nx;
+    }
+    const pn=parseInt(res.printed,10);
+    if(isFinite(pn)){offs[f.id]=pdf-pn;try{localStorage.setItem(OFF,JSON.stringify(offs));}catch(_){}}
+    return {pdf,res,mismatch:printedKind&&(!isFinite(pn)||pn!==req.n),pn};
+  }
+
+  async function searchScope(f,raw){
+    const r=await findPages(f,raw,new AbortController().signal);
+    if(!r)return null;
+    const a=r[0],b=Math.min(r[1],r[0]+2),paras=[],sents=[];
+    for(let p=a;p<=b;p++){
+      const u=split((await getPage(f,p)).text),off=paras.length;
+      u.sents.forEach(s=>sents.push({p:s.p+off,t:s.t}));
+      u.paras.forEach(x=>paras.push(x));
+    }
+    return sents.length?{units:{paras,sents},pdf:a}:null;
+  }
+
+  async function aiLocate(S,raw){
+    const list=S.slice(0,400).map((s,i)=>"["+(i+1)+"] "+s.t.slice(0,400)).join("\n");
+    const prompt="A student asked a voice assistant to read part of a book or notes. The numbered sentences below are the exact text available. Using ONLY them, find the sentences the student asked for. The request was spoken, so it may contain small recognition errors: \""+raw+"\"\nReply with JSON only: {\"from\":number,\"to\":number} using the sentence numbers. If the request is for a whole paragraph, section or list, give its first and last sentence. If it cannot be found, reply {\"from\":0,\"to\":0}.\n\nSENTENCES:\n"+list;
+    const r=String(await callGemini(prompt,[],[],null,null,new AbortController().signal));
+    const m=r.match(/\{[^}]*\}/);
+    if(!m)return null;
+    let o;
+    try{o=JSON.parse(m[0]);}catch(_){return null;}
+    let a=Math.round(Number(o.from)),b=Math.round(Number(o.to));
+    if(!(a>0&&b>=a))return null;
+    a=Math.min(a,S.length);b=Math.min(b,S.length,a+99);
+    return [a-1,b-1];
+  }
+
+  function pickUnits(u,req){
+    const S=u.sents,np=u.paras.length;
+    if(!S.length)return {err:"This page has no readable text."};
+    let idx=S.map((_,i)=>i);
+    if(req.para){
+      let a,b;
+      if(req.para==="last"){a=b=np;}else{a=req.para[0];b=req.para[1];}
+      if(a<1||a>np)return {err:"This page has only "+np+" paragraph"+(np===1?"":"s")+"."};
+      b=Math.min(b,np);
+      idx=idx.filter(i=>S[i].p>=a-1&&S[i].p<=b-1);
+    }
+    if(req.sent){
+      let a,b;
+      if(req.sent==="last"){a=b=idx.length;}else{a=req.sent[0];b=req.sent[1];}
+      if(a<1||a>idx.length)return {err:"There "+(idx.length===1?"is only 1 sentence":"are only "+idx.length+" sentences")+" there."};
+      idx=idx.slice(a-1,Math.min(b,idx.length));
+    }
+    return {range:[idx[0],idx[idx.length-1]]};
+  }
+
+  /* wait until the live voice has finished its short reply */
+  async function quiet(){
+    const playing=()=>{
+      const ctx=courseLive.audioContext;
+      return !!(courseLive.playing&&courseLive.playing.length&&ctx&&ctx.currentTime<courseLive.nextPlayTime);
+    };
+    for(let i=0;i<50;i++){
+      if(!playing()){
+        await sleep2(350);
+        if(!playing())return;
+      }
+      await sleep2(200);
+    }
+  }
+
+  /* ---------- the app's own reader ---------- */
+  const R={active:false,hold:false,paused:false,chunks:[],i:0,tok:0,label:"",shown:"",ka:null};
+  let micVal=false;
+  try{
+    Object.defineProperty(courseLive,"micHold",{configurable:true,get(){return R.hold||micVal;},set(v){micVal=v;}});
+  }catch(_){}
+
+  const st=document.createElement("style");
+  st.textContent="#ojReadBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:100012;display:flex;align-items:center;gap:8px;max-width:94vw;padding:8px 10px 8px 14px;border-radius:99px;background:#2563eb;color:#fff;font:700 12px Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}#ojReadBar button{border:0;border-radius:99px;padding:7px 12px;font:800 12px Arial,sans-serif;background:#fff;color:#1e3a8a}#ojReadBar button.end{background:#dc2626;color:#fff}#ojReadTxt{max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}";
+  document.head.appendChild(st);
+  const bar=document.createElement("div");
+  bar.id="ojReadBar";bar.className="hidden";
+  bar.innerHTML='<span id="ojReadTxt"></span><button type="button" id="ojReadPause">Pause</button><button type="button" class="end" id="ojReadStop">Stop</button>';
+  document.body.appendChild(bar);
+  const speed=()=>{const v=Number(localStorage.getItem("ojoola_speech_speed"));return v>=.5&&v<=3?v:1;};
+  const paintBar=()=>{
+    document.getElementById("ojReadTxt").textContent="🔊 Reading "+R.label+" ("+Math.min(R.i+1,R.chunks.length)+"/"+R.chunks.length+")";
+    document.getElementById("ojReadPause").textContent=R.paused?"Resume":"Pause";
+  };
+
+  function speakFrom(i){
+    const tok=++R.tok;
+    R.i=i;R.paused=false;paintBar();
+    const step=()=>{
+      if(tok!==R.tok)return;
+      if(R.i>=R.chunks.length){endRead(true,false);return;}
+      const u=new SpeechSynthesisUtterance(R.chunks[R.i]);
+      const v=window.ojVoice&&window.ojVoice();
+      if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";
+      u.rate=speed();
+      u.onend=()=>{if(tok!==R.tok)return;R.i++;paintBar();step();};
+      u.onerror=e=>{
+        if(tok!==R.tok)return;
+        if(e.error==="canceled"||e.error==="interrupted")return;
+        if(e.error==="not-allowed"){R.tok++;endRead(false,true);note("Your browser blocked the voice. Tap the screen once, then ask again.");return;}
+        R.i++;step();
+      };
+      speechSynthesis.speak(u);
+    };
+    try{speechSynthesis.cancel();}catch(_){}
+    setTimeout(step,60);
+  }
+  function startRead(label,chunks,shown){
+    stopRead(true);
+    R.active=true;R.hold=true;R.paused=false;R.label=label;R.chunks=chunks;R.shown=shown;R.i=0;
+    bar.classList.remove("hidden");
+    clearInterval(R.ka);
+    R.ka=setInterval(()=>{
+      if(R.active&&courseLive.setup)liveSend({realtimeInput:{audio:{data:liveBytesToBase64(new Uint8Array(3200)),mimeType:"audio/pcm;rate=16000"}}});
+    },5000);
+    speakFrom(0);
+  }
+  function endRead(done,silent){
+    if(!R.active)return;
+    R.active=false;R.hold=false;R.paused=false;
+    clearInterval(R.ka);
+    bar.classList.add("hidden");
+    if(!silent)tell("The app "+(done?"has finished reading":"stopped reading")+" "+R.label+" aloud to the student. Reply with ONE very short sentence asking what they would like next. Do not read the text again. For your reference only, here is the text that was read:\n"+R.shown.slice(0,6000));
+  }
+  function stopRead(silent){
+    if(!R.active)return;
+    R.tok++;
+    try{speechSynthesis.cancel();}catch(_){}
+    endRead(false,silent);
+  }
+  document.getElementById("ojReadStop").onclick=()=>stopRead(false);
+  document.getElementById("ojReadPause").onclick=()=>{
+    if(!R.active)return;
+    if(R.paused){speakFrom(R.i);}
+    else{R.tok++;try{speechSynthesis.cancel();}catch(_){}R.paused=true;paintBar();}
+  };
+  const prevStop=window.stopCourseLive;
+  window.stopCourseLive=function(u){
+    if(u!==false)stopRead(true);
+    return prevStop.apply(this,arguments);
+  };
+
+  /* ---------- find it, then read or answer ---------- */
+  async function handle(req){
+    if(busy)return;
+    busy=true;
+    const t0=Date.now();
+    try{
+      const c=courses[courseLive.courseIndex];
+      if(!c||!courseLive.setup)return;
+      const files=(c.pdfs||[]).filter(f=>f&&f.id&&f.data);
+      if(!files.length){tell("The student asked for text from a page, but no PDF is attached to this course. Tell them to add the PDF to the course first.");return;}
+      const f=(!req.n&&last)?(files.find(x=>x.id===last.fid)||files[0]):pickPdf(files,req.raw,c);
+      const total=(await pdfDocFor(f)).getPageCount();
+      let pageRel=req.rel==="nextpage"||req.rel==="prevpage";
+      const sameRel=!!(last&&last.units&&req.rel&&!pageRel);
+      let range=null,units,res,pdf,warn="",searched=false;
+
+      if(sameRel){
+        const S=last.units.sents,n=S.length;
+        if(req.rel==="again")range=[last.a,last.b];
+        else if(req.rel==="cont"){if(last.b+1<n)range=[last.b+1,n-1];else pageRel=true;}
+        else if(req.rel==="nextsent"){if(last.b+1<n)range=[last.b+1,last.b+1];else pageRel=true;}
+        else if(req.rel==="prevsent"){if(last.a>0)range=[last.a-1,last.a-1];else{tell("The student asked for the sentence before the first one on the page. Tell them that was the start of the page.");return;}}
+        else if(req.rel==="nextpar"){range=parRange(S,S[last.b].p+1);if(!range)pageRel=true;}
+        else if(req.rel==="prevpar"){range=S[last.a].p>0?parRange(S,S[last.a].p-1):null;if(!range){tell("The student asked for the paragraph before the first one on the page. Tell them that was the start of the page.");return;}}
+        if(pageRel){req.rel="nextpage";range=null;}
+      }
+
+      if(sameRel&&!pageRel){units=last.units;res=last.res;pdf=last.pdf;}
+      else if(req.n||pageRel){
+        const r=await pageRes(f,req,total);
+        if(r.err){tell("The student asked for a page that could not be opened: "+r.err+" Tell them.");return;}
+        pdf=r.pdf;res=r.res;units=split(res.text);
+        if(r.mismatch)warn="The page you asked for, "+req.n+", was not found by its printed number. This is PDF page "+pdf+".";
+      }
+      else if(last){units=last.units;res=last.res;pdf=last.pdf;}
+      else if(req.find){
+        const sr=await searchScope(f,req.raw);
+        if(!sr){tell("The student asked you to read some text, but the app could not find it in their PDF. Tell them kindly and ask for the page number or the first few words.");return;}
+        units=sr.units;pdf=sr.pdf;res={printed:"",text:"",foot:""};searched=true;
+      }
+      else{tell("The student asked for a paragraph or sentence but did not say which page. Ask them which page.");return;}
+
+      const S=units.sents;
+      if(!S.length){tell("The page the student asked for has no readable text. Tell them.");return;}
+
+      if(range===null){
+        if(req.para||req.sent){
+          const r=pickUnits(units,req);
+          if(r.err){tell("The student asked for text that is not there: "+r.err+" Tell them briefly.");return;}
+          range=r.range;
+        }else if(req.find){
+          let r=await aiLocate(S,req.raw);
+          if(!r&&!searched){
+            const sr=await searchScope(f,req.raw);
+            if(sr){units=sr.units;pdf=sr.pdf;res={printed:"",text:"",foot:""};searched=true;r=await aiLocate(units.sents,req.raw);}
+          }
+          if(!r){tell("The app could not find the text the student asked for. Tell them kindly and ask for the page number or the first few words.");return;}
+          range=r;
+        }else range=[0,S.length-1];
+      }
+
+      const SS=units.sents;
+      const picked=SS.slice(range[0],range[1]+1).map(s=>s.t);
+      const withFoot=!req.para&&!req.sent&&!req.find&&range[0]===0&&range[1]===SS.length-1&&!!res.foot;
+      const foots=withFoot?res.foot.split(/\n+/).map(x=>x.trim()).filter(Boolean).map(x=>"Footnote. "+x):[];
+      const shown=picked.concat(foots).join("\n");
+      const label="PDF page "+pdf+(res.printed?" (printed page "+res.printed+")":"");
+      last={fid:f.id,pdf,units,res,a:range[0],b:range[1]};
+
+      if(!req.read){
+        tell("PAGE TEXT ("+label+"). "+warn+" The student said: \""+req.raw+"\". Answer from this text only, speaking naturally and briefly. Do not read the whole text aloud unless they ask you to read it.\n\nTEXT:\n"+shown);
+        return;
+      }
+
+      const spoken=chunkify((warn?[warn]:[]).concat(picked,foots));
+      if(!spoken.length){tell("The text the student asked for is empty. Tell them.");return;}
+      const wait=2600-(Date.now()-t0);
+      if(wait>0)await sleep2(wait);
+      await quiet();
+      if(!courseLive.setup)return;
+      try{saveLiveLine("ai","📖 "+label+"\n"+shown);}catch(_){}
+      liveSetStatus("Reading "+label+"…");
+      startRead(label,spoken,shown);
+    }catch(e){
+      tell("The app could not open that text just now. Tell the student something went wrong and ask them to try again.");
+    }finally{
+      busy=false;
+    }
+  }
+
+  let heard="",hT=null;
+  window.ojLiveHear=function(sc){
+    const t=sc&&sc.inputTranscription&&sc.inputTranscription.text;
+    if(t){
+      heard=(heard+" "+t).trim();
+      clearTimeout(hT);
+      hT=setTimeout(()=>{
+        hT=null;
+        const x=heard;
+        heard="";
+        const req=parseReq(x);
+        if(req)handle(req);
+      },1100);
+    }else if(sc&&(sc.turnComplete||sc.interrupted)&&!hT){
+      heard="";
+    }
+  };
+
+  window.ojLivePageRule=function(){
+    return "Reading aloud: you cannot see the pages. When the student asks you to read, recite or repeat any page, paragraph, sentence, heading or passage, reply with ONE short sentence only, such as Reading it now, and then say nothing more. The app finds the exact text and reads it aloud itself, so you must never read, recite or invent page text on your own. When the student asks a question about a page, say One moment and wait for the message that starts with PAGE TEXT, then answer from that text only. When the app tells you it could not find something, tell the student kindly and ask for the page number or the first few words. The student can name a page by the number printed on it, or say PDF page for its position in the file.";
+  };
+})();
+
 </script>
 
 </body>
