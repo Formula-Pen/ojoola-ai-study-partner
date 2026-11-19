@@ -8563,6 +8563,485 @@ window.renderMarkdown=function(text){
   return prev(t);
 };
 })();
+  /* WIDER TABLES: drag sideways to read */
+(function(){
+const st=document.createElement("style");
+st.textContent=".ojTblWrap{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;overscroll-behavior-x:contain}.ojTbl{width:100%;min-width:520px}.ojTbl th,.ojTbl td{min-width:150px;overflow-wrap:normal;word-break:normal;hyphens:none}.ojTbl th:first-child,.ojTbl td:first-child{min-width:130px}";
+document.head.appendChild(st);
+})();
+
+  /* PDF LIBRARY v3: notes scanner and PDF creator (all on the phone) */
+(function(){
+const MAXP=500,DKEY="ojoola_pdf_draft",LKEY="ojoola_pdf_lib",SKEY="ojoola_pdf_delafter";
+const Q={small:{side:1100,q:.5,kb:90},balanced:{side:1500,q:.68,kb:180},high:{side:2000,q:.85,kb:380}};
+let pages=[],edit=null,cancel=false,working=false,quality="balanced",isOpen=false,pgOpen=false,flash=null,loaded=false;
+
+const st=document.createElement("style");
+st.textContent="#pdfLib,#pdfPages{position:fixed;inset:0;overflow-y:auto;background:#f5f7fb}#pdfLib{z-index:60;padding-bottom:60px}#pdfPages{z-index:62}body.dark #pdfLib,body.dark #pdfPages{background:#0b1220}#pdfLib .wrap,#pdfPages .wrap{padding-top:calc(16px + env(safe-area-inset-top,0px))}.pdfBig{display:block;width:100%;margin-top:10px;text-align:center}.pdfQ{display:flex;gap:6px;margin-top:10px}.pdfQ button{flex:1;padding:10px 4px;font-size:12px}.pdfQ .on{background:#2563eb;color:#fff}.pdfGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}.pdfPg{border:1px solid #e3e8f1;border-radius:14px;padding:8px;background:#fff}body.dark .pdfPg{background:#121c2e;border-color:#26344d}.pdfTh{height:150px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;background:rgba(128,128,128,.12)}.pdfTh img{max-width:100%;max-height:100%;object-fit:contain}.pdfPgBar{display:flex;justify-content:space-between;align-items:center;margin:6px 0;font-size:13px}.pdfBtns{display:flex;gap:4px}.pdfBtns button{flex:1;border:0;border-radius:9px;padding:8px 0;background:#eaf0ff;color:#2563eb;font-size:14px}body.dark .pdfBtns button{background:#1d3158;color:#bfdbfe}.pdfBtns .x{background:#fee2e2;color:#b91c1c}.pdfStrip{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;-webkit-overflow-scrolling:touch}.pdfSt{flex:0 0 72px;border:1px solid #dbe3ef;border-radius:10px;padding:4px;background:transparent;color:inherit;font-size:11px}body.dark .pdfSt{border-color:#334155}.pdfSt img{display:block;width:100%;height:92px;object-fit:contain;border-radius:6px;background:rgba(128,128,128,.12)}.pdfDone{position:sticky;bottom:0;padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));background:#f5f7fb}body.dark .pdfDone{background:#0b1220}.pdfItem{display:flex;gap:10px;align-items:center;margin-top:10px}.pdfItem img{width:54px;height:72px;object-fit:cover;border-radius:8px;background:rgba(128,128,128,.15)}.pdfItemBtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.pdfItemBtns button{padding:7px 10px;font-size:12px}#pdfProg{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px}#pdfEd{position:fixed;left:0;right:0;bottom:0;z-index:65;background:#fff;border-radius:22px 22px 0 0;padding:18px;max-height:88vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.3)}body.dark #pdfEd{background:#121c2e}";
+document.head.appendChild(st);
+
+const rd=(k,f)=>safeJSON(localStorage.getItem(k),f)||f;
+const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(_){toast("Your device storage is almost full.");}};
+function toast(t){const e=document.createElement("div");e.textContent=t;e.style.cssText="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);max-width:88vw;background:#14213d;color:#fff;padding:11px 16px;border-radius:14px;font:14px Arial,sans-serif;z-index:100010;box-shadow:0 8px 24px rgba(0,0,0,.3)";document.body.appendChild(e);setTimeout(()=>e.remove(),3500);}
+const mb=n=>(n/1048576).toFixed(n<10485760?1:0)+" MB";
+const free=cv=>{cv.width=cv.height=0;};
+const blobOf=(cv,q)=>new Promise(r=>cv.toBlob(r,"image/jpeg",q));
+const yieldUI=()=>new Promise(r=>setTimeout(r,0));
+
+/* ---------- image helpers ---------- */
+async function toCanvas(src,max){
+  let bmp;
+  try{bmp=await createImageBitmap(src,{imageOrientation:"from-image"});}
+  catch(_){bmp=await new Promise((res,rej)=>{const u=URL.createObjectURL(src),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),0);};i.onerror=rej;i.src=u;});}
+  const w=bmp.width||bmp.naturalWidth,h=bmp.height||bmp.naturalHeight,sc=Math.min(1,max/Math.max(w,h));
+  const cv=document.createElement("canvas");
+  cv.width=Math.max(1,Math.round(w*sc));cv.height=Math.max(1,Math.round(h*sc));
+  cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+  if(bmp.close)bmp.close();
+  return cv;
+}
+async function makeThumb(blob){const t=await toCanvas(blob,240);const d=t.toDataURL("image/jpeg",.6);free(t);return d;}
+
+function rotateCv(cv,deg){
+  if(!deg)return cv;
+  const o=document.createElement("canvas"),odd=deg%180!==0;
+  o.width=odd?cv.height:cv.width;o.height=odd?cv.width:cv.height;
+  const x=o.getContext("2d");x.translate(o.width/2,o.height/2);x.rotate(deg*Math.PI/180);x.drawImage(cv,-cv.width/2,-cv.height/2);
+  free(cv);return o;
+}
+
+function detect(cv){
+  const s=Math.min(1,200/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*s)),h=Math.max(8,Math.round(cv.height*s));
+  const t=document.createElement("canvas");t.width=w;t.height=h;
+  const x=t.getContext("2d");x.drawImage(cv,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data,n=w*h,L=new Uint8Array(n),hist=new Array(256).fill(0);
+  for(let i=0;i<n;i++){const v=(d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11)|0;L[i]=v;hist[v]++;}
+  free(t);
+  let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
+  let wB=0,sB=0,best=0,th=128;
+  for(let i=0;i<256;i++){wB+=hist[i];if(!wB)continue;const wF=n-wB;if(!wF)break;sB+=i*hist[i];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>best){best=v;th=i;}}
+  const lab=new Uint8Array(n),stack=new Int32Array(n);
+  let bestC=0,bb=null;
+  for(let s0=0;s0<n;s0++){
+    if(L[s0]<=th||lab[s0])continue;
+    let sp=0,cnt=0,x0=w,y0=h,x1=0,y1=0;stack[sp++]=s0;lab[s0]=1;
+    while(sp){
+      const p=stack[--sp],px=p%w,py=(p/w)|0;cnt++;
+      if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py;
+      if(px>0&&!lab[p-1]&&L[p-1]>th){lab[p-1]=1;stack[sp++]=p-1;}
+      if(px<w-1&&!lab[p+1]&&L[p+1]>th){lab[p+1]=1;stack[sp++]=p+1;}
+      if(py>0&&!lab[p-w]&&L[p-w]>th){lab[p-w]=1;stack[sp++]=p-w;}
+      if(py<h-1&&!lab[p+w]&&L[p+w]>th){lab[p+w]=1;stack[sp++]=p+w;}
+    }
+    if(cnt>bestC){bestC=cnt;bb=[x0/w,y0/h,(x1+1)/w,(y1+1)/h];}
+  }
+  if(!bb||bestC<n*.25)return null;
+  return bb;
+}
+
+function flatten(cv){
+  const W=cv.width,H=cv.height;
+  const q=document.createElement("canvas");q.width=Math.max(8,W>>2);q.height=Math.max(8,H>>2);
+  const qx=q.getContext("2d");qx.drawImage(cv,0,0,q.width,q.height);
+  const qd=qx.getImageData(0,0,q.width,q.height).data,B=8,bw=Math.ceil(q.width/B),bh=Math.ceil(q.height/B);
+  const sm=document.createElement("canvas");sm.width=bw;sm.height=bh;
+  const sx=sm.getContext("2d"),so=sx.createImageData(bw,bh);
+  for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){
+    const x0=bx*B,y0=by*B,x1=Math.min(q.width,x0+B),y1=Math.min(q.height,y0+B);
+    let sum=0,cnt=0;
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*q.width+x)*4;sum+=qd[i]*.3+qd[i+1]*.59+qd[i+2]*.11;cnt++;}
+    const mean=sum/cnt;let r=0,g=0,b=0,k=0;
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*q.width+x)*4;if(qd[i]*.3+qd[i+1]*.59+qd[i+2]*.11>=mean){r+=qd[i];g+=qd[i+1];b+=qd[i+2];k++;}}
+    k=k||1;const o=(by*bw+bx)*4;so.data[o]=r/k;so.data[o+1]=g/k;so.data[o+2]=b/k;so.data[o+3]=255;
+  }
+  sx.putImageData(so,0,0);
+  const bg=document.createElement("canvas");bg.width=W;bg.height=H;
+  const bgx=bg.getContext("2d");bgx.imageSmoothingEnabled=true;bgx.imageSmoothingQuality="high";bgx.drawImage(sm,0,0,W,H);
+  const cx=cv.getContext("2d"),id=cx.getImageData(0,0,W,H),bd=bgx.getImageData(0,0,W,H),p=id.data,b=bd.data;
+  for(let i=0;i<p.length;i+=4){
+    for(let c=0;c<3;c++){const v=p[i+c]*245/Math.max(60,b[i+c]);p[i+c]=v>255?255:v;}
+  }
+  cx.putImageData(id,0,0);
+  free(q);free(sm);free(bg);
+}
+
+function adjust(cv,br,ct){
+  if(!br&&!ct)return;
+  const f=1+ct/100,lut=new Uint8Array(256);
+  for(let i=0;i<256;i++){const v=(i-128)*f+128+br*1.5;lut[i]=v<0?0:v>255?255:v;}
+  const x=cv.getContext("2d"),id=x.getImageData(0,0,cv.width,cv.height),p=id.data;
+  for(let i=0;i<p.length;i+=4){p[i]=lut[p[i]];p[i+1]=lut[p[i+1]];p[i+2]=lut[p[i+2]];}
+  x.putImageData(id,0,0);
+}
+
+/* ---------- pages (stored on the phone, never uploaded) ---------- */
+function saveDraft(){wr(DKEY,pages.map(({th,...p})=>p));}
+
+async function loadDraft(){
+  pages=rd(DKEY,[]).filter(p=>p&&p.id);
+  render();
+  for(let i=0;i<pages.length;i+=20){
+    await Promise.all(pages.slice(i,i+20).map(async p=>{try{p.th=await idbGet("th:"+p.id)||"";}catch(_){}}));
+    render();
+  }
+  loaded=true;
+}
+
+async function addFiles(list){
+  if(working)return;
+  let files=[...list];
+  const room=MAXP-pages.length;
+  if(files.length>room){toast("Maximum "+MAXP+" pages per PDF. Extra pictures were skipped.");files=files.slice(0,Math.max(0,room));}
+  if(!files.length)return;
+  working=true;cancel=false;
+  for(let i=0;i<files.length;i++){
+    if(cancel)break;
+    prog("Adding pages","Adding page "+(i+1)+" of "+files.length);
+    try{
+      const id=uid(),cv=await toCanvas(files[i],1800);
+      const blob=await blobOf(cv,.88);free(cv);
+      const th=await makeThumb(blob);
+      await idbPut("pg:"+id,blob);await idbPut("th:"+id,th);
+      pages.push({id,rot:0,br:0,ct:0,auto:false,th});
+    }catch(err){toast("Could not read a picture: "+((err&&err.message)||err));}
+    if(i%5===4){saveDraft();if(i%25===24)render();}
+    await yieldUI();
+  }
+  working=false;saveDraft();hideProg();render();
+}
+
+async function autoPage(p,cb){
+  if(!(await idbGet("og:"+p.id)))await idbPut("og:"+p.id,await idbGet("pg:"+p.id));
+  const src=await idbGet("og:"+p.id);
+  let cv=await toCanvas(src,1800);
+  cb&&cb("Scanning");
+  const bx=detect(cv);
+  if(bx){
+    cb&&cb("Cropping");
+    const m=.008,w=cv.width,h=cv.height;
+    const x0=Math.max(0,bx[0]-m)*w,y0=Math.max(0,bx[1]-m)*h,x1=Math.min(1,bx[2]+m)*w,y1=Math.min(1,bx[3]+m)*h;
+    if(x1-x0<w*.98||y1-y0<h*.98){
+      const o=document.createElement("canvas");o.width=Math.max(1,Math.round(x1-x0));o.height=Math.max(1,Math.round(y1-y0));
+      o.getContext("2d").drawImage(cv,x0,y0,x1-x0,y1-y0,0,0,o.width,o.height);
+      free(cv);cv=o;
+    }
+  }
+  cb&&cb("Enhancing");
+  flatten(cv);
+  const blob=await blobOf(cv,.88);free(cv);
+  await idbPut("pg:"+p.id,blob);
+  p.th=await makeThumb(blob);await idbPut("th:"+p.id,p.th);
+  p.auto=true;
+}
+
+async function autoAll(){
+  if(working)return;
+  if(!pages.length){toast("Add some pictures first.");return;}
+  working=true;cancel=false;
+  const n=pages.length;
+  for(let i=0;i<n;i++){
+    if(cancel)break;
+    try{await autoPage(pages[i],s=>prog(s,"Processing page "+(i+1)+" of "+n));}
+    catch(_){toast("Page "+(i+1)+" could not be scanned.");}
+    saveDraft();
+    if(i%10===9)render();
+    await yieldUI();
+  }
+  working=false;hideProg();render();
+}
+
+async function resetPage(p){
+  const o=await idbGet("og:"+p.id);
+  if(o){await idbPut("pg:"+p.id,o);p.th=await makeThumb(o);await idbPut("th:"+p.id,p.th);}
+  p.auto=false;p.rot=0;p.br=0;p.ct=0;saveDraft();
+}
+
+async function dropFiles(p){await idbDel("pg:"+p.id);await idbDel("og:"+p.id);await idbDel("th:"+p.id);}
+
+/* ---------- create the PDF ---------- */
+async function createPdf(){
+  if(working)return;
+  if(!pages.length){toast("Add some pictures first.");return;}
+  working=true;cancel=false;
+  const cfg=Q[quality],n=pages.length;
+  try{
+    prog("Preparing","Loading the PDF tool…");
+    const lib=await loadPdfLib();
+    const doc=await lib.PDFDocument.create();
+    for(let i=0;i<n;i++){
+      if(cancel)throw new Error("cancel");
+      const p=pages[i];
+      prog("Compressing","Processing page "+(i+1)+" of "+n);
+      let cv=await toCanvas(await idbGet("pg:"+p.id),cfg.side);
+      cv=rotateCv(cv,p.rot);
+      adjust(cv,p.br,p.ct);
+      const blob=await blobOf(cv,cfg.q),w=cv.width,h=cv.height;free(cv);
+      const img=await doc.embedJpg(await blob.arrayBuffer());
+      const pw=595,ph=Math.round(pw*h/w*100)/100;
+      doc.addPage([pw,ph]).drawImage(img,{x:0,y:0,width:pw,height:ph});
+      await yieldUI();
+    }
+    prog("Building PDF","Putting the pages together…");
+    const bytes=await doc.save();
+    const blob=new Blob([bytes],{type:"application/pdf"});
+    const typed=($("pdfName").value||"").trim();
+    const stamp=new Date().toISOString().slice(0,10);
+    const base=typed.replace(/[^\p{L}\p{N}]+/gu,"_").replace(/^_+|_+$/g,"")||"Ojoola_Notes_"+stamp;
+    const entry={id:uid(),name:base+".pdf",pages:n,size:blob.size,ts:Date.now(),thumb:pages[0].th||""};
+    let saved=true;
+    try{await idbPut("pdf:"+entry.id,blob);}catch(_){saved=false;}
+    if(saved){const l=rd(LKEY,[]);l.unshift(entry);wr(LKEY,l);}
+    flash=Object.assign({},entry,{unsaved:!saved,blob:saved?null:blob});
+    for(const p of pages)await dropFiles(p);
+    pages=[];saveDraft();$("pdfName").value="";
+  }catch(e){
+    if(e.message!=="cancel")toast("The PDF could not be created. Try the Small File option or fewer pages.");
+  }
+  working=false;hideProg();render();renderList();storage();
+  ov.scrollTop=0;
+}
+
+/* ---------- saved PDFs ---------- */
+const getBlob=async e=>e.blob||idbGet("pdf:"+e.id);
+
+async function download(e){
+  const b=await getBlob(e);
+  if(!b){toast("This PDF is no longer stored.");return;}
+  const u=URL.createObjectURL(b),a=document.createElement("a");
+  a.href=u;a.download=e.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),60000);
+  if(!e.unsaved&&$("pdfDelAfter").checked)setTimeout(()=>removePdf(e.id,true),1500);
+}
+async function openPdf(e){
+  const b=await getBlob(e);
+  if(!b){toast("This PDF is no longer stored.");return;}
+  const u=URL.createObjectURL(b);window.open(u,"_blank");setTimeout(()=>URL.revokeObjectURL(u),120000);
+}
+async function removePdf(id,silent){
+  if(!silent&&!confirm("Delete this PDF from the Ojoola Library? A copy you downloaded stays on your phone."))return;
+  await idbDel("pdf:"+id);
+  wr(LKEY,rd(LKEY,[]).filter(x=>x.id!==id));
+  if(flash&&flash.id===id)flash=null;
+  render();renderList();storage();
+}
+function renamePdf(id){
+  const l=rd(LKEY,[]),e=l.find(x=>x.id===id);if(!e)return;
+  const v=prompt("New name",e.name.replace(/\.pdf$/i,""));if(!v)return;
+  const b=v.replace(/[^\p{L}\p{N}]+/gu,"_").replace(/^_+|_+$/g,"");if(!b)return;
+  e.name=b+".pdf";wr(LKEY,l);renderList();
+}
+async function study(e){
+  const c=courses[currentCourseIndex];
+  if(!c){toast("Open a course first, then tap Create PDF.");return;}
+  const b=await getBlob(e);
+  if(!b){toast("This PDF is no longer stored.");return;}
+  if(b.size>15*1024*1024){toast("This PDF is over 15 MB, which is the limit for course materials. Use Small File.");return;}
+  const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]||"");r.onerror=rej;r.readAsDataURL(b);});
+  c.pdfs.push({id:uid(),name:e.name,size:b.size,mimeType:"application/pdf",data});
+  if(saveCourses()){renderCourseFiles();toast("Added to your course materials.");closeLib(true);}
+}
+
+/* ---------- main PDF Library screen (tools only) ---------- */
+const ov=document.createElement("div");
+ov.id="pdfLib";ov.className="hidden";
+ov.innerHTML='<div class="wrap">'+
+'<div class="pageHeader"><button class="iconBtn" data-a="close" aria-label="Back">←</button><div style="flex:1"><h2>PDF Library</h2><div class="muted" id="pdfStore"></div></div></div>'+
+'<div id="pdfFlash"></div>'+
+'<div class="card"><div class="flex between"><b>New PDF</b><span class="muted" id="pdfCount"></span></div>'+
+'<div class="muted" style="margin:6px 0 4px">Scanning, cropping and PDF building all happen on your phone. Nothing is uploaded.</div>'+
+'<button class="primary pdfBig" data-a="addopen">+ Add Notes / Images</button>'+
+'<div id="pdfStripBox" class="hidden"><div class="muted" style="margin-top:12px">Tap a page to crop, rotate or adjust it.</div><div id="pdfStrip" class="pdfStrip"></div>'+
+'<button class="secondary pdfBig" data-a="manage">Manage and reorder pages</button>'+
+'<button class="secondary pdfBig" data-a="auto">✨ Auto Scan &amp; Crop All Pages</button></div>'+
+'<div class="pdfQ"><button class="secondary" data-a="q" data-q="small">Small File</button><button class="secondary" data-a="q" data-q="balanced">Balanced</button><button class="secondary" data-a="q" data-q="high">High Quality</button></div>'+
+'<input id="pdfName" placeholder="PDF name (optional)" style="margin-top:10px">'+
+'<div class="muted" id="pdfEst" style="margin-top:6px"></div>'+
+'<button class="primary pdfBig" data-a="create">Create PDF</button>'+
+'<button class="danger pdfBig" data-a="clear">Remove all pages</button></div>'+
+'<div class="lpHead">Saved PDFs</div>'+
+'<label class="flex muted" style="align-items:flex-start"><input type="checkbox" id="pdfDelAfter" style="width:20px;height:20px;flex:0 0 20px"> <span>Delete from Ojoola Library after download. A downloaded copy is saved separately in your phone\'s files, so you do not need both.</span></label>'+
+'<div id="pdfList"></div></div>';
+document.body.appendChild(ov);
+
+/* ---------- pages screen (all the images) ---------- */
+const pp=document.createElement("div");
+pp.id="pdfPages";pp.className="hidden";
+pp.innerHTML='<div class="wrap">'+
+'<div class="pageHeader"><button class="iconBtn" data-a="pdone" aria-label="Back">←</button><div style="flex:1"><h2>Your pages</h2><div class="muted" id="pdfPgCount"></div></div></div>'+
+'<label class="primary pdfBig">+ Add Notes / Images<input id="pdfCam" type="file" accept="image/*" capture="environment" multiple hidden></label>'+
+'<div class="muted" style="margin-top:8px">Tap the button to add your notes as pictures. You can add more any time, up to '+MAXP+' pages.</div>'+
+'<div id="pdfGrid" class="pdfGrid"></div>'+
+'<div class="pdfDone"><button class="primary pdfBig" style="margin-top:0" data-a="pdone">Done</button></div></div>';
+document.body.appendChild(pp);
+
+const inEl={click(){}};
+function wire(id){
+  const el=document.getElementById(id);
+  el.addEventListener("change",async()=>{
+    const f=[...el.files];
+    if(!f.length)return;
+    toast("Adding "+f.length+" picture"+(f.length>1?"s":"")+"…");
+    try{await addFiles(f);}catch(err){toast("Could not add pictures: "+((err&&err.message)||err));}
+    el.value="";
+  });
+}
+
+wire("pdfCam");
+  
+const progEl=document.createElement("div");
+progEl.id="pdfProg";progEl.className="hidden";
+progEl.innerHTML='<div class="card center" style="max-width:340px;width:100%"><div class="lpSpin" style="width:30px;height:30px;margin:0 auto 12px;border:3px solid rgba(37,99,235,.25);border-top-color:#2563eb;border-radius:50%;animation:ojspin .9s linear infinite"></div><div id="pdfProgStage" style="font-weight:900;font-size:16px"></div><div id="pdfProgText" class="muted" style="margin:6px 0 14px"></div><button class="secondary" id="pdfProgCancel">Stop</button></div>';
+document.body.appendChild(progEl);
+$("pdfProgCancel").onclick=()=>{cancel=true;};
+function prog(stage,text){progEl.classList.remove("hidden");$("pdfProgStage").textContent=stage;$("pdfProgText").textContent=text;}
+function hideProg(){progEl.classList.add("hidden");}
+window.addEventListener("beforeunload",e=>{if(working){e.preventDefault();e.returnValue="";}});
+
+const rotStyle=p=>"transform:rotate("+p.rot+"deg)"+(p.rot%180?" scale(.72)":"")+";filter:brightness("+(1+p.br/100)+") contrast("+(1+p.ct/100)+")";
+
+function render(){
+  $("pdfCount").textContent=pages.length+" of "+MAXP+" pages";
+  $("pdfPgCount").textContent=pages.length+" of "+MAXP+" pages";
+  $("pdfEst").textContent=pages.length?"Estimated size: about "+mb(pages.length*Q[quality].kb*1024)+" (the real size is shown when the PDF is ready)":"Add pictures to see an estimated size.";
+  ov.querySelectorAll(".pdfQ button").forEach(b=>b.classList.toggle("on",b.dataset.q===quality));
+  $("pdfStripBox").classList.toggle("hidden",!pages.length);
+  $("pdfStrip").innerHTML=pages.map((p,i)=>'<button class="pdfSt" data-a="ed" data-i="'+i+'" aria-label="Edit page '+(i+1)+'"><img loading="lazy" src="'+(p.th||"")+'" alt="" style="'+rotStyle(p)+'"><span>'+(i+1)+(p.auto?" ✓":"")+'</span></button>').join("");
+  $("pdfGrid").innerHTML=pages.length?pages.map((p,i)=>
+    '<div class="pdfPg"><div class="pdfTh"><img loading="lazy" src="'+(p.th||"")+'" alt="Page '+(i+1)+'" style="'+rotStyle(p)+'"></div>'+
+    '<div class="pdfPgBar"><b>Page '+(i+1)+'</b>'+(p.auto?'<span class="lpChip">scanned</span>':"")+'</div>'+
+    '<div class="pdfBtns"><button data-a="mv" data-i="'+i+'" data-d="-1" aria-label="Move earlier">◀</button><button data-a="mv" data-i="'+i+'" data-d="1" aria-label="Move later">▶</button><button data-a="rot" data-i="'+i+'" aria-label="Rotate">⟳</button><button class="x" data-a="del" data-i="'+i+'" aria-label="Delete page">✕</button></div></div>'
+  ).join(""):'<div class="muted" style="grid-column:1/-1;text-align:center;padding:30px 0">No pages yet. Tap + Add Notes / Images.</div>';
+  const f=$("pdfFlash");
+  if(flash){
+    f.innerHTML='<div class="card" style="border-color:#16a34a;margin-bottom:12px"><b>✓ PDF ready</b><div class="muted" style="margin:4px 0">'+escapeHTML(flash.name)+" · "+flash.pages+" pages · "+mb(flash.size)+'</div>'+(flash.unsaved?'<div style="color:#b91c1c;font-size:13px;margin-bottom:6px">Your device had no room to keep it in Ojoola. Download it now, or it will be lost when you leave.</div>':'<div class="muted" style="margin-bottom:6px">Saved in your Ojoola Library below.</div>')+'<div class="pdfItemBtns"><button class="primary" data-a="fdl">Download PDF</button><button class="secondary" data-a="fopen">Open</button><button class="secondary" data-a="fstudy">Study with Ojoola</button></div></div>';
+  }else f.innerHTML="";
+}
+
+function renderList(){
+  const l=rd(LKEY,[]);
+  $("pdfList").innerHTML=l.length?l.map(e=>
+    '<div class="card pdfItem"><img src="'+(e.thumb||"")+'" alt=""><div style="flex:1;min-width:0"><div style="font-weight:800;overflow-wrap:anywhere">'+escapeHTML(e.name)+'</div><div class="muted">'+e.pages+" pages · "+mb(e.size)+" · "+new Date(e.ts).toLocaleDateString()+'</div><div class="pdfItemBtns"><button class="secondary" data-a="open" data-id="'+e.id+'">Open</button><button class="secondary" data-a="dl" data-id="'+e.id+'">Download</button><button class="secondary" data-a="study" data-id="'+e.id+'">Study</button><button class="secondary" data-a="ren" data-id="'+e.id+'">Rename</button><button class="danger" data-a="rm" data-id="'+e.id+'">Delete</button></div></div></div>'
+  ).join(""):'<div class="muted" style="margin-top:8px">No saved PDFs yet.</div>';
+}
+
+async function storage(){
+  const el=$("pdfStore"),used=rd(LKEY,[]).reduce((a,e)=>a+(e.size||0),0);
+  let t="Ojoola PDF storage used: "+mb(used);
+  try{
+    if(navigator.storage&&navigator.storage.estimate){
+      const e=await navigator.storage.estimate(),left=(e.quota||0)-(e.usage||0);
+      t+=" · Available for Ojoola: about "+mb(Math.max(0,left));
+      if(left<150*1048576)t+=" · ⚠ Storage is low. Delete old PDFs you no longer need.";
+    }
+  }catch(_){}
+  el.textContent=t;
+}
+
+/* ---------- adjust sheet ---------- */
+function openEdit(i){
+  const p=pages[i];if(!p)return;
+  edit=i;
+  let s=$("pdfEd");if(!s){s=document.createElement("div");s.id="pdfEd";ov.appendChild(s);}
+  s.innerHTML='<div class="flex between"><b>Page '+(i+1)+' of '+pages.length+'</b><button class="iconBtn" data-a="edone" aria-label="Close">✕</button></div>'+
+  '<div class="pdfTh" style="height:200px;margin:10px 0"><img id="pdfEdImg" src="'+(p.th||"")+'" alt="Preview"></div>'+
+  '<label class="muted">Brightness</label><input type="range" min="-50" max="50" value="'+p.br+'" data-s="br">'+
+  '<label class="muted">Contrast</label><input type="range" min="-50" max="50" value="'+p.ct+'" data-s="ct">'+
+  '<button class="secondary pdfBig" data-a="erot">⟳ Rotate</button>'+
+  '<button class="secondary pdfBig" data-a="eauto">✨ Re-run auto scan on this page</button>'+
+  '<button class="secondary pdfBig" data-a="ereset">Reset this page</button>'+
+  '<button class="danger pdfBig" data-a="edel">Delete this page</button>'+
+  '<button class="primary pdfBig" data-a="edone">Done</button>';
+  paintEdit();
+}
+function paintEdit(){
+  const p=pages[edit],im=$("pdfEdImg");if(!p||!im)return;
+  im.style.cssText=rotStyle(p);
+}
+function closeEdit(){const s=$("pdfEd");if(s)s.remove();edit=null;saveDraft();render();}
+
+ov.addEventListener("input",e=>{
+  const k=e.target.dataset&&e.target.dataset.s;
+  if(!k||edit===null||!pages[edit])return;
+  pages[edit][k]=Number(e.target.value);paintEdit();
+});
+
+async function act(e){
+  const b=e.target.closest("[data-a]");if(!b)return;
+  const a=b.dataset.a,i=Number(b.dataset.i),id=b.dataset.id;
+  const entry=id?rd(LKEY,[]).find(x=>x.id===id):null;
+  if(a==="close")closeLib();
+  else if(a==="addopen")openPages();
+  else if(a==="addmore")inEl.click();
+  else if(a==="manage")openPages();
+  else if(a==="pdone")closePages();
+  else if(a==="auto")autoAll();
+  else if(a==="create")createPdf();
+  else if(a==="q"){quality=b.dataset.q;render();}
+  else if(a==="clear"){
+    if(!pages.length||!confirm("Remove all "+pages.length+" pages from this PDF?"))return;
+    for(const p of pages)await dropFiles(p);
+    pages=[];saveDraft();render();
+  }
+  else if(a==="mv"){const j=i+Number(b.dataset.d);if(j<0||j>=pages.length)return;const t=pages[i];pages[i]=pages[j];pages[j]=t;saveDraft();render();}
+  else if(a==="rot"){pages[i].rot=(pages[i].rot+90)%360;saveDraft();render();}
+  else if(a==="del"){if(!confirm("Delete page "+(i+1)+"?"))return;await dropFiles(pages[i]);pages.splice(i,1);saveDraft();render();}
+  else if(a==="ed")openEdit(i);
+  else if(a==="edone")closeEdit();
+  else if(a==="erot"){pages[edit].rot=(pages[edit].rot+90)%360;paintEdit();}
+  else if(a==="edel"){const k=edit;if(!confirm("Delete page "+(k+1)+"?"))return;const p=pages[k];closeEdit();await dropFiles(p);pages.splice(k,1);saveDraft();render();}
+  else if(a==="eauto"){
+    const k=edit,p=pages[k];working=true;prog("Scanning","Processing page "+(k+1));
+    try{await autoPage(p,s=>prog(s,"Processing page "+(k+1)));saveDraft();}catch(_){toast("This page could not be scanned.");}
+    working=false;hideProg();openEdit(k);
+  }
+  else if(a==="ereset"){const k=edit;await resetPage(pages[k]);openEdit(k);}
+  else if(a==="fdl"&&flash)download(flash);
+  else if(a==="fopen"&&flash)openPdf(flash);
+  else if(a==="fstudy"&&flash)study(flash);
+  else if(a==="open"&&entry)openPdf(entry);
+  else if(a==="dl"&&entry)download(entry);
+  else if(a==="study"&&entry)study(entry);
+  else if(a==="ren")renamePdf(id);
+  else if(a==="rm")removePdf(id);
+}
+ov.addEventListener("click",act);
+pp.addEventListener("click",act);
+
+$("pdfDelAfter").checked=localStorage.getItem(SKEY)==="1";
+$("pdfDelAfter").onchange=function(){localStorage.setItem(SKEY,this.checked?"1":"0");};
+
+function openPages(){pp.classList.remove("hidden");pgOpen=true;render();pp.scrollTop=0;}
+function closePages(){
+  if(working){toast("Please wait, or tap Stop first.");return;}
+  saveDraft();pp.classList.add("hidden");pgOpen=false;render();
+}
+function openLib(){
+  ov.classList.remove("hidden");isOpen=true;
+  renderList();storage();
+  if(!loaded)loadDraft();else render();
+  ov.scrollTop=0;
+}
+function closeLib(force){
+  if(working&&!force){toast("Please wait, or tap Stop first.");return;}
+  closeEdit();saveDraft();pp.classList.add("hidden");pgOpen=false;ov.classList.add("hidden");isOpen=false;
+}
+(window.ojBackHooks=window.ojBackHooks||[]).push(
+  {isOpen:()=>edit!==null,close:closeEdit},
+  {isOpen:()=>pgOpen,close:closePages},
+  {isOpen:()=>isOpen,close:closeLib}
+);
+
+/* the button: same line as + Add PDF, on the far right */
+const lab=$("coursePdfInput").parentNode;
+const row=document.createElement("div");
+row.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px";
+lab.parentNode.insertBefore(row,lab);
+row.appendChild(lab);
+const cb=document.createElement("button");
+cb.type="button";cb.className="secondary";cb.textContent="📄 Create PDF";cb.onclick=openLib;
+row.appendChild(cb);
+})();
+  
 </script>
 
 </body>
