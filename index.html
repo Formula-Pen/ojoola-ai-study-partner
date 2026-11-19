@@ -8252,6 +8252,274 @@ input,textarea{font-size:14px;padding:10px 12px}
     return h+'</div>';
   };
 })();
+
+  /* PHONE VOICE CHOICE + SENTENCE HIGHLIGHT WHILE A LESSON IS READ (no AI used) */
+(function(){
+  const synth=window.speechSynthesis;
+  if(!synth)return;
+  const VKEY="ojoola_read_voice";
+  let vCache=null;
+
+  const st=document.createElement("style");
+  st.textContent="::highlight(ojread){background-color:#fde68a;color:#111827}";
+  document.head.appendChild(st);
+
+  /* ---------- voice ---------- */
+  const enVoices=()=>(synth.getVoices()||[]).filter(v=>/^en/i.test(v.lang));
+  function score(v){
+    const n=(v.name+" "+v.voiceURI).toLowerCase();
+    const l=String(v.lang||"").replace("_","-").toLowerCase();
+    let s=0;
+    if(l==="en-gb")s+=30;
+    else if(l==="en-ng")s+=28;
+    else if(l==="en-us")s+=20;
+    else if(/^en-(au|ie|za|in)$/.test(l))s+=14;
+    if(/natural|neural|online|premium|enhanced|wavenet|studio|network/.test(n))s+=14;
+    if(n.indexOf("google")>-1)s+=6;
+    if(v.localService)s+=3;
+    if(/female|woman|libby|sonia|hazel|susan|serena|samantha|karen|jenny|aria|emma|joanna|salli|zira|moira|tessa|fiona|catherine|martha|stephanie|kate|abbi|holly|maisie|olivia/.test(n))s+=12;
+    return s;
+  }
+  window.ojVoice=function(){
+    if(vCache)return vCache;
+    const list=enVoices();
+    if(!list.length)return null;
+    const saved=localStorage.getItem(VKEY);
+    let v=null;
+    if(saved&&saved!=="auto")v=list.find(x=>x.voiceURI===saved||x.name===saved)||null;
+    if(!v)v=list.slice().sort((a,b)=>score(b)-score(a))[0];
+    vCache=v;
+    return v;
+  };
+
+  /* every spoken sentence in the app uses the chosen voice */
+  const rawSpeak=synth.speak.bind(synth);
+  synth.speak=function(u){
+    try{
+      const v=window.ojVoice();
+      if(v&&!u.voice){u.voice=v;u.lang=v.lang;}
+    }catch(_){}
+    return rawSpeak(u);
+  };
+
+  /* Settings card */
+  let sel=null;
+  const box=document.querySelector("#settingsModal .modalBox");
+  if(box){
+    const card=document.createElement("div");
+    card.className="card";
+    card.style.marginTop="14px";
+    card.innerHTML='<h3>Reading voice</h3><p class="muted">Used when Ọjọ́ọ̀la reads lessons and answers aloud. Auto picks the best English voice on this phone.</p><select id="ojVoiceSel" style="width:100%;padding:12px;border-radius:13px"></select><br><br><button class="secondary" id="ojVoiceTest" type="button">▶ Play a sample</button>';
+    box.appendChild(card);
+    sel=card.querySelector("#ojVoiceSel");
+    sel.onchange=()=>{localStorage.setItem(VKEY,sel.value);vCache=null;};
+    card.querySelector("#ojVoiceTest").onclick=()=>{
+      synth.cancel();
+      const u=new SpeechSynthesisUtterance("Hello, this is how your lessons will sound. You can change the speed while you listen.");
+      u.rate=Number(localStorage.getItem("ojoola_speech_speed"))||1;
+      synth.speak(u);
+    };
+  }
+  function fillVoices(){
+    if(!sel)return;
+    const list=enVoices().sort((a,b)=>score(b)-score(a));
+    const cur=localStorage.getItem(VKEY)||"auto";
+    sel.innerHTML='<option value="auto">Auto (recommended)</option>'+list.map(v=>'<option value="'+escapeHTML(v.voiceURI)+'">'+escapeHTML(v.name+" ("+v.lang+")")+"</option>").join("");
+    sel.value=cur;
+    if(sel.value!==cur)sel.value="auto";
+  }
+  synth.addEventListener("voiceschanged",()=>{vCache=null;fillVoices();});
+  fillVoices();
+
+  /* ---------- lesson text, split into sentences with exact positions ---------- */
+  const host=$("lpListenHost");
+
+  function collect(root){
+    const parts=[];
+    (function walk(node){
+      node.childNodes.forEach(n=>{
+        if(n.nodeType===3){
+          parts.push({text:n.nodeValue,node:n});
+        }else if(n.nodeType===1){
+          if(n.classList.contains("ojCode")){
+            parts.push({code:n});
+          }else if(n.tagName==="BR"){
+            parts.push({text:"\n"});
+          }else{
+            const blk=/^(P|DIV|LI|UL|OL|TR|H[1-6]|TABLE)$/.test(n.tagName)||n.classList.contains("ojTblWrap");
+            if(blk)parts.push({text:"\n"});
+            walk(n);
+            if(n.tagName==="TD"||n.tagName==="TH")parts.push({text:", "});
+            if(blk)parts.push({text:"\n"});
+          }
+        }
+      });
+    })(root);
+    let full="",codeN=0;
+    parts.forEach(p=>{
+      p.start=full.length;
+      if(p.code)full+="\n\u0001"+(codeN++)+"\u0001\n";
+      else full+=p.text;
+      p.end=full.length;
+    });
+    return {parts,full};
+  }
+
+  function makeChunks(full){
+    const out=[];
+    let pos=0;
+    full.split("\n").forEach(line=>{
+      const ls=pos;
+      pos+=line.length+1;
+      const cm=/^\u0001(\d+)\u0001$/.exec(line);
+      if(cm){
+        out.push({code:Number(cm[1]),speak:"The code is shown on screen.",start:ls,end:ls+line.length});
+        return;
+      }
+      if(!/[\p{L}\p{N}]/u.test(line))return;
+      const re=/(?:[^.!?]|[.!?](?!\s|$))+[.!?]*["')\]]*\s*/g;
+      let m;
+      const pieces=[];
+      while((m=re.exec(line))){
+        if(!m[0])break;
+        let a=ls+m.index;
+        const e=ls+m.index+m[0].length;
+        while(e-a>110){
+          const seg=full.slice(a,a+110);
+          let cut=Math.max(seg.lastIndexOf(", "),seg.lastIndexOf("; "),seg.lastIndexOf(": "));
+          if(cut<40)cut=seg.lastIndexOf(" ");
+          if(cut<20)cut=109;
+          pieces.push({s:a,e:a+cut+1});
+          a=a+cut+1;
+        }
+        pieces.push({s:a,e});
+      }
+      pieces.forEach(pc=>{
+        const raw=full.slice(pc.s,pc.e);
+        const lead=raw.length-raw.replace(/^\s+/,"").length;
+        const trail=raw.length-raw.replace(/\s+$/,"").length;
+        const s=pc.s+lead,e=pc.e-trail;
+        if(e<=s)return;
+        const speak=full.slice(s,e).replace(/[*_#>•]/g,"").replace(/\s+/g," ").trim();
+        if(!/[\p{L}\p{N}]/u.test(speak))return;
+        const prev=out[out.length-1];
+        if(prev&&prev.code===undefined&&prev.line===ls&&prev.speak.length<25){
+          prev.end=e;
+          prev.speak+=" "+speak;
+        }else{
+          out.push({speak,start:s,end:e,line:ls});
+        }
+      });
+    });
+    out.forEach(c=>{
+      if(c.code===undefined&&!/[.!?:;,]$/.test(c.speak))c.speak+=".";
+    });
+    return out;
+  }
+
+  const startAt=(parts,pos)=>{
+    for(const p of parts){
+      if(p.node&&p.end>pos)return {n:p.node,o:Math.max(pos,p.start)-p.start};
+    }
+    return null;
+  };
+  const endAt=(parts,pos)=>{
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      if(p.node&&p.start<pos)return {n:p.node,o:Math.min(pos,p.end)-p.start};
+    }
+    return null;
+  };
+
+  /* ---------- highlight ---------- */
+  function hlClear(){
+    try{if(window.CSS&&CSS.highlights)CSS.highlights.delete("ojread");}catch(_){}
+  }
+  function keepInView(r){
+    try{
+      const rect=r.getBoundingClientRect();
+      const bar=$("lpListen");
+      const top=bar&&!bar.classList.contains("hidden")?bar.getBoundingClientRect().bottom:80;
+      if(rect.top<top+12||rect.bottom>innerHeight-30){
+        window.scrollBy({top:rect.top-(top+innerHeight*0.22),behavior:"smooth"});
+      }
+    }catch(_){}
+  }
+  function lessonHighlight(){
+    const sp=speechPlayer;
+    if(!sp||sp.container!==host||!window.__lessonChunks||sp.text!==window.__lessonText)return;
+    const c=window.__lessonChunks[sp.index];
+    if(!c){hlClear();return;}
+    if(!window.CSS||!CSS.highlights||typeof Highlight==="undefined")return;
+    const root=document.querySelector("#lpBody .lpLesson");
+    if(!root)return;
+    const cur=collect(root);
+    if(cur.full!==window.__lessonFull)return;
+    const r=document.createRange();
+    if(c.code!==undefined){
+      const el=root.querySelectorAll(".ojCode")[c.code];
+      if(!el)return;
+      r.selectNodeContents(el.querySelector("pre")||el);
+    }else{
+      const a=startAt(cur.parts,c.start),b=endAt(cur.parts,c.end);
+      if(!a||!b)return;
+      r.setStart(a.n,a.o);
+      r.setEnd(b.n,b.o);
+    }
+    CSS.highlights.set("ojread",new Highlight(r));
+    keepInView(r);
+  }
+
+  /* ---------- connect to the player ---------- */
+  window.__lessonChunks=null;
+  window.__lessonText="";
+  window.__lessonFull="";
+
+  const prevSplit=window.splitSpeech;
+  window.splitSpeech=function(t){
+    if(window.__lessonChunks&&t===window.__lessonText)return window.__lessonChunks.map(c=>c.speak);
+    return prevSplit.apply(this,arguments);
+  };
+
+  const pSC=window.speakChunk;
+  window.speakChunk=function(){
+    const r=pSC.apply(this,arguments);
+    try{lessonHighlight();}catch(_){}
+    return r;
+  };
+  const pM=window.moveSpeech;
+  window.moveSpeech=function(){
+    const r=pM.apply(this,arguments);
+    try{lessonHighlight();}catch(_){}
+    return r;
+  };
+  const pStop=window.stopSpeech;
+  window.stopSpeech=function(){
+    hlClear();
+    return pStop.apply(this,arguments);
+  };
+  const pFin=window.finishSpeech;
+  window.finishSpeech=function(){
+    hlClear();
+    return pFin.apply(this,arguments);
+  };
+
+  const btn=$("lpListenBtn");
+  if(btn){
+    btn.onclick=()=>{
+      const root=document.querySelector("#lpBody .lpLesson");
+      if(!root)return;
+      const cur=collect(root);
+      const ch=makeChunks(cur.full);
+      if(!ch.length)return;
+      window.__lessonFull=cur.full;
+      window.__lessonChunks=ch;
+      window.__lessonText=ch.map(c=>c.speak).join(" ");
+      toggleReadAloud(window.__lessonText,host);
+      btn.classList.add("hidden");
+    };
+  }
+})();
 </script>
 
 </body>
