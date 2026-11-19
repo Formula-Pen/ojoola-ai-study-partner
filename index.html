@@ -2112,7 +2112,7 @@ function backToCourseInfo(){
   renderCourseInfo();
 }
 
-window.addEventListener("popstate",e=>{
+window.addEventListener("popstate_unused",e=>{
   const s=e.state||{
     page:"home"
   };
@@ -7373,7 +7373,70 @@ async function getCourseNotes(c,onStatus,signal){
   const files=[
     ...(c.pdfs||[]).map(f=>({f,mime:"application/pdf"})),
     ...([]).map(f=>({f,mime:"image/jpeg"}))].filter(x=>x.f&&x.f.id&&x.f.data);for(const {f,mime} of files){if(store[f.id])continue;onStatus?.("Reading "+(f.name||"file")+" (first time only)…");const notes=await callGemini("Study this file carefully. Write detailed study notes capturing all key definitions, concepts, formulas, examples, steps, tables and diagrams. Mention page numbers or headings where you can. Be accurate and do not add outside information.",[],[{inline_data:{mime_type:f.mimeType||mime,data:f.data}}],null,onStatus,signal);store[f.id]=notes;try{localStorage.setItem("ojoola_file_notes",JSON.stringify(store));}catch(_){}}return files.filter(x=>store[x.f.id]).map(x=>"=== "+(x.f.name||"File")+" ==="+String.fromCharCode(10)+store[x.f.id]).join(String.fromCharCode(10)+String.fromCharCode(10));}
+/* BACK BUTTON: go back one step, exit only from Home */
+(function(){
+  const rs=history.replaceState.bind(history);
+  history.replaceState=function(st,t,u){
+    const cur=history.state;
+    if(cur&&cur.oj&&!(st&&st.oj))st=Object.assign({},st||{},{oj:cur.oj});
+    return rs(st,t,u);
+  };
 
+  const sp=window.setPage;
+  window.setPage=function(page,opts){
+    return sp.call(this,page,Object.assign({},opts,{noHistory:true}));
+  };
+
+  window.ojBackHooks=window.ojBackHooks||[];
+  const shown=id=>{const e=document.getElementById(id);return !!e&&!e.classList.contains("hidden");};
+
+  let tip=null,tipTimer=null;
+  function exitTip(){
+    if(!tip){
+      tip=document.createElement("div");
+      tip.style.cssText="position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(20,33,61,.92);color:#fff;padding:8px 14px;border-radius:99px;font:12px Arial,sans-serif;z-index:100003;pointer-events:none;transition:opacity .25s";
+      document.body.appendChild(tip);
+    }
+    tip.textContent="Tap again to exit";
+    tip.style.opacity="1";
+    clearTimeout(tipTimer);
+    tipTimer=setTimeout(()=>{tip.style.opacity="0";},1800);
+  }
+
+  function stepBack(){
+    for(const h of window.ojBackHooks){
+      try{if(h.isOpen()){h.close();return true;}}catch(_){}
+    }
+    const modal=document.querySelector(".modal:not(.hidden)");
+    if(modal){modal.classList.add("hidden");return true;}
+    if(shown("learnView")){$("lpBack").click();return true;}
+    if(shown("courseLiveView")){backFromLiveConversation();return true;}
+    if(shown("courseChatView")){backToCourseInfo();return true;}
+    if(shown("courseInfoView")||shown("generalView")){goHome();return true;}
+    return false;
+  }
+
+  let last=0,leaving=false;
+  window.addEventListener("popstate",e=>{
+    const s=e.state;
+    if(leaving||!s||s.oj!=="guard")return;
+    if(stepBack()){history.pushState({oj:"app"},"");return;}
+    const now=Date.now();
+    if(now-last<2000){leaving=true;history.back();return;}
+    last=now;
+    exitTip();
+    history.pushState({oj:"app"},"");
+  });
+
+  const s0=history.state;
+  if(!s0||!s0.oj){
+    rs({oj:"guard"},"");
+    history.pushState({oj:"app"},"");
+  }else if(s0.oj==="guard"){
+    history.pushState({oj:"app"},"");
+  }
+})();
+  
 </script>
 
 </body>
