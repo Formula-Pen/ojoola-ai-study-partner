@@ -7646,6 +7646,9 @@ body.dark .oc-p{color:#7dd3fc}
   const st=document.createElement("style");
   st.textContent=`
 #gStrip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
+.inputRow{gap:6px}
+.inputRow .sendBtn{width:40px;height:40px;flex:0 0 40px;border-radius:12px;font-size:16px;margin-bottom:4px}
+#generalPicBtn{width:32px;height:32px;flex:0 0 32px;border-radius:50%;font-size:22px;font-weight:400;line-height:1;padding:0;margin-bottom:8px}
 .gPrev{position:relative;flex:0 0 auto}
 .gPrev img{width:64px;height:64px;object-fit:cover;border-radius:12px;display:block;border:1px solid #dbe3ef}
 .gPrev button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border:0;border-radius:50%;background:#dc2626;color:#fff;font-size:12px;line-height:22px;padding:0}
@@ -7716,7 +7719,7 @@ body.dark .oc-p{color:#7dd3fc}
   btn.id="generalPicBtn";
   btn.className="sendBtn";
   btn.style.cssText="background:#eaf0ff;color:#2563eb";
-  btn.textContent="🖼️";
+  btn.textContent="+";
   btn.setAttribute("aria-label","Add a picture");
   row.insertBefore(btn,ta);
 
