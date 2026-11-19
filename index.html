@@ -8867,25 +8867,39 @@ ov.innerHTML='<div class="wrap">'+
 document.body.appendChild(ov);
 
 /* ---------- pages screen (all the images) ---------- */
+const pk=document.createElement("style");
+pk.textContent=".pdfPickBtn{position:relative;overflow:hidden}.pdfPickBtn input{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;padding:0;margin:0;border:0;font-size:100px;cursor:pointer}";
+document.head.appendChild(pk);
+
 const pp=document.createElement("div");
 pp.id="pdfPages";pp.className="hidden";
 pp.innerHTML='<div class="wrap">'+
 '<div class="pageHeader"><button class="iconBtn" data-a="pdone" aria-label="Back">←</button><div style="flex:1"><h2>Your pages</h2><div class="muted" id="pdfPgCount"></div></div></div>'+
-'<label class="primary pdfBig">🖼 Upload from gallery (many at once)<input id="pdfGal" type="file" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label>'+
-'<label class="secondary pdfBig">📷 Take a photo<input id="pdfCam" type="file" accept="image/*" capture="environment" hidden></label>'+
-'<div class="muted" style="margin-top:8px">Add your notes as pictures. You can add more any time, up to '+MAXP+' pages.</div>'+
+'<div class="primary pdfBig pdfPickBtn">🖼 Upload from gallery (many at once)<input id="pdfGal" type="file" accept="image/*" multiple></div>'+
+'<div class="secondary pdfBig pdfPickBtn">📷 Take a photo<input id="pdfCam" type="file" accept="image/*" capture="environment"></div>'+
+'<div id="pdfMsg" class="muted" style="margin-top:8px;font-weight:700"></div>'+
+'<div class="muted" style="margin-top:4px">Add your notes as pictures. You can add more any time, up to '+MAXP+' pages.</div>'+
 '<div id="pdfGrid" class="pdfGrid"></div>'+
 '<div class="pdfDone"><button class="primary pdfBig" style="margin-top:0" data-a="pdone">Done</button></div></div>';
 document.body.appendChild(pp);
 
-/* both buttons: the selection is cleared only after the pictures are processed */
+/* every message is also written on the screen, so nothing disappears */
+let lastMsg="";
+function say(t){lastMsg=t;const m=$("pdfMsg");if(m)m.textContent=t;}
+const baseToast=toast;
+toast=function(t){baseToast(t);say(t);};
+
 function wire(id){
   const el=document.getElementById(id);
   el.addEventListener("change",async()=>{
     const f=[...el.files];
+    say("Your phone sent "+f.length+" file"+(f.length===1?"":"s")+".");
     if(!f.length)return;
-    toast("Adding "+f.length+" picture"+(f.length>1?"s":"")+"…");
-    try{await addFiles(f);}catch(err){toast("Could not add pictures: "+((err&&err.message)||err));}
+    const before=pages.length;
+    try{await addFiles(f);}
+    catch(err){say("Error: "+((err&&err.message)||err));}
+    if(pages.length>before)say((pages.length-before)+" page"+(pages.length-before>1?"s":"")+" added. You now have "+pages.length+".");
+    else say(lastMsg+" No pages were added.");
     el.value="";
   });
 }
