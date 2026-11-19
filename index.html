@@ -7436,6 +7436,206 @@ async function getCourseNotes(c,onStatus,signal){
     history.pushState({oj:"app"},"");
   }
 })();
+
+  /* CODE BLOCKS: colours, indentation and a Copy button on each block */
+(function(){
+  const st=document.createElement("style");
+  st.textContent=`
+.ojCode{margin:10px 0;border:1px solid #d9e0ec;border-radius:12px;overflow:hidden;background:#f6f8fc;max-width:100%}
+.ojCodeBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px 6px 12px;background:#e8edf6;color:#475569;font:800 11px Arial,sans-serif;letter-spacing:.3px}
+.ojCopy{border:0;border-radius:8px;padding:6px 11px;background:#fff;color:#2563eb;font:800 11px Arial,sans-serif}
+.ojCode pre.ojPre{margin:0;padding:12px 14px;overflow-x:auto;white-space:pre;overflow-wrap:normal;word-break:normal;tab-size:4;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#1e293b;-webkit-overflow-scrolling:touch}
+.ojCode code{font:inherit;white-space:inherit}
+.oc-k{color:#7c3aed;font-weight:700}
+.oc-s{color:#15803d}
+.oc-c{color:#64748b;font-style:italic}
+.oc-n{color:#b45309}
+.oc-f{color:#2563eb}
+.oc-t{color:#0e7490}
+.oc-d,.oc-v{color:#be185d}
+.oc-p{color:#0369a1}
+body.dark .ojCode{background:#0b1220;border-color:#26344d}
+body.dark .ojCodeBar{background:#16233a;color:#94a3b8}
+body.dark .ojCopy{background:#1d3158;color:#bfdbfe}
+body.dark .ojCode pre.ojPre{color:#e2e8f0}
+body.dark .oc-k{color:#c4b5fd}
+body.dark .oc-s{color:#86efac}
+body.dark .oc-c{color:#94a3b8}
+body.dark .oc-n{color:#fbbf24}
+body.dark .oc-f{color:#93c5fd}
+body.dark .oc-t{color:#67e8f9}
+body.dark .oc-d,body.dark .oc-v{color:#f9a8d4}
+body.dark .oc-p{color:#7dd3fc}
+`;
+  document.head.appendChild(st);
+
+  const W=s=>new Set(s.split(" "));
+  const RX={
+    hash:/#[^\n]*/,
+    cmtC:/\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/,
+    cmtSql:/--[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/,
+    cmtCss:/\/\*[\s\S]*?(?:\*\/|$)/,
+    strPy:/[rRbBfFuU]{0,2}(?:"""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|"(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?)/,
+    strC:/"(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?/,
+    strJs:/"(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?|`(?:\\[\s\S]|[^`\\])*`?/,
+    strSql:/'(?:''|[^'])*'?/,
+    num:/\b(?:0[xX][\da-fA-F]+|\d+\.?\d*(?:[eE][+-]?\d+)?)\b/,
+    word:/[A-Za-z_$][\w$]*/,
+    deco:/@[A-Za-z_][\w.]*/,
+    pre:/#\s*[a-z]+/,
+    shVar:/\$\{?\w+\}?/
+  };
+
+  const LANG={
+    python:{types:1,kw:W("False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield self cls"),
+      rules:[["c",RX.hash],["s",RX.strPy],["d",RX.deco],["n",RX.num],["w",RX.word]]},
+    js:{types:1,kw:W("break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof let new of return static super switch this throw try typeof var void while with yield async await true false null undefined NaN interface type enum implements public private protected readonly"),
+      rules:[["c",RX.cmtC],["s",RX.strJs],["n",RX.num],["w",RX.word]]},
+    java:{types:1,kw:W("abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public return short static strictfp super switch synchronized this throw throws transient try void volatile while true false null var record"),
+      rules:[["c",RX.cmtC],["s",RX.strC],["d",RX.deco],["n",RX.num],["w",RX.word]]},
+    c:{types:1,kw:W("auto break case char const continue default do double else enum extern float for goto if inline int long register return short signed sizeof static struct switch typedef union unsigned void volatile while class namespace using template new delete public private protected virtual bool true false nullptr"),
+      rules:[["c",RX.cmtC],["s",RX.strC],["k",RX.pre],["n",RX.num],["w",RX.word]]},
+    csharp:{types:1,kw:W("abstract as base bool break byte case catch char class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using var virtual void volatile while async await"),
+      rules:[["c",RX.cmtC],["s",RX.strC],["n",RX.num],["w",RX.word]]},
+    sql:{i:1,kw:W("select from where insert into values update set delete create table alter drop index join inner left right outer full on group by order having limit offset as and or not null is in like distinct union all primary key foreign references default unique check constraint case when then else end asc desc count sum avg min max"),
+      rules:[["c",RX.cmtSql],["s",RX.strSql],["n",RX.num],["w",RX.word]]},
+    bash:{kw:W("if then else elif fi for while do done case esac function in echo cd ls mkdir rm cp mv cat grep export return exit sudo apt pip npm git"),
+      rules:[["c",RX.hash],["s",RX.strC],["v",RX.shVar],["n",RX.num],["w",RX.word]]},
+    json:{kw:W("true false null"),
+      rules:[["p",/"(?:\\.|[^"\\\n])*"(?=\s*:)/],["s",/"(?:\\.|[^"\\\n])*"?/],["n",/-?\d+\.?\d*(?:[eE][+-]?\d+)?/],["w",RX.word]]},
+    css:{rules:[["c",RX.cmtCss],["s",RX.strC],["k",/@[\w-]+/],["n",/#[\da-fA-F]{3,8}\b|-?\d*\.?\d+(?:px|em|rem|%|vh|vw|ms|s|deg|fr)?/],["p",/[\w-]+(?=\s*:)/],["f",/[.#][\w-]+/],["w",/[A-Za-z_-][\w-]*/]]},
+    html:{}
+  };
+
+  const ALIAS=Object.assign(Object.create(null),{
+    py:"python",python:"python",python3:"python",
+    js:"js",javascript:"js",jsx:"js",ts:"js",typescript:"js",tsx:"js",node:"js",
+    java:"java",kotlin:"java",
+    c:"c",cpp:"c","c++":"c",h:"c",
+    cs:"csharp",csharp:"csharp","c#":"csharp",
+    sql:"sql",mysql:"sql",
+    sh:"bash",bash:"bash",shell:"bash",zsh:"bash",
+    json:"json",css:"css",html:"html",htm:"html",xml:"html"
+  });
+  const LABEL=Object.assign(Object.create(null),{
+    py:"Python",python:"Python",js:"JavaScript",javascript:"JavaScript",ts:"TypeScript",typescript:"TypeScript",
+    jsx:"JSX",tsx:"TSX",java:"Java",kotlin:"Kotlin",html:"HTML",htm:"HTML",xml:"XML",css:"CSS",json:"JSON",
+    sql:"SQL",mysql:"SQL",bash:"Bash",sh:"Shell",shell:"Shell",c:"C",cpp:"C++","c++":"C++",cs:"C#",csharp:"C#",php:"PHP"
+  });
+
+  function guess(c){
+    if(/^\s*<(!doctype|html|head|body|div|section|p|h1|ul|form|table)\b/i.test(c))return "html";
+    if(/^\s*(def |class \w+(\(.*\))?:|import \w+|from \w+ import|print\()/m.test(c))return "python";
+    if(/\b(public\s+(static\s+)?(class|void)|System\.out\.|String\[\]\s+args)/.test(c))return "java";
+    if(/\b(console\.log|function\s*\w*\(|const\s+\w+\s*=|let\s+\w+\s*=|=>)/.test(c))return "js";
+    return null;
+  }
+
+  function hlMarkup(s){
+    return s.split(/(<!\-\-[\s\S]*?(?:\-\->|$)|<![A-Za-z][^>]*>?|<\/?[A-Za-z][^>]*>?)/g).map((p,i)=>{
+      if(i%2===0)return escapeHTML(p);
+      if(p.indexOf("<!"+"--")===0)return '<span class="oc-c">'+escapeHTML(p)+"</span>";
+      if(p.indexOf("<!")===0)return '<span class="oc-k">'+escapeHTML(p)+"</span>";
+      const m=/^(<\/?)([\w:-]+)([\s\S]*?)(\/?>?)$/.exec(p);
+      if(!m)return escapeHTML(p);
+      const attrs=m[3].split(/("[^"]*"?|'[^']*'?)/g).map((a,j)=>
+        j%2?'<span class="oc-s">'+escapeHTML(a)+"</span>"
+           :escapeHTML(a).replace(/([\w:@.-]+)(?==)/g,'<span class="oc-f">$1</span>')
+      ).join("");
+      return '<span class="oc-k">'+escapeHTML(m[1]+m[2])+"</span>"+attrs+'<span class="oc-k">'+escapeHTML(m[4])+"</span>";
+    }).join("");
+  }
+
+  function hlHtml(code){
+    const blk=/(<(script|style)\b[^>]*>)([\s\S]*?)(<\/\2\s*>|$)/gi;
+    let out="",last=0,m;
+    while((m=blk.exec(code))){
+      if(m[0]==="")break;
+      out+=hlMarkup(code.slice(last,m.index))+hlMarkup(m[1])+hl(m[3],m[2].toLowerCase()==="script"?"js":"css")+hlMarkup(m[4]);
+      last=m.index+m[0].length;
+    }
+    return out+hlMarkup(code.slice(last));
+  }
+
+  function hl(code,key){
+    if(key==="html")return hlHtml(code);
+    const spec=key&&LANG[key];
+    if(!spec||!spec.rules)return escapeHTML(code);
+    const re=new RegExp(spec.rules.map(r=>"("+r[1].source+")").join("|"),spec.i?"gi":"g");
+    let out="",last=0,m;
+    while((m=re.exec(code))){
+      if(m[0]===""){re.lastIndex++;continue;}
+      out+=escapeHTML(code.slice(last,m.index));
+      let gi=1;
+      while(m[gi]===undefined)gi++;
+      let cls=spec.rules[gi-1][0];
+      const tok=m[0];
+      if(cls==="w"){
+        const lw=spec.i?tok.toLowerCase():tok;
+        if(spec.kw&&spec.kw.has(lw))cls="k";
+        else if(code[m.index+tok.length]==="(")cls="f";
+        else if(spec.types&&/^[A-Z]/.test(tok))cls="t";
+        else cls="";
+      }
+      out+=cls?'<span class="oc-'+cls+'">'+escapeHTML(tok)+"</span>":escapeHTML(tok);
+      last=m.index+tok.length;
+    }
+    return out+escapeHTML(code.slice(last));
+  }
+
+  function codeBlock(raw,tag){
+    tag=String(tag||"").toLowerCase();
+    const lang=ALIAS[tag]||(tag?null:guess(raw));
+    const label=LABEL[tag]||(lang&&LABEL[lang])||(tag?tag.toUpperCase():"Code");
+    return '<div class="ojCode"><div class="ojCodeBar"><span>'+escapeHTML(label)+'</span><button type="button" class="ojCopy">Copy</button></div><pre class="ojPre"><code>'+hl(raw,lang)+"</code></pre></div>";
+  }
+
+  /* pull code blocks out first so the text formatter never touches them */
+  const prevMd=window.renderMarkdown;
+  window.renderMarkdown=function(text){
+    const blocks=[];
+    const t=String(text||"").replace(/```([^\n`]*)\n([\s\S]*?)(?:```|$)/g,(m,tag,body)=>{
+      if(!/```$/.test(m))body=body.replace(/`{1,2}$/,"");
+      blocks.push(codeBlock(body.replace(/\r/g,"").replace(/\n$/,""),String(tag).trim().split(/\s+/)[0]));
+      return "\nOJCODEPH"+(blocks.length-1)+"X\n";
+    });
+    let html=prevMd(t);
+    blocks.forEach((b,i)=>{
+      html=html.replace(new RegExp("(?:<br>)*OJCODEPH"+i+"X(?:<br>)*"),()=>b);
+    });
+    return html;
+  };
+
+  /* Copy button copies only that block */
+  document.addEventListener("click",e=>{
+    const b=e.target.closest&&e.target.closest(".ojCopy");
+    if(!b)return;
+    const pre=b.closest(".ojCode").querySelector("pre");
+    copyText(pre?pre.textContent:"",b);
+  });
+
+  /* tell the AI to always fence code with the language name */
+  const prevExtras=window.chatExtras2;
+  window.chatExtras2=function(c){
+    const o=prevExtras(c);
+    try{
+      o.systemInstruction.parts[0].text+=" Whenever you show program code, put it in a fenced code block that starts with three backticks and the language name, for example python, javascript, java or html, and ends with three backticks. Keep the original indentation exactly and write one statement per line. Never use em dashes or en dashes inside code.";
+    }catch(_){}
+    return o;
+  };
+
+  /* the dash clean up must not change code */
+  const prevClean=window.ojClean;
+  window.ojClean=function(t){
+    return String(t||"").split(/(```[\s\S]*?(?:```|$))/g).map((p,i)=>i%2?p:prevClean(p)).join("");
+  };
+
+  /* read aloud should not spell out code */
+  const prevSplit=window.splitSpeech;
+  window.splitSpeech=function(t){
+    return prevSplit(String(t||"").replace(/```[\s\S]*?(?:```|$)/g," The code is shown on screen. "));
+  };
+})();
   
 </script>
 
