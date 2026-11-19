@@ -7636,7 +7636,263 @@ body.dark .oc-p{color:#7dd3fc}
     return prevSplit(String(t||"").replace(/```[\s\S]*?(?:```|$)/g," The code is shown on screen. "));
   };
 })();
-  
+
+  /* GENERAL CHAT PICTURES: attach, caption, view large, auto delete after 24 hours */
+(function(){
+  const DAY=24*60*60*1000,IDX="ojoola_gimg_index";
+  let pend=[],viewer=null;
+  const thumbCache={};
+
+  const st=document.createElement("style");
+  st.textContent=`
+#gStrip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
+.gPrev{position:relative;flex:0 0 auto}
+.gPrev img{width:64px;height:64px;object-fit:cover;border-radius:12px;display:block;border:1px solid #dbe3ef}
+.gPrev button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border:0;border-radius:50%;background:#dc2626;color:#fff;font-size:12px;line-height:22px;padding:0}
+.ojImgRow{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-bottom:6px}
+.ojImgCell img{display:block;max-width:150px;max-height:150px;border-radius:12px;object-fit:cover;cursor:zoom-in}
+.ojImgGone{font-size:12px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.2);font-style:italic}
+#ojViewer{position:fixed;inset:0;z-index:100005;background:rgba(0,0,0,.93);display:flex;flex-direction:column}
+#ojViewer .vBar{display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;color:#fff;font:13px Arial,sans-serif}
+#ojViewer .vBar button{border:0;border-radius:10px;padding:9px 14px;background:#fff;color:#111;font-weight:800}
+#ojViewer .vBody{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch}
+#ojViewer img{max-width:100%;max-height:100%;object-fit:contain}
+#ojViewer.zoom .vBody{display:block}
+#ojViewer.zoom img{max-width:none;max-height:none;width:220%}
+`;
+  document.head.appendChild(st);
+
+  function note(t){
+    const e=document.createElement("div");
+    e.textContent=t;
+    e.style.cssText="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);max-width:88vw;background:#14213d;color:#fff;padding:11px 16px;border-radius:14px;font:14px Arial,sans-serif;z-index:100006;box-shadow:0 8px 24px rgba(0,0,0,.3)";
+    document.body.appendChild(e);
+    setTimeout(()=>e.remove(),3000);
+  }
+
+  const readIdx=()=>safeJSON(localStorage.getItem(IDX),[])||[];
+  const saveIdx=a=>{try{localStorage.setItem(IDX,JSON.stringify(a));}catch(_){}};
+
+  /* prepare a picture: full copy for the AI (max 1600px) and a small thumbnail */
+  function prep(file){
+    return new Promise((res,rej)=>{
+      const url=URL.createObjectURL(file);
+      const i=new Image();
+      i.onload=()=>{
+        try{
+          const mk=(max,q)=>{
+            const sc=Math.min(1,max/Math.max(i.width,i.height));
+            const cv=document.createElement("canvas");
+            cv.width=Math.max(1,Math.round(i.width*sc));
+            cv.height=Math.max(1,Math.round(i.height*sc));
+            const cx=cv.getContext("2d");
+            cx.fillStyle="#fff";
+            cx.fillRect(0,0,cv.width,cv.height);
+            cx.drawImage(i,0,0,cv.width,cv.height);
+            return cv.toDataURL("image/jpeg",q);
+          };
+          const full=mk(1600,.82).split(",")[1];
+          const thumb=mk(360,.7);
+          URL.revokeObjectURL(url);
+          res({id:uid(),full,thumb});
+        }catch(e){URL.revokeObjectURL(url);rej(e);}
+      };
+      i.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("decode"));};
+      i.src=url;
+    });
+  }
+
+  /* picture button, preview strip and hidden file picker */
+  const wrap=document.querySelector("#generalView .chatInputWrap");
+  const row=wrap.querySelector(".inputRow");
+  const ta=$("generalInput");
+  const strip=document.createElement("div");
+  strip.id="gStrip";
+  strip.className="hidden";
+  wrap.insertBefore(strip,row);
+
+  const btn=document.createElement("button");
+  btn.type="button";
+  btn.id="generalPicBtn";
+  btn.className="sendBtn";
+  btn.style.cssText="background:#eaf0ff;color:#2563eb";
+  btn.textContent="🖼️";
+  btn.setAttribute("aria-label","Add a picture");
+  row.insertBefore(btn,ta);
+
+  const fi=document.createElement("input");
+  fi.type="file";
+  fi.accept="image/*";
+  fi.multiple=true;
+  fi.hidden=true;
+  row.appendChild(fi);
+  btn.onclick=()=>fi.click();
+
+  const basePH=ta.placeholder;
+  function renderStrip(){
+    strip.innerHTML="";
+    pend.forEach(p=>{
+      const d=document.createElement("div");
+      d.className="gPrev";
+      const im=document.createElement("img");
+      im.src=p.thumb;
+      im.alt="Picture to send";
+      const x=document.createElement("button");
+      x.type="button";
+      x.textContent="✕";
+      x.setAttribute("aria-label","Remove picture");
+      x.onclick=()=>{pend=pend.filter(q=>q.id!==p.id);renderStrip();};
+      d.append(im,x);
+      strip.appendChild(d);
+    });
+    strip.classList.toggle("hidden",!pend.length);
+    ta.placeholder=pend.length?"Add a caption (optional)…":basePH;
+  }
+
+  fi.onchange=async()=>{
+    const files=[...fi.files];
+    fi.value="";
+    for(const f of files){
+      if(pend.length>=4){note("You can add up to 4 pictures at once.");break;}
+      if(!f.type.startsWith("image/")){note(f.name+" is not a picture.");continue;}
+      if(f.size>15*1024*1024){note(f.name+" is too big. Please choose a picture under 15 MB.");continue;}
+      try{pend.push(await prep(f));renderStrip();}
+      catch(_){note("I couldn't read that picture. Please try another one.");}
+    }
+  };
+
+  /* send: caption is the normal message box */
+  const origSend=window.sendGeneral;
+  window.sendGeneral=async function(){
+    if(!pend.length||!getApiKey()||activeController)return origSend.apply(this,arguments);
+    const input=$("generalInput");
+    if(!input.value.trim())input.value="Please describe this picture and tell me anything useful about it.";
+    const cap=input.value.trim();
+    const imgs=pend.slice();
+    pend=[];
+    renderStrip();
+    const meta=[],idx=readIdx();
+    for(const im of imgs){
+      const ts=Date.now();
+      try{await idbPut("gimg:"+im.id,{full:im.full,thumb:im.thumb});}catch(_){}
+      thumbCache[im.id]=im.thumb;
+      idx.push({id:im.id,ts});
+      meta.push({id:im.id,ts});
+    }
+    saveIdx(idx);
+    window.__gSend={imgs};
+    const p=origSend.apply(this,arguments);
+    window.__gSend=null;
+    const m=generalChat[generalChat.length-2];
+    if(m&&m.role==="user"&&m.text===cap&&!m.imgs){
+      m.imgs=meta;
+      saveGeneral();
+      renderGeneralChat();
+      scrollToBottom("generalMsgs");
+    }
+    return p;
+  };
+
+  /* hand the pictures to the AI for this one message */
+  const origFP=window.fileParts;
+  window.fileParts=function(c){
+    if(!c&&window.__gSend){
+      return window.__gSend.imgs.map(i=>({inline_data:{mime_type:"image/jpeg",data:i.full}}));
+    }
+    return origFP.apply(this,arguments);
+  };
+
+  /* let the AI know earlier messages had pictures */
+  const origMH=window.makeHistory;
+  window.makeHistory=function(h){
+    return origMH((h||[]).map(m=>
+      m&&m.imgs&&m.imgs.length
+        ?Object.assign({},m,{text:"[The student attached "+m.imgs.length+" picture"+(m.imgs.length>1?"s":"")+" with this message] "+m.text})
+        :m
+    ));
+  };
+
+  /* show pictures inside the message */
+  function gone(cell){cell.className="ojImgGone";cell.textContent="Picture removed after 24 hours";}
+  function show(cell,im,thumb){
+    cell.className="ojImgCell";
+    cell.innerHTML="";
+    const img=document.createElement("img");
+    img.src=thumb;
+    img.alt="Picture you sent";
+    img.onclick=()=>viewFull(im);
+    cell.appendChild(img);
+  }
+  function fill(cell,im){
+    const t=thumbCache[im.id];
+    if(t){show(cell,im,t);return;}
+    if(im.gone||Date.now()-im.ts>DAY){gone(cell);return;}
+    cell.className="ojImgGone";
+    cell.textContent="Loading picture…";
+    idbGet("gimg:"+im.id).then(r=>{
+      if(r&&r.thumb){thumbCache[im.id]=r.thumb;show(cell,im,r.thumb);}
+      else gone(cell);
+    }).catch(()=>gone(cell));
+  }
+  function imgRow(msg){
+    const r=document.createElement("div");
+    r.className="ojImgRow";
+    msg.imgs.forEach(im=>{
+      const cell=document.createElement("div");
+      fill(cell,im);
+      r.appendChild(cell);
+    });
+    return r;
+  }
+  const origCME=window.createMessageElement;
+  window.createMessageElement=function(msg){
+    const w=origCME.apply(this,arguments);
+    try{
+      if(msg&&msg.role==="user"&&Array.isArray(msg.imgs)&&msg.imgs.length){
+        const b=w.querySelector(".bubble");
+        b.insertBefore(imgRow(msg),b.firstChild);
+      }
+    }catch(_){}
+    return w;
+  };
+
+  /* large view: tap to zoom, phone back button closes it */
+  function closeViewer(){if(viewer){viewer.remove();viewer=null;}}
+  async function viewFull(im){
+    let rec=null;
+    try{rec=await idbGet("gimg:"+im.id);}catch(_){}
+    if(!rec||!rec.full){note("This picture has been removed.");return;}
+    closeViewer();
+    const v=document.createElement("div");
+    v.id="ojViewer";
+    v.innerHTML='<div class="vBar"><span>Tap the picture to zoom</span><button type="button">Close</button></div><div class="vBody"><img alt="Picture"></div>';
+    const img=v.querySelector("img");
+    img.src="data:image/jpeg;base64,"+rec.full;
+    img.onclick=()=>v.classList.toggle("zoom");
+    v.querySelector("button").onclick=closeViewer;
+    document.body.appendChild(v);
+    viewer=v;
+  }
+  (window.ojBackHooks=window.ojBackHooks||[]).push({isOpen:()=>!!viewer,close:closeViewer});
+
+  /* delete pictures older than 24 hours, keep the chat text */
+  function sweep(){
+    const idx=readIdx(),keep=[];
+    let changed=false;
+    idx.forEach(e=>{
+      if(Date.now()-e.ts>DAY){idbDel("gimg:"+e.id);delete thumbCache[e.id];changed=true;}
+      else keep.push(e);
+    });
+    if(!changed)return;
+    saveIdx(keep);
+    generalChat.forEach(m=>(m.imgs||[]).forEach(im=>{if(Date.now()-im.ts>DAY)im.gone=true;}));
+    saveGeneral();
+    if(!$("generalView").classList.contains("hidden"))renderGeneralChat();
+  }
+  setTimeout(sweep,1500);
+  setInterval(sweep,10*60*1000);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)sweep();});
+})();
 </script>
 
 </body>
