@@ -1,4 +1,4 @@
-const CACHE_NAME = "ojoola-v23";
+const CACHE_NAME = "ojoola-v24";
 const PDF_LIB = "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
 const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 self.addEventListener("notificationclick", event => {
