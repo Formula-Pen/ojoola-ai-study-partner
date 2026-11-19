@@ -10098,6 +10098,222 @@ row.appendChild(cb);
   };
 })();
 
+  /* ORDER SCREEN: sort by photo time, open each photo to check it, number the order */
+(function(){
+  const pp=document.getElementById("pdfPages");
+  if(!pp)return;
+  const tip=t=>{const e=document.createElement("div");e.textContent=t;e.style.cssText="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);max-width:88vw;background:#14213d;color:#fff;padding:11px 16px;border-radius:14px;font:14px Arial,sans-serif;z-index:100020;box-shadow:0 8px 24px rgba(0,0,0,.3)";document.body.appendChild(e);setTimeout(()=>e.remove(),3200);};
+
+  const st=document.createElement("style");
+  st.textContent=
+  "#ojOrder{position:fixed;inset:0;z-index:66;overflow-y:auto;background:#f5f7fb;color:#172033;padding-bottom:110px}body.dark #ojOrder{background:#0b1220;color:#e8edf7}"+
+  "#ojOrder .wrap{padding-top:calc(16px + env(safe-area-inset-top,0px))}"+
+  ".ojOGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}"+
+  ".ojOItem{position:relative;border:2px solid #dbe3ef;border-radius:12px;overflow:hidden;background:rgba(128,128,128,.12);aspect-ratio:3/4}"+
+  "body.dark .ojOItem{border-color:#334155}.ojOItem.on{border-color:#2563eb}"+
+  ".ojOItem img{width:100%;height:100%;object-fit:cover;display:block}"+
+  ".ojOItem .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:#64748b}"+
+  ".ojOBadge{position:absolute;top:5px;left:5px;min-width:34px;height:34px;padding:0 6px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);color:#fff;font:900 15px Arial,sans-serif;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.4)}"+
+  ".ojOItem.on .ojOBadge{background:#2563eb}"+
+  ".ojOFoot{position:fixed;left:0;right:0;bottom:0;z-index:67;display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));background:#f5f7fb;border-top:1px solid #dbe3ef}body.dark .ojOFoot{background:#0b1220;border-color:#26344d}"+
+  ".ojOFoot button{flex:1}"+
+  "#ojOView{position:fixed;inset:0;z-index:68;display:flex;flex-direction:column;background:#0b1220;color:#fff}"+
+  "#ojOView .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;font:700 13px Arial,sans-serif}"+
+  "#ojOView .body{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch}"+
+  "#ojOView .body img{max-width:100%;max-height:100%;object-fit:contain}"+
+  "#ojOView.actual .body{display:block}#ojOView.actual .body img{max-width:none;max-height:none;width:200%}"+
+  "#ojOView .foot{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px))}"+
+  "#ojOView button{border:0;border-radius:11px;padding:12px;font:800 13px Arial,sans-serif;background:rgba(255,255,255,.16);color:#fff}"+
+  "#ojOView .foot button{flex:1}#ojOView button.go{background:#2563eb}#ojOView button.on{background:#16a34a}"+
+  /* page numbers on every page of the Your pages screen and the strip */
+  ".pdfGrid{counter-reset:pg}.pdfPg{counter-increment:pg}.pdfPg .pdfTh{position:relative}"+
+  ".pdfPg .pdfTh::before{content:counter(pg);position:absolute;top:6px;left:6px;z-index:2;min-width:30px;height:30px;padding:0 6px;border-radius:50%;background:#2563eb;color:#fff;font:900 14px Arial,sans-serif;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.35)}"+
+  ".pdfSt span{display:block;font-weight:900;font-size:13px;margin-top:2px;color:#2563eb}";
+  document.head.appendChild(st);
+
+  let items=[],ord=[],box=null,view=null,vi=0,viewUrl=null,target=null,tok=0;
+
+  const numOf=it=>{const k=ord.indexOf(it);return k<0?0:k+1;};
+
+  function paint(){
+    if(!box)return;
+    items.forEach(it=>{
+      const n=numOf(it);
+      it.el.classList.toggle("on",!!n);
+      it.badge.textContent=n?String(n):"";
+      it.badge.style.fontSize=n>99?"11px":"15px";
+    });
+    const c=box.querySelector("#ojOCount");
+    c.textContent=ord.length+" of "+items.length+" numbered";
+    box.querySelector("#ojOAdd").textContent="Add "+(ord.length||items.length)+" page"+((ord.length||items.length)===1?"":"s");
+    if(view)paintView();
+  }
+  function toggle(it){
+    const k=ord.indexOf(it);
+    if(k<0)ord.push(it);else ord.splice(k,1);
+    paint();
+  }
+
+  function build(){
+    const g=box.querySelector("#ojOGrid");
+    g.innerHTML="";
+    items.forEach((it,i)=>{
+      const d=document.createElement("div");
+      d.className="ojOItem";
+      d.innerHTML='<div class="ph">Loading…</div>';
+      const img=document.createElement("img");
+      img.alt="Photo "+(i+1);
+      img.style.display="none";
+      d.appendChild(img);
+      const b=document.createElement("button");
+      b.type="button";b.className="ojOBadge";b.setAttribute("aria-label","Number this photo");
+      d.appendChild(b);
+      d.onclick=e=>{if(e.target===b){toggle(it);return;}openView(i);};
+      it.el=d;it.img=img;it.badge=b;
+      if(it.th){img.src=it.th;img.style.display="";d.querySelector(".ph").remove();}
+      g.appendChild(d);
+    });
+    paint();
+  }
+
+  async function makeThumbs(my){
+    for(const it of items){
+      if(my!==tok||!box)return;
+      if(it.th||it.bad)continue;
+      try{
+        let bmp;
+        try{bmp=await createImageBitmap(it.f,{imageOrientation:"from-image"});}
+        catch(_){bmp=await new Promise((res,rej)=>{const u=URL.createObjectURL(it.f),im=new Image();im.onload=()=>{res(im);setTimeout(()=>URL.revokeObjectURL(u),0);};im.onerror=rej;im.src=u;});}
+        const w=bmp.width||bmp.naturalWidth,h=bmp.height||bmp.naturalHeight,sc=Math.min(1,220/Math.max(w,h));
+        const cv=document.createElement("canvas");
+        cv.width=Math.max(1,Math.round(w*sc));cv.height=Math.max(1,Math.round(h*sc));
+        cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+        if(bmp.close)bmp.close();
+        const blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",.6));
+        cv.width=cv.height=0;
+        it.th=URL.createObjectURL(blob);
+        if(it.img){it.img.src=it.th;it.img.style.display="";const p=it.el.querySelector(".ph");if(p)p.remove();}
+      }catch(_){
+        it.bad=true;
+        const p=it.el&&it.el.querySelector(".ph");
+        if(p)p.textContent="No preview";
+      }
+      await new Promise(r=>setTimeout(r,0));
+    }
+  }
+
+  function sortByTime(){
+    const idx=new Map(items.map((it,i)=>[it,i]));
+    items.sort((a,b)=>((a.f.lastModified||0)-(b.f.lastModified||0))||(idx.get(a)-idx.get(b)));
+    ord=items.slice();
+    build();
+  }
+
+  /* ---------- full size check ---------- */
+  function closeView(){
+    if(viewUrl){URL.revokeObjectURL(viewUrl);viewUrl=null;}
+    if(view){view.remove();view=null;}
+  }
+  function paintView(){
+    if(!view)return;
+    const it=items[vi],n=numOf(it);
+    view.querySelector("#ojVT").textContent="Photo "+(vi+1)+" of "+items.length+(n?" · numbered "+n:" · no number");
+    const b=view.querySelector("#ojVNum");
+    b.textContent=n?"Number "+n+" (tap to remove)":"Give it the next number";
+    b.classList.toggle("on",!!n);
+  }
+  function showView(i){
+    vi=Math.max(0,Math.min(items.length-1,i));
+    if(viewUrl){URL.revokeObjectURL(viewUrl);viewUrl=null;}
+    const img=view.querySelector("img");
+    viewUrl=URL.createObjectURL(items[vi].f);
+    img.onerror=()=>tip("This photo could not be shown here, but it can still be added.");
+    img.src=viewUrl;
+    view.classList.remove("actual");
+    paintView();
+  }
+  function openView(i){
+    closeView();
+    const v=document.createElement("div");
+    v.id="ojOView";
+    v.innerHTML='<div class="bar"><span id="ojVT"></span><button type="button" id="ojVClose">Close</button></div><div class="body"><img alt="Photo"></div><div class="foot"><button type="button" id="ojVPrev">◀ Back</button><button type="button" id="ojVNum" class="go"></button><button type="button" id="ojVNext">Next ▶</button></div>';
+    document.body.appendChild(v);
+    view=v;
+    v.querySelector("img").onclick=()=>v.classList.toggle("actual");
+    v.querySelector("#ojVClose").onclick=closeView;
+    v.querySelector("#ojVPrev").onclick=()=>showView(vi-1);
+    v.querySelector("#ojVNext").onclick=()=>showView(vi+1);
+    v.querySelector("#ojVNum").onclick=()=>toggle(items[vi]);
+    showView(i);
+  }
+
+  /* ---------- the ordering screen ---------- */
+  function close(){
+    tok++;
+    closeView();
+    items.forEach(it=>{if(it.th)URL.revokeObjectURL(it.th);});
+    items=[];ord=[];target=null;
+    if(box){box.remove();box=null;}
+  }
+
+  function finish(){
+    let list=ord.slice();
+    const rest=items.filter(it=>ord.indexOf(it)<0);
+    if(rest.length&&ord.length){
+      if(confirm(rest.length+" photo"+(rest.length>1?"s have":" has")+" no number. Add "+(rest.length>1?"them":"it")+" at the end?\n\nOK adds them at the end. Cancel leaves them out."))list=list.concat(rest);
+    }else if(!ord.length)list=items.slice();
+    const files=list.map(it=>it.f),el=target;
+    close();
+    try{
+      const dt=new DataTransfer();
+      files.forEach(f=>dt.items.add(f));
+      el.files=dt.files;
+      window.__ojPass=true;
+      el.dispatchEvent(new Event("change",{bubbles:true}));
+    }catch(_){tip("Your browser could not pass the photos on in this order.");}
+    finally{window.__ojPass=false;}
+  }
+
+  function open(el,files){
+    close();
+    target=el;
+    items=files.map(f=>({f}));
+    const b=document.createElement("div");
+    b.id="ojOrder";
+    b.innerHTML='<div class="wrap">'+
+      '<div class="pageHeader"><button class="iconBtn" id="ojOBack" aria-label="Cancel">←</button><div style="flex:1"><h2>Put your pages in order</h2><div class="muted" id="ojOCount"></div></div></div>'+
+      '<div class="muted" style="line-height:1.5">Photos are sorted by the time they were taken. <b>Tap a photo to open it</b> and check the page. <b>Tap the circle</b> on a photo to number it. The number is its page number in the PDF.</div>'+
+      '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="secondary" id="ojOSort" style="flex:1">Sort by photo time</button><button type="button" class="secondary" id="ojOClear" style="flex:1">Clear numbers</button></div>'+
+      '<div id="ojOGrid" class="ojOGrid"></div></div>'+
+      '<div class="ojOFoot"><button type="button" class="secondary" id="ojOCancel">Cancel</button><button type="button" class="primary" id="ojOAdd"></button></div>';
+    document.body.appendChild(b);
+    box=b;
+    b.querySelector("#ojOBack").onclick=close;
+    b.querySelector("#ojOCancel").onclick=close;
+    b.querySelector("#ojOSort").onclick=sortByTime;
+    b.querySelector("#ojOClear").onclick=()=>{ord=[];paint();tip("Now tap the circles in the order you want.");};
+    b.querySelector("#ojOAdd").onclick=finish;
+    sortByTime();
+    makeThumbs(++tok);
+  }
+
+  /* catch the gallery pick before the normal handler, so it can be ordered first */
+  pp.addEventListener("change",e=>{
+    const el=e.target;
+    if(window.__ojPass||!el||el.id!=="pdfGal")return;
+    const files=[...(el.files||[])];
+    if(files.length<2)return;
+    e.stopPropagation();
+    open(el,files);
+  },true);
+
+  window.ojBackHooks=window.ojBackHooks||[];
+  window.ojBackHooks.unshift(
+    {isOpen:()=>!!view,close:closeView},
+    {isOpen:()=>!!box,close:close}
+  );
+})();
+
 </script>
 
 </body>
