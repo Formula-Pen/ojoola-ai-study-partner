@@ -8570,7 +8570,7 @@ st.textContent=".ojTblWrap{overflow-x:auto;overflow-y:hidden;-webkit-overflow-sc
 document.head.appendChild(st);
 })();
 
-  /* PDF LIBRARY v3: notes scanner and PDF creator (all on the phone) */
+  /* PDF LIBRARY v4: notes scanner and PDF creator (all on the phone) */
 (function(){
 const MAXP=500,DKEY="ojoola_pdf_draft",LKEY="ojoola_pdf_lib",SKEY="ojoola_pdf_delafter";
 const Q={small:{side:1100,q:.5,kb:90},balanced:{side:1500,q:.68,kb:180},high:{side:2000,q:.85,kb:380}};
@@ -8592,7 +8592,7 @@ const yieldUI=()=>new Promise(r=>setTimeout(r,0));
 async function toCanvas(src,max){
   let bmp;
   try{bmp=await createImageBitmap(src,{imageOrientation:"from-image"});}
-  catch(_){bmp=await new Promise((res,rej)=>{const u=URL.createObjectURL(src),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),0);};i.onerror=rej;i.src=u;});}
+  catch(_){bmp=await new Promise((res,rej)=>{const u=URL.createObjectURL(src),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),0);};i.onerror=()=>rej(new Error("This picture format is not supported"));i.src=u;});}
   const w=bmp.width||bmp.naturalWidth,h=bmp.height||bmp.naturalHeight,sc=Math.min(1,max/Math.max(w,h));
   const cv=document.createElement("canvas");
   cv.width=Math.max(1,Math.round(w*sc));cv.height=Math.max(1,Math.round(h*sc));
@@ -8688,12 +8688,13 @@ async function loadDraft(){
 }
 
 async function addFiles(list){
-  if(working)return;
+  if(working){toast("Please wait, pictures are still being added.");return;}
   let files=[...list];
   const room=MAXP-pages.length;
   if(files.length>room){toast("Maximum "+MAXP+" pages per PDF. Extra pictures were skipped.");files=files.slice(0,Math.max(0,room));}
   if(!files.length)return;
   working=true;cancel=false;
+  let added=0;
   for(let i=0;i<files.length;i++){
     if(cancel)break;
     prog("Adding pages","Adding page "+(i+1)+" of "+files.length);
@@ -8703,11 +8704,13 @@ async function addFiles(list){
       const th=await makeThumb(blob);
       await idbPut("pg:"+id,blob);await idbPut("th:"+id,th);
       pages.push({id,rot:0,br:0,ct:0,auto:false,th});
+      added++;
     }catch(err){toast("Could not read a picture: "+((err&&err.message)||err));}
     if(i%5===4){saveDraft();if(i%25===24)render();}
     await yieldUI();
   }
   working=false;saveDraft();hideProg();render();
+  if(added)toast(added+" page"+(added>1?"s":"")+" added.");
 }
 
 async function autoPage(p,cb){
@@ -8868,13 +8871,14 @@ const pp=document.createElement("div");
 pp.id="pdfPages";pp.className="hidden";
 pp.innerHTML='<div class="wrap">'+
 '<div class="pageHeader"><button class="iconBtn" data-a="pdone" aria-label="Back">←</button><div style="flex:1"><h2>Your pages</h2><div class="muted" id="pdfPgCount"></div></div></div>'+
-'<label class="primary pdfBig">+ Add Notes / Images<input id="pdfCam" type="file" accept="image/*" capture="environment" multiple hidden></label>'+
-'<div class="muted" style="margin-top:8px">Tap the button to add your notes as pictures. You can add more any time, up to '+MAXP+' pages.</div>'+
+'<label class="primary pdfBig">🖼 Upload from gallery (many at once)<input id="pdfGal" type="file" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label>'+
+'<label class="secondary pdfBig">📷 Take a photo<input id="pdfCam" type="file" accept="image/*" capture="environment" hidden></label>'+
+'<div class="muted" style="margin-top:8px">Add your notes as pictures. You can add more any time, up to '+MAXP+' pages.</div>'+
 '<div id="pdfGrid" class="pdfGrid"></div>'+
 '<div class="pdfDone"><button class="primary pdfBig" style="margin-top:0" data-a="pdone">Done</button></div></div>';
 document.body.appendChild(pp);
 
-const inEl={click(){}};
+/* both buttons: the selection is cleared only after the pictures are processed */
 function wire(id){
   const el=document.getElementById(id);
   el.addEventListener("change",async()=>{
@@ -8885,9 +8889,9 @@ function wire(id){
     el.value="";
   });
 }
-
+wire("pdfGal");
 wire("pdfCam");
-  
+
 const progEl=document.createElement("div");
 progEl.id="pdfProg";progEl.className="hidden";
 progEl.innerHTML='<div class="card center" style="max-width:340px;width:100%"><div class="lpSpin" style="width:30px;height:30px;margin:0 auto 12px;border:3px solid rgba(37,99,235,.25);border-top-color:#2563eb;border-radius:50%;animation:ojspin .9s linear infinite"></div><div id="pdfProgStage" style="font-weight:900;font-size:16px"></div><div id="pdfProgText" class="muted" style="margin:6px 0 14px"></div><button class="secondary" id="pdfProgCancel">Stop</button></div>';
@@ -8910,7 +8914,7 @@ function render(){
     '<div class="pdfPg"><div class="pdfTh"><img loading="lazy" src="'+(p.th||"")+'" alt="Page '+(i+1)+'" style="'+rotStyle(p)+'"></div>'+
     '<div class="pdfPgBar"><b>Page '+(i+1)+'</b>'+(p.auto?'<span class="lpChip">scanned</span>':"")+'</div>'+
     '<div class="pdfBtns"><button data-a="mv" data-i="'+i+'" data-d="-1" aria-label="Move earlier">◀</button><button data-a="mv" data-i="'+i+'" data-d="1" aria-label="Move later">▶</button><button data-a="rot" data-i="'+i+'" aria-label="Rotate">⟳</button><button class="x" data-a="del" data-i="'+i+'" aria-label="Delete page">✕</button></div></div>'
-  ).join(""):'<div class="muted" style="grid-column:1/-1;text-align:center;padding:30px 0">No pages yet. Tap + Add Notes / Images.</div>';
+  ).join(""):'<div class="muted" style="grid-column:1/-1;text-align:center;padding:30px 0">No pages yet. Use one of the buttons above.</div>';
   const f=$("pdfFlash");
   if(flash){
     f.innerHTML='<div class="card" style="border-color:#16a34a;margin-bottom:12px"><b>✓ PDF ready</b><div class="muted" style="margin:4px 0">'+escapeHTML(flash.name)+" · "+flash.pages+" pages · "+mb(flash.size)+'</div>'+(flash.unsaved?'<div style="color:#b91c1c;font-size:13px;margin-bottom:6px">Your device had no room to keep it in Ojoola. Download it now, or it will be lost when you leave.</div>':'<div class="muted" style="margin-bottom:6px">Saved in your Ojoola Library below.</div>')+'<div class="pdfItemBtns"><button class="primary" data-a="fdl">Download PDF</button><button class="secondary" data-a="fopen">Open</button><button class="secondary" data-a="fstudy">Study with Ojoola</button></div></div>';
@@ -8971,7 +8975,6 @@ async function act(e){
   const entry=id?rd(LKEY,[]).find(x=>x.id===id):null;
   if(a==="close")closeLib();
   else if(a==="addopen")openPages();
-  else if(a==="addmore")inEl.click();
   else if(a==="manage")openPages();
   else if(a==="pdone")closePages();
   else if(a==="auto")autoAll();
@@ -9041,7 +9044,9 @@ const cb=document.createElement("button");
 cb.type="button";cb.className="secondary";cb.textContent="📄 Create PDF";cb.onclick=openLib;
 row.appendChild(cb);
 })();
+
   
+
 </script>
 
 </body>
