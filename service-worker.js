@@ -1,4 +1,5 @@
-const CACHE_NAME = "ojoola-v21";
+const CACHE_NAME = "ojoola-v23";
+const PDF_LIB = "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
 const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 self.addEventListener("notificationclick", event => {
 event.notification.close();
@@ -8,7 +9,7 @@ return clients.openWindow("./");
 }));
 });
 self.addEventListener("install", event => {
-event.waitUntil(caches.open(CACHE_NAME).then(cache => Promise.all(APP_SHELL.map(u => cache.add(u).catch(() => {})))).then(() => self.skipWaiting()));
+event.waitUntil(caches.open(CACHE_NAME).then(cache => Promise.all([...APP_SHELL.map(u => cache.add(u).catch(() => {})), fetch(PDF_LIB, { mode: "no-cors" }).then(r => cache.put(PDF_LIB, r)).catch(() => {})])).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", event => {
 event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -17,6 +18,10 @@ self.addEventListener("fetch", event => {
 const request = event.request;
 if (request.method !== "GET") return;
 const url = new URL(request.url);
+if (request.url === PDF_LIB) {
+event.respondWith(caches.match(PDF_LIB).then(hit => hit || fetch(request).then(r => { const c = r.clone(); caches.open(CACHE_NAME).then(ch => ch.put(PDF_LIB, c)).catch(() => {}); return r; })));
+return;
+}
 if (url.origin !== self.location.origin) return;
 event.respondWith(fetch(request, { cache: "no-store" }).then(response => {
 if (response && response.ok) {
