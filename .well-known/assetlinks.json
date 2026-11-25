@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.web.ojoola_ai_study_partner.twa",
+        "sha256_cert_fingerprints": ["DC:56:7C:FA:6E:CE:69:12:BC:4D:66:D5:22:78:90:E4:41:CD:E2:83:B6:4A:A8:B8:0E:ED:02:E5:38:0E:E9:54"]
+      }
+    }]
