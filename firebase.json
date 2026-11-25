@@ -1,7 +1,7 @@
 {
 "hosting": {
 "public": ".",
-"ignore": ["firebase.json", "**/.*", "**/node_modules/**", "worker.js"],
+"ignore": ["firebase.json", "**/node_modules/**", "worker.js"],
 "headers": [
 { "source": "/service-worker.js", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
 { "source": "**/*.@(html|js|json|webmanifest)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
