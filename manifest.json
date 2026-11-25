@@ -3,6 +3,7 @@
   "short_name": "Ọjọ́ọ̀la",
   "description": "Your AI Study Partner",
   "start_url": "./",
+  "id": "/",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
