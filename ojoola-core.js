@@ -167,7 +167,7 @@
   function loadSupport() {
     if (document.getElementById("ojoolaSupportJs")) return;
     const s = document.createElement("script");
-    s.id = "ojoolaSupportJs"; s.src = "support.js"; ["ojoola-sync.js", "ojoola-notify.js", "ojoola-quiz.js"].forEach(f => { const x = document.createElement("script"); x.src = f; document.head.appendChild(x); });
+    s.id = "ojoolaSupportJs"; s.src = "support.js"; ["ojoola-sync.js", "ojoola-notify.js", "ojoola-quiz.js", "ojoola-push.js"].forEach(f => { const x = document.createElement("script"); x.src = f; document.head.appendChild(x); });
     document.head.appendChild(s);
   }
 
