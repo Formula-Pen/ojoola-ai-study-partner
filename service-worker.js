@@ -3,6 +3,19 @@ try {
   importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
   importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
   firebase.initializeApp({
+    apiKey: "AIzaSyB4hQJiZT35WPP8XfR-ui_-jjbztBtka8Q",
+    authDomain: "ojoola-ai-study-partner.firebaseapp.com",
+    projectId: "ojoola-ai-study-partner",
+    storageBucket: "ojoola-ai-study-partner.firebasestorage.app",
+    messagingSenderId: "893105726838",
+    appId: "1:893105726838:web:729451cede982d72788657"
+  });
+  firebase.messaging();
+} catch (e) {}
+try {
+  importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+  importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+  firebase.initializeApp({
     apiKey: "PASTE_HERE",
     authDomain: "PASTE_HERE",
     projectId: "PASTE_HERE",
