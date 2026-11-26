@@ -1,4 +1,16 @@
-const CACHE_NAME = "ojoola-v24";
+const CACHE_NAME = "ojoola-v25";
+try {
+  importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+  importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+  firebase.initializeApp({
+    apiKey: "PASTE_HERE",
+    authDomain: "PASTE_HERE",
+    projectId: "PASTE_HERE",
+    messagingSenderId: "PASTE_HERE",
+    appId: "PASTE_HERE"
+  });
+  firebase.messaging();
+} catch (e) {}
 const PDF_LIB = "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
 const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 self.addEventListener("notificationclick", event => {
