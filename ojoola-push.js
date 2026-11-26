@@ -75,7 +75,7 @@
       try {
         var r = await Notification.requestPermission();
         if (r === "granted") await register();
-      } catch (e) { statusEl.textContent = "Could not turn on notifications. Please try again."; return; }
+      } catch (e) { statusEl.textContent = "Could not turn on notifications: " + ((e && (e.code || e.message)) || e); return; }
       paint();
     };
     copyBtn.onclick = function () {
